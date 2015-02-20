@@ -63,9 +63,10 @@ DEV_LAMBDAEXNERR=\
 DEV_CORECAML=\
 	CoreCaml_Syntax \
 	CoreCaml_Pretty \
-	CoreCaml_Interp \
 	CoreCaml_Small \
 	CoreCaml_Big
+
+#	CoreCaml_Interp \
 
 DEV_LAMBDAEXNSUM=\
 	LambdaExnSum_Syntax \
