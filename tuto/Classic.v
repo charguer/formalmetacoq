@@ -1,6 +1,6 @@
 (**************************************************************************
 * Extensionality, Classical logic and Non-construtivism                   *
-* Arthur Charguéraud                                                      *
+* Arthur Chargueraud                                                      *
 **************************************************************************)
 
 Set Implicit Arguments.
@@ -129,7 +129,7 @@ Lemma func_eta : forall A B (f : A -> B),
   (fun x => f x) = f.
 Proof.
   (* BEGIN SOLUTION *)
-  intros. apply func_ext. auto.
+  intros. apply func_ext. auto. 
   (* END SOLUTION *)
 Qed.
 
@@ -313,7 +313,7 @@ Qed.
     complete our proof without using the excluded middle property.
     (Intuitively, the reason is that the halting problem is undecidable.
     For more details, read "Coinductive big-step operational semantics",
-    by Xavier Leroy and Hervé Grall.) *)
+    by Xavier Leroy and Herv Grall.) *)
 
 (** Beyond the fact that the excluded middle is sometimes necessary,
     it is sometimes also very convenient. It means that, at any time
@@ -1735,7 +1735,7 @@ Qed.
     points in formal logics. Details can be found in the paper:
    
        The Optimal Fixed Point Combinator
-       Arthur Charguéraud, 
+       Arthur Charguraud, 
        Interactive Theorem Proving (ITP), July 2010
 *)
 

@@ -1,6 +1,6 @@
 (***************************************************************************
 * Calculus of Constructions - Infrastructure                               *
-* Arthur Charguéraud, April 2007                                           *
+* Arthur Chargueraud, April 2007                                           *
 ***************************************************************************)
 
 Set Implicit Arguments.

@@ -1,6 +1,6 @@
 (***************************************************************************
 * Correctness of the CPS-transformation - Correctness                      *
-* Arthur Charguéraud, January 2009                                         *
+* Arthur Chargueraud, January 2009                                         *
 ***************************************************************************)
 
 Set Implicit Arguments.

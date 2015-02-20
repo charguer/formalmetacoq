@@ -1,6 +1,6 @@
 (***************************************************************************
 * Safety for Simply Typed Lambda Calculus (CBV) - Infrastructure           *
-* Arthur Charguéraud, January 2009                                         *
+* Arthur Chargueraud, January 2009                                         *
 ***************************************************************************)
 
 Set Implicit Arguments.

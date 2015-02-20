@@ -1,6 +1,6 @@
 (***************************************************************************
 * Safety for Simply Typed Lambda Calculus (CBV) - Adequacy                 *
-* Brian Aydemir & Arthur Charguéraud, July 2007                            *
+* Brian Aydemir & Arthur Chargueraud, July 2007                            *
 ***************************************************************************)
 
 Set Implicit Arguments.
@@ -94,10 +94,12 @@ Definition eprogress := forall t T,
 (** ** Proving the renaming lemma for [term]. *)
 
 Lemma term_rename : forall x y t,
-  x \notin fv t -> term (t ^ x) ->
-  y \notin fv t -> term (t ^ y).
+  term (t ^ x) ->
+  x \notin fv t -> 
+  y \notin fv t -> 
+  term (t ^ y).
 Proof.
-  introv Frx Wx Fry.
+  introv Wx Frx Fry.
   (* introduce a renaming *)
   rewrite (@subst_intro x). 
   (* apply substitution result *)
@@ -112,10 +114,12 @@ Qed.
 (** ** Proving the renaming lemma for [typing]. *)
 
 Lemma typing_rename : forall x y E t U T,
-  x \notin dom E \u fv t -> (E & x ~ U) |= (t ^ x) ~: T ->
-  y \notin dom E \u fv t -> (E & y ~ U) |= (t ^ y) ~: T.
+  (E & x ~ U) |= (t ^ x) ~: T -> 
+  x \notin dom E \u fv t ->
+  y \notin dom E \u fv t -> 
+  (E & y ~ U) |= (t ^ y) ~: T.
 Proof.
-  introv Frx Typx Fry.
+  introv Typx Frx Fry.
   (* ensure x <> y, so as to be able to build (E & y ~ U & x ~ U) *)
   tests: (x = y). subst*.
   (* assert that E is ok *)

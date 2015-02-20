@@ -1,6 +1,6 @@
 (***************************************************************************
 * Safety for STLC with Datatypes - Definitions                             *
-* Arthur Charguéraud, July 2007                                            *
+* Arthur Chargueraud, July 2007                                            *
 ***************************************************************************)
 
 Set Implicit Arguments.

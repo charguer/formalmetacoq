@@ -127,7 +127,7 @@ Definition isctx (f:trm->trm) :=
   forall t1 t2, step t1 t2 -> step (f t1) (f t2).
 
 Lemma isctx_ctx : forall c, isctx c.
-Proof. intros. applys step_ctx. Qed.
+Proof. intros_all. applys* step_ctx. Qed.
 
 Hint Resolve isctx_ctx.
 

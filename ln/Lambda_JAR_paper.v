@@ -1,11 +1,11 @@
 (***************************************************************************
 * The pure lambda-calculus in locally nameless style - Formalization       *
-* Arthur Charguéraud, January 2009                                         *
+* Arthur Chargueraud, January 2009                                         *
 ***************************************************************************)
 
 (** This file is the appendix to the paper:
        The Locally Nameless Representation
-       Arthur Charguéraud
+       Arthur Chargueraud
        Journal of Automated Reasoning (JAR), May 2011 *)
     
 

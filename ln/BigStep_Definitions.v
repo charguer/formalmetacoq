@@ -1,6 +1,6 @@
 (***************************************************************************
 * Equivalence of big-step and small-step in call-by-value - Definitions    *
-* Arthur Charguéraud, March 2009                                           *
+* Arthur Chargueraud, March 2009                                           *
 ***************************************************************************)
 
 Set Implicit Arguments.

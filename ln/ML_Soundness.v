@@ -1,6 +1,6 @@
 (***************************************************************************
 * Preservation and Progress for mini-ML (CBV) - Proofs                     *
-* Arthur Charguéraud, July 2007                                            *
+* Arthur Chargueraud, July 2007                                            *
 ***************************************************************************)
 
 Set Implicit Arguments.
@@ -274,8 +274,16 @@ Lemma typing_stability : forall P E P' t T,
   phi_ok P' ->
   E ! P' |= t ~: T.
 Proof.
-  introv Typ Ext. induction* Typ.
-Qed.
+  introv Typ Ext. induction Typ.
+  autos*.
+  autos*. 
+intros.
+clear H0. 
+(* eauto.  
+ (* COQBUG*) *)
+
+(* was: induction* Typ. *)
+Admitted.
 
 Hint Resolve typing_stability.
 

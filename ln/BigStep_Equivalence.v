@@ -1,6 +1,6 @@
 (***************************************************************************
 * Equivalence of big-step and small-step in call-by-value - Equivalence    *
-* Arthur Charguéraud, March 2009                                           *
+* Arthur Chargueraud, March 2009                                           *
 ***************************************************************************)
 
 Set Implicit Arguments.
@@ -89,7 +89,7 @@ Proof.
   induction Rt; intros.
   apply~ reds_red_val.
   inversions Rt'. false_invert. apply* reds_red.
-  inversions Rt'. false_invert. apply* reds_red. apply* IHRt.
+  inversions Rt'. false_invert. apply* reds_red. 
 Qed.
 
 Lemma beta_star_to_reds : forall t v,

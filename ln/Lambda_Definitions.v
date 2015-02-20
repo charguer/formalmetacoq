@@ -1,6 +1,6 @@
 (***************************************************************************
 * Church-Rosser Property in Pure Lambda-Calculus - Definitions             *
-* Arthur Charguéraud, March 2007                                           *
+* Arthur Chargueraud, March 2007                                           *
 ***************************************************************************)
 
 Set Implicit Arguments.

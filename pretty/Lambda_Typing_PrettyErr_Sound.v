@@ -46,7 +46,7 @@ Proof.
   introv Tv Tt. inductions Tt; simpl.
   constructors*.
   constructors*.
-  case_if. 
+  cases_if.
     binds_cases H0.
       false* binds_empty_inv. 
       subst. applys* typing_val_weaken.
@@ -55,10 +55,10 @@ Proof.
     binds_cases H0.
       false* binds_empty_inv.
       constructors~.
-  case_if.
-    false. lets: typing_ok Tt.
-     rewrite <- concat_assoc in H.
-     lets (?&M): (ok_middle_inv H).
+  cases_if.
+    false. lets N: typing_ok Tt.
+     rewrite <- concat_assoc in N.
+     lets (?&M): (ok_middle_inv N).
      simpl_dom. notin_false.
     forwards*: IHTt. rewrite* concat_assoc. 
   constructors*.

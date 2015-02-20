@@ -1,6 +1,6 @@
 (***************************************************************************
 * Safety for Simply Typed Lambda Calculus (CBV) - Proofs                   *
-* Brian Aydemir & Arthur Charguéraud, July 2007                            *
+* Brian Aydemir & Arthur Chargueraud, July 2007                            *
 ***************************************************************************)
 
 Set Implicit Arguments.
