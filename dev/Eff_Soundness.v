@@ -46,7 +46,7 @@ Proof. intros_all~. Qed.
 Lemma sto_modif_refl : forall M L1 L2,
   L2 << L1 ->
   sto_modif M M L1 L2.
-Proof. intros_all~. auto* subset_notin. Qed.
+Proof. intros_all~. autos* subset_notin. Qed.
 
 Lemma sto_modif_trans : forall M2 L2 M1 L1 M3 L3,
   sto_modif M1 M2 L1 L2 -> 

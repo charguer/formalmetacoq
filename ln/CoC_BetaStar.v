@@ -13,7 +13,7 @@ Require Import LibLN CoC_Definitions CoC_Infrastructure.
 Lemma red_all_to_out : forall (R : relation), 
   red_all R -> red_refl R -> red_out R.
 Proof.
-  intros_all. auto*.
+  intros_all. autos*.
 Qed.
 
 Lemma red_out_to_rename : forall (R : relation),
@@ -145,7 +145,7 @@ Proof.
   apply~ (@star_trans beta (trm_app ([x ~> u']t1) ([x ~> u]t2))).
     apply* beta_star_app1.
     apply* beta_star_app2.
-  auto*.
+  autos*.
   apply~ (@star_trans beta (trm_abs ([x ~> u']t1) ([x ~> u]t2))).
     apply* beta_star_abs1.
     apply* (@beta_star_abs2 (L \u \{x})). intros y Fr. cross*.

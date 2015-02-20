@@ -24,7 +24,8 @@ TLC_VO=$(TLC_SRC:.v=.vo)
 
 #######################################################
 
-INCLUDES=-I . -I $(TLC) 
+INCLUDES=-R . LN -R $(TLC) TLC
+
 COQC=$(COQBIN)coqc $(INCLUDES)
 COQDEP=$(COQBIN)coqdep $(INCLUDES) 
 

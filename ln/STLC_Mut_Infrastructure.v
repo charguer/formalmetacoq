@@ -218,7 +218,7 @@ Qed.
 Lemma value_regular : forall e,
   value e -> term e.
 Proof.
-  induction 1; auto*.
+  induction 1; autos*.
 Qed.
 
 (** A reduction relation only holds on pairs of locally-closed terms. *)
@@ -226,7 +226,7 @@ Qed.
 Lemma red_regular : forall e e',
   red e e' -> term e /\ term e'.
 Proof.
-  induction 1; auto* value_regular.
+  induction 1; autos* value_regular.
 Qed.
 
 (** Automation for reasoning on well-formedness. *)

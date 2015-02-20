@@ -519,7 +519,7 @@ Lemma pat_match_terms : forall p t ts,
 Proof.
   induction p; simpl; introv EQ TT;
    try solve [ inversions EQ; auto ]; 
-   destruct t; inversions EQ; inversions TT; auto*.
+   destruct t; inversions EQ; inversions TT; autos*.
   remember (pat_match p1 t1) as K1. symmetry in HeqK1.
    remember (pat_match p2 t2) as K2. symmetry in HeqK2. 
    destruct K1 as [ts1|]; destruct K2 as [ts2|]; try discriminate.
@@ -531,7 +531,7 @@ Qed.
 Lemma pat_match_regular : forall p v i,
   pat_match p v i -> term v.
 Proof.
-  induction 1; auto*.
+  induction 1; autos*.
 Qed.
 
 Lemma pat_match_regular_has : forall p v i,
@@ -541,7 +541,7 @@ Proof.
   induction 1; introv B.
   binds_single B. subst~.
   inversion B.
-  binds_cases B; auto*.
+  binds_cases B; autos*.
 Qed.
 
 
@@ -1151,7 +1151,7 @@ Hint Rewrite
 Tactic Notation "calc_set" :=
   autorewrite with set.
 Tactic Notation "calc_set" "*" := 
-  calc_set; auto*.
+  calc_set; autos*.
  *)
 
 (* useful ??
@@ -1228,7 +1228,7 @@ Qed.
 Fact test : forall t xs k,
   term'_rec k t -> term (lazy_open k xs t).
 Proof.
-  induction t; simpl; introv H; auto*.
+  induction t; simpl; introv H; autos*.
   destruct~ (le_lt_dec k n). false. omega.
   apply_fresh term_abs. apply IHt. 
 Qed.
@@ -1236,7 +1236,7 @@ Qed.
 Fact term'_rec_1_to_hole_rec : forall t,
   term'_rec 1 t -> hole_rec 0 t.
 Proof.
-  introv. generalize 0. induction t; simpl; introv H; auto*.
+  introv. generalize 0. induction t; simpl; introv H; autos*.
   omega.
 Qed.
 *)
@@ -1310,5 +1310,5 @@ specializes M __ __ __ __ __.
 rewrite concat_empty_r in M.
 rewrite map_empty in M.
 rewrite concat_empty_r in M.
-apply M; try rewrite concat_empty_r; auto*.
+apply M; try rewrite concat_empty_r; autos*.
 (*   apply_empty* (@typing_substitution U). todo *)

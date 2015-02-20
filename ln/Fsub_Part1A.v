@@ -184,7 +184,7 @@ Tactic Notation "apply_fresh" constr(T) "as" ident(x) :=
   apply_fresh_base T gather_vars x.
 
 Tactic Notation "apply_fresh" "*" constr(T) "as" ident(x) :=
-  apply_fresh T as x; auto*.
+  apply_fresh T as x; autos*.
 
 (** These tactics help applying a lemma which conclusion mentions
   an environment (E & F) in the particular case when F is empty *)
@@ -203,7 +203,7 @@ Tactic Notation "apply_empty" constr(F) :=
   apply_empty_bis (get_env) F.
 
 Tactic Notation "apply_empty" "*" constr(F) :=
-  apply_empty F; auto*.
+  apply_empty F; autos*.
 
 (** Tactic to undo when Coq does too much simplification *)   
 
@@ -212,7 +212,7 @@ Ltac unsimpl_map_bind :=
     unsimpl ((subst_tb Z P) (B U)) end.
 
 Tactic Notation "unsimpl_map_bind" "*" :=
-  unsimpl_map_bind; auto*.
+  unsimpl_map_bind; autos*.
 
 
 (* ********************************************************************** *)
@@ -325,8 +325,8 @@ Hint Resolve okt_narrow  wft_weaken.
 Lemma sub_regular : forall E S T,
   sub E S T -> okt E /\ wft E S /\ wft E T.
 Proof.
-  induction 1. auto*. auto*. auto*. auto*. (* Coq bug here? *)
-  split. auto*. split;
+  induction 1. autos*. autos*. autos*. autos*. (* Coq bug here? *)
+  split. autos*. split;
    apply_fresh* wft_all as Y;
     destructi~ (H1 Y); apply_empty* (@wft_narrow T1). 
 Qed.
@@ -411,7 +411,7 @@ Proof.
       apply* binds_mid. 
       apply TransQ.
         do_rew* concat_assoc (apply_empty* sub_weakening).
-        binds_get H. auto*.
+        binds_get H. autos*.
     apply* (@sub_trans_tvar U).
     binds_cases H; auto.
   apply* sub_arrow.
@@ -431,9 +431,9 @@ Proof.
      by building back what has been deconstructed too much *)
   assert (sub E (typ_all S1 S2) (typ_all T1 T2)). 
     apply_fresh* sub_all as y. 
-  auto*.
+  autos*.
   (* case: all / all *)
-  apply_fresh sub_all as Y. auto*. 
+  apply_fresh sub_all as Y. autos*. 
   forward~ (H0 Y) as K. apply (K (T2 open_tt_var Y)); auto.
   puts (IHW T1). apply_empty* (@sub_narrowing_aux T1).
 Qed.

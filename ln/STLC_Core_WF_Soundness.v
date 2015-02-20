@@ -55,7 +55,7 @@ Proof.
   apply_empty* typing_subst.
   (* case: ctx *)
   gen t' T. induction C; simpls; intros t' Red SR T Typ.
-  auto*.
+  autos*.
   inversions Typ. apply* typing_app.
   inversions Typ. apply* typing_app.
 Qed.

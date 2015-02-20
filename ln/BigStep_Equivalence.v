@@ -138,7 +138,7 @@ Lemma beta_starn_regular : forall n e e',
   beta_starn n e e' -> term e /\ term e'.
 Proof.
   induction 1. 
-  auto*.
+  autos*.
   destruct* (beta_regular H).
 Qed.
 
@@ -162,7 +162,7 @@ Lemma beta_star_to_beta_starn : forall t1 t2,
   beta_star t1 t2 -> exists n, beta_starn n t1 t2.
 Proof.
   introv H. induction H.
-  auto*.
+  autos*.
   destruct* IHbeta_star.
 Qed.
 

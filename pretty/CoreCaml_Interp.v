@@ -740,25 +740,25 @@ Tactic Notation "run" constr(Red) :=
   run_ifres Red.
 
 Tactic Notation "run" "*" constr(Red) :=
-  run Red; auto*.
+  run Red; autos*.
 
 Tactic Notation "runs" constr(Red) :=
   run Red; subst.
 
 Tactic Notation "runs" "*" constr(Red) :=
-  run Red; subst; auto*.
+  run Red; subst; autos*.
 
 Tactic Notation "run" :=
   run_if.
 
 Tactic Notation "run" "*" :=
-  run; auto*.
+  run; autos*.
 
 Tactic Notation "runs" :=
   run; subst.
 
 Tactic Notation "runs" "*" :=
-  runs; auto*.
+  runs; autos*.
 
 
 (************************************************************)
@@ -818,7 +818,7 @@ Proof.
   runs. runs*.
   runs. runs*. 
   runs. runs*. 
-  runs. runs. case_if; run_inv; subst; auto*.
+  runs. runs. case_if; run_inv; subst; autos*.
   (* app *)
   run red_app. run red_app_1. destruct v; tryfalse.
   unfolds run_call. run. inverts E.

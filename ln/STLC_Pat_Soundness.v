@@ -26,8 +26,8 @@ Proof.
    do_rew* concat_assoc (apply* H0).
   apply_fresh* typing_let as xs. 
     do_rew* concat_assoc (apply* H1).
-  auto*.
-  auto*.
+  autos*.
+  autos*.
 Qed.
 
 (** Typing is preserved by substitution. *)
@@ -48,8 +48,8 @@ Proof.
   apply_fresh* typing_let as xs.
    rewrite* subst_open_vars.
    do_rew* concat_assoc (apply* H1).
-  auto*.
-  auto*.
+  autos*.
+  autos*.
 Qed.
 
 (** Typing is preserved by iterated substitution. *)
@@ -91,14 +91,14 @@ Proof.
    rewrite* (@substs_intro xs).
    apply~ (@typing_substs Us). unfolds~ terms.
    apply~ (@typing_pattern_match p1 t1 T).
-  auto*.
+  autos*.
   inversions Typ1. pick_fresh x.
     rewrite* (@substs_intro (x::nil)). unfolds substs.
     apply_empty* typing_subst.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
 Qed.
 
 (** Lemma : well-typed pattern matching never fails. *)

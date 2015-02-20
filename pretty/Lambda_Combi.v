@@ -211,7 +211,7 @@ Lemma credval_red : forall e v,
 Proof.
   introv (n&R). gen e v. induction n using peano_induction.
   asserts IH: (forall m e f v, cred e (out_ter m v) -> f = proj_ext e -> m < n -> red f v).
-    intros. subst. auto*. clear H.
+    intros. subst. autos*. clear H.
   introv R. inverts R as; simpls; auto.
   introv R1 R2 [L2 L1]. inverts L2. inverts L1. constructors*.
   introv R1 R2 [L2 L1]. inverts L2. inverts L1. constructors*.
@@ -241,7 +241,7 @@ Proof.
   introv R1 R2 E. inverts E as E. destruct o; tryfalse. inverts E.
    lets [(o1'&E1&M1)|M1]: cored_cred_or_diverge R1; subst*.
   introv E. destruct o; tryfalse; auto.
-  introv R1 E. inverts E as E. destruct o; tryfalse. inverts E. auto*.
+  introv R1 E. inverts E as E. destruct o; tryfalse. inverts E. autos*.
 Qed.
 
 (** [cdiverge] to [diverge] *)
@@ -293,7 +293,7 @@ Lemma credval_bigred : forall t v,
 Proof.
   introv (n&R). gen t v. induction n using peano_induction.
   asserts IH: (forall m t v, cred t (out_ter m v) -> m < n -> bigred t v).
-    auto*. clear H.
+    autos*. clear H.
   introv R. inverts R as; auto.
   introv R1 R2 [L2 L1]. inverts L2. inverts L1.
    inverts R2 as R3 R4 [L4 L3]. inverts L3. inverts L4.

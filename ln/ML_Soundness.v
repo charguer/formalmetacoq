@@ -42,7 +42,7 @@ Proof.
     binds_cases H1.
       apply* binds_concat_left.
        rewrite* sch_subst_fresh. applys~ (@fv_in_values_binds sch) B.
-      auto*.
+      autos*.
     rewrite~ sch_subst_arity. apply* typ_subst_type_list.
   apply_fresh* typing_abs. intros y Fr.
    rewrite sch_subst_fold.   
@@ -61,17 +61,17 @@ Proof.
      rewrite factorize_map; [| apply* pat_typing_arity_elim ].
      rewrite <- concat_assoc. rewrite <- map_concat.
      apply* H1. rewrite* concat_assoc.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
   apply* typing_loc. rewrite* typ_subst_fresh.
    applys~ (@fv_in_values_binds typ) H1.
-  auto*.
-  auto*.
+  autos*.
+  autos*.
   apply* typing_set.
   apply* typing_raise.
    rewrite* <- (@typ_subst_fresh Z U typ_exn). 
@@ -142,19 +142,19 @@ Proof.
     apply* (@ok_singles sch (pat_arity p)). 
     do 2 rewrite dom_concat. auto.
     rewrite length_map. apply* pat_typing_arity_elim.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
 Qed.
 
 (* ********************************************************************** *)
@@ -193,19 +193,19 @@ Proof.
   apply_fresh* (@typing_match T Us). intros xs Fr.
    rewrite* subst_open_vars.
    do_rew* concat_assoc (apply* H1).
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
 Qed.
 
 (* ********************************************************************** *)
@@ -241,7 +241,7 @@ Lemma typing_pattern_match : forall p t T E P ts Us,
   typings E P ts Us.
 Proof.
   induction p; introv H1 H2 H0; destruct t; 
-   inversion H0; inversion H1; auto; subst; inversions H2; auto*.
+   inversion H0; inversion H1; auto; subst; inversions H2; autos*.
   remember (pat_match p1 t1) as K1. 
    remember (pat_match p2 t2) as K2. 
    destruct K1 as [ts1|]; destruct K2 as [ts2|]; try discriminate.
@@ -257,7 +257,7 @@ Lemma pattern_match_values : forall p t ts,
   Forall value ts.
 Proof.
   induction p; introv EQ Val; 
-   destruct t; simpl in EQ; inversion EQ; auto; inversions Val; auto*.
+   destruct t; simpl in EQ; inversion EQ; auto; inversions Val; autos*.
   remember (pat_match p1 t1) as K1. 
    remember (pat_match p2 t2) as K2. 
    destruct K1 as [ts1|]; destruct K2 as [ts2|]; try discriminate.
@@ -433,7 +433,7 @@ Proof.
            exists* (trm_nat (n + n0)) mu.
            inversions H5.
         branch 1. inversions Val2; inversions Typ2. 
-          auto*.
+          autos*.
           inversions H4.
         branch 2. exists* e.
         branch 3. exists* (trm_app t1 t2') mu'.

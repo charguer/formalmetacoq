@@ -77,13 +77,13 @@ Tactic Notation "apply_fresh" constr(T) :=
   apply_fresh_base T gather_vars ltac_no_arg.
 
 Tactic Notation "apply_fresh" "*" constr(T) :=
-  apply_fresh T; auto*.
+  apply_fresh T; autos*.
 
 Tactic Notation "apply_fresh" constr(T) "as" ident(X) :=
   apply_fresh_base T gather_vars X.
 
 Tactic Notation "apply_fresh" "*" constr(T) "as" ident(X) :=
-  apply_fresh T as X; auto*.
+  apply_fresh T as X; autos*.
 
 Hint Constructors term value red typing pat_match pat_typing.
 
@@ -410,7 +410,7 @@ Qed.
 Lemma value_regular : forall e,
   value e -> term e.
 Proof.
-  induction 1; auto*. 
+  induction 1; autos*. 
 Qed.
 
 (** Pattern-matching regular. *)
@@ -421,7 +421,7 @@ Lemma pat_match_regular : forall p t m,
   /\ term t 
   /\ forall x t1, binds x t1 m -> term t1.
 Proof.
-  induction 1; (splits 3; [ | auto* | introv B ]).
+  induction 1; (splits 3; [ | autos* | introv B ]).
   rewrite~ dom_single.
   destruct (binds_single_inv B). subst~.
   auto.
@@ -463,7 +463,7 @@ Implicit Arguments fresh_length [xs L n].
 Lemma red_regular : forall e e',
   red e e' -> term e /\ term e'.
 Proof.
-  induction 1; auto* value_regular.
+  induction 1; autos* value_regular.
   pick_freshes (pat_arity p1) xs.
   forwards~ K: (H2 xs).
   forwards~ [K1 K2] : (pat_match_regular K).

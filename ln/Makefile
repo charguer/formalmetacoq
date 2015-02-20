@@ -19,9 +19,9 @@ COQBIN=
 
 ############################################################################
 
-INCLUDES=-I . -I $(TLC)
+INCLUDES=-R . LN -R $(TLC) TLC
 
-COQC=$(COQBIN)coqc -dont-load-proofs $(INCLUDES)
+COQC=$(COQBIN)coqc $(INCLUDES)
 COQDEP=$(COQBIN)coqdep $(INCLUDES)
 COQDOC=$(COQBIN)coqdoc --quiet --utf8 --html
 

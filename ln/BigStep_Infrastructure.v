@@ -198,7 +198,7 @@ Hint Resolve open_term.
 Lemma value_regular : forall e,
   value e -> term e.
 Proof.
-  induction 1; auto*.
+  induction 1; autos*.
 Qed.
 
 (** A reduction relation only holds on pairs of locally-closed terms. *)
@@ -206,21 +206,21 @@ Qed.
 Lemma beta_regular : forall e e',
   beta e e' -> term e /\ term e'.
 Proof.
-  induction 1; auto* value_regular.
+  induction 1; autos* value_regular.
 Qed.
 
 Lemma beta_star_regular : forall e e',
   beta_star e e' -> term e /\ term e'.
 Proof.
   induction 1. 
-  auto*.
+  autos*.
   destruct* (beta_regular H).
 Qed.
 
 Lemma reds_regular : forall e e',
   reds e e' -> term e /\ term e'.
 Proof.
-  induction 1; auto* value_regular.
+  induction 1; autos* value_regular.
 Qed.
 
 (** Automation for reasoning on well-formedness. *)

@@ -119,7 +119,7 @@ Tactic Notation "apply_fresh" constr(T) "as" ident(x) :=
   apply_fresh_base T gather_vars x.
 
 Tactic Notation "apply_fresh" "*" constr(T) "as" ident(x) :=
-  apply_fresh T as x; auto*.
+  apply_fresh T as x; autos*.
 
 Ltac exists_fresh := 
   let L := gather_vars_with (fun x : vars => x) in exists L.
@@ -208,7 +208,7 @@ Ltac cross :=
   rewrite subst_open_var; try cross.
 
 Tactic Notation "cross" "*" := 
-  cross; auto*.
+  cross; autos*.
 
 
 (* ********************************************************************** *)
@@ -367,8 +367,8 @@ Proof.
   unfold open, close_var. generalize 0. gen y.
   induction W; intros y Fr k; simpls.
   case_var; simple*. case_nat*.
-  auto*.
-  auto*.
+  autos*.
+  autos*.
   apply_fresh* term_abs as z.
    unfolds open. rewrite* close_var_rec_open.
   apply_fresh* term_prod as z.
@@ -468,7 +468,7 @@ Hint Extern 1 (term ?t) => match goal with
 
 Lemma ok_from_wf : forall E, wf E -> ok E.
 Proof.
-  induction 1. auto. auto* (regular_typing H0).
+  induction 1. auto. autos* (regular_typing H0).
 Qed.
 
 Hint Extern 1 (ok ?E) => match goal with
@@ -559,7 +559,7 @@ Proof.
     inversions H. false* (empty_push_inv H5).
      destruct (eq_push_inv H4) as [? [? ?]]. subst~. 
      apply* typing_fresh.
-    auto*.
+    autos*.
 Qed.
 
 Lemma notin_fv_from_binds' : forall E F x V y U,

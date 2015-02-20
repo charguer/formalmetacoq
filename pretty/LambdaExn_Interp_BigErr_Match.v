@@ -83,7 +83,7 @@ Proof.
   inverts~ R. 
   inverts~ R.
   runs b1. destruct b1; inverts R as R; auto.
-   runs b2. destruct b2; inverts R as R; auto*.
+   runs b2. destruct b2; inverts R as R; autos*.
    tests C: (isclo v).
      inverts C. simpls. runs b3. inverts* R.
      rewrite~ if_isclo_not_isclo in R. inverts* R.

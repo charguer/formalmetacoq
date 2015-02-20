@@ -124,7 +124,7 @@ Qed.
 
 Lemma para_iter_red_refl : red_refl (para iter).
 Proof.
-  intros_all. auto* para_red_refl.
+  intros_all. autos* para_red_refl.
 Qed.
 
 End ParaProperties.
@@ -137,7 +137,7 @@ Lemma beta_star_to_para_iter :
 Proof.
   intros_all. induction* H. 
   apply* para_iter_red_refl.
-  apply iter_step. induction H; auto* para_red_refl.
+  apply iter_step. induction H; autos* para_red_refl.
 Qed.
 
 Lemma para_iter_to_beta_star : 
@@ -200,9 +200,9 @@ Proof.
     apply_fresh para_red as y; auto. 
     apply* (@para_red_rename x).
     (* case: var / var *)
-  auto*.
+  autos*.
     (* case: srt / srt *)
-  auto*.
+  autos*.
     (* case: trm_app / red *)
   lets~ [u2 [U2a U2b]]: IHHS2 u' __. clear IHHS2.
   lets [L2 [t1'x [t2'x [EQ [Ht1'x Ht2'x]]]]]: (para_abs_inv HS1).
@@ -244,7 +244,7 @@ Proof.
   introv H. induction H; intros T MtoT.
   destruct~ (IHiter_1 T) as [P [HP1 HP2]]. 
    destruct~ (IHiter_2 P) as [Q [HQ1 HQ2]].
-   exists Q. auto* (@iter_trans para P).
+   exists Q. autos* (@iter_trans para P).
   destruct* (para_confluence H MtoT).
 Qed.
 
@@ -263,9 +263,9 @@ Qed.
 Lemma confluence_beta_star : confluence (beta star).
 Proof.
   intros_all. destruct (@para_iter_confluence M S T).
-  auto* beta_star_to_para_iter.
-  auto* beta_star_to_para_iter.
-  auto* para_iter_to_beta_star.
+  autos* beta_star_to_para_iter.
+  autos* beta_star_to_para_iter.
+  autos* para_iter_to_beta_star.
 Qed.
 
 Lemma church_rosser_beta : church_rosser beta.

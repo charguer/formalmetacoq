@@ -396,17 +396,17 @@ Hint Resolve star_refl star_once star_step.
 Lemma beta_star_lam : forall t1 t2,
   star beta t1 t2 ->
   star beta (lam t1) (lam t2).
-Proof. induction 1; auto*. Qed.
+Proof. induction 1; autos*. Qed.
 
 Lemma beta_star_app1 : forall t11 t12 t2,
   star beta t11 t12 ->
   star beta (app t11 t2) (app t12 t2).
-Proof. induction 1; auto*. Qed.
+Proof. induction 1; autos*. Qed.
 
 Lemma beta_star_app2 : forall t1 t21 t22,
   star beta t21 t22 ->
   star beta (app t1 t21) (app t1 t22).
-Proof. induction 1; auto*. Qed.
+Proof. induction 1; autos*. Qed.
 
 Lemma beta_star_apps : forall t1 t2 us,
   t1 -->* t2 ->
@@ -658,7 +658,7 @@ Proof.
   exists t1. auto~ star_refl.
   lets t1' E' R': (beta_on_eta_exp E R).
    lets t1'' E'' R'': (IHRed _ E').
-   exists t1''. auto* star_trans.
+   exists t1''. autos* star_trans.
 Qed.
 
 End BetaEta.

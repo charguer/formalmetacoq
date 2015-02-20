@@ -21,7 +21,7 @@ Proof.
   exists* i1.
   destruct (IHless1 _ C1) as [i2 [Le2 C2]].
    destruct (IHless2 _ C2) as [i3 [Le3 C3]].
-   exists i3. auto* (Le.le_trans i1 i2 i3).
+   exists i3. autos* (Le.le_trans i1 i2 i3).
 Qed.
 
 Lemma less_type_type_inv : forall i j,
@@ -94,7 +94,7 @@ Proof.
   induction Typ; intros; subst; tryfalse.
   inversions H2. exists* i k.
   destruct~ IHTyp1 as [i' [k' [EQi [TypU [Univ [L TypT]]]]]].
-  exists i' k'. auto* (@less_trans T0).
+  exists i' k'. autos* (@less_trans T0).
 Qed.
 
 Lemma typing_abs_inv : forall E V t P,
@@ -107,7 +107,7 @@ Proof.
   induction Typ; intros; subst; tryfalse.
   inversions H1. exists* T i.
   destruct~ IHTyp1 as [T' [i' [TypP [LeP [L TypB]]]]].
-  exists T' i'. auto* (@less_trans T).
+  exists T' i'. autos* (@less_trans T).
 Qed.
 
 Lemma typing_prod_type_inv : forall E U T i,
@@ -174,7 +174,7 @@ Proof.
       wf (E & (map (subst x v) F))); 
    intros; subst; simpls subst. 
   (* case: trm_type *)
-  auto*.
+  autos*.
   (* case: var *)
   case_var.
     binds_mid~. rewrite* subst_fresh. apply_empty* typing_weaken.
@@ -340,7 +340,7 @@ Proof.
      apply* (@typing_sub_env (E & x ~ U)).
 
   (* case: trm_app 1 *)
-  auto*.
+  autos*.
 
   (* case: trm_app 2 *)
   destruct (typing_wf_from_typing Typ1) as [i TypUT].

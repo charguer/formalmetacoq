@@ -36,7 +36,7 @@ Proof.
        rewrite* sch_subst_fresh. lets: (fv_in_values_binds B).
        unfolds subset. unfolds notin. eauto.
        (* todo: use a lemma to deal with the inclusion *)
-      auto*.
+      autos*.
     rewrite~ sch_subst_arity. apply* typ_subst_type_list.
   apply_fresh* typing_abs as y.
    rewrite sch_subst_fold.   
@@ -44,7 +44,7 @@ Proof.
   apply_fresh* (@typing_let (sch_subst Z U M) (L1 \u \{Z})) as y.
     simpl in Fry. rewrite* <- sch_subst_open_vars.
     apply_ih_map_bind* H2.
-  auto*.
+  autos*.
 Qed.
 
 (* ********************************************************************** *)
@@ -101,7 +101,7 @@ Proof.
   apply* typing_var. apply* binds_weaken.
   apply_fresh* typing_abs as y. apply_ih_bind* H1.
   apply_fresh* (@typing_let M L1) as y. apply_ih_bind* H2.
-  auto*.
+  autos*.
 Qed.
 
 (* ********************************************************************** *)
@@ -125,7 +125,7 @@ Proof.
   apply_fresh* (@typing_let M0 L1) as y. 
    rewrite* trm_subst_open_var. 
    apply_ih_bind* H2. 
-  auto*.
+  autos*.
 Qed.
 
 (* ********************************************************************** *)
@@ -143,8 +143,8 @@ Proof.
    rewrite* (@trm_subst_intro x). 
    apply_empty* typing_trm_subst.
    apply* has_scheme_from_typ.
-  auto*.
-  auto*.
+  autos*.
+  autos*.
 Qed. 
 
 (* ********************************************************************** *)

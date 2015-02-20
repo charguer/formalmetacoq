@@ -195,7 +195,7 @@ Tactic Notation "apply_fresh" constr(T) :=
   apply_fresh_base_simple T gather_vars.
 
 Tactic Notation "apply_fresh" "*" constr(T) :=
-  apply_fresh T; auto*.
+  apply_fresh T; autos*.
 
 
 (* ********************************************************************** *)
@@ -281,7 +281,7 @@ Lemma typings_concat : forall E P ts1 Us1 ts2 Us2,
   typings E P (ts1++ts2) (Us1++Us2).
 Proof.
   induction ts1; introv Typ1 Typ2; inversions Typ1; simpls*.
-  rew_app; auto*.
+  rew_app; autos*.
 Qed.
 
 
@@ -560,7 +560,7 @@ Lemma pat_match_terms : forall p t ts,
 Proof.
   induction p; simpl; introv EQ TT;
    try solve [ inversions EQ; auto ]; 
-   destruct t; inverts EQ as EQ; inversions TT; auto*.
+   destruct t; inverts EQ as EQ; inversions TT; autos*.
   remember (pat_match p1 t1) as K1. symmetry in HeqK1.
    remember (pat_match p2 t2) as K2. symmetry in HeqK2. 
    destruct K1 as [ts1|]; destruct K2 as [ts2|]; try discriminate.
@@ -677,7 +677,7 @@ Lemma typ_substs_intro : forall Xs Us T,
   (typ_open T Us) = typ_substs Xs Us (typ_open_vars T Xs).
 Proof.
   intros. apply~ (@typ_substs_intro_ind T Xs Us nil).
-  change (typ_fv_list nil) with (\{}:vars). auto*.
+  change (typ_fv_list nil) with (\{}:vars). autos*.
 Qed.
 
 (** Types are stable by type substitution *)
@@ -861,7 +861,7 @@ Hint Resolve phi_ok_binds sto_ok_binds.
 Lemma value_regular : forall e,
   value e -> term e.
 Proof.
-  induction 1; auto*.
+  induction 1; autos*.
 Qed.
 
 (** A typing relation is restricted to well-formed objects. *)

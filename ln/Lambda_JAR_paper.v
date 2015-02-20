@@ -166,7 +166,7 @@ Lemma subset_union_2p : forall E1 E2 F1 F2 G : vars,
   E1 \c (F1 \u G) -> E2 \c (F2 \u G) -> (E1 \u E2) \c ((F1 \u F2) \u G).
 Proof.
   introv H1 H2. intros x. specializes H1 x. specializes H2 x.
-  repeat rewrite in_union in *. auto*.
+  repeat rewrite in_union in *. autos*.
 Qed.
 
 Lemma subset_remove_11 : forall x y : var, 
@@ -552,7 +552,7 @@ Lemma lc_rec_open_var_rec : forall x t k,
   lc_at k (open_var_rec k x t) -> lc_at (S k) t.
 Proof.
   unfold open_var_rec.
-  induction t; simpl; introv H; auto*.
+  induction t; simpl; introv H; autos*.
   case_nat; simpls~.
 Qed.
 
@@ -567,7 +567,7 @@ Lemma lc_at_open_var_rec : forall x t k,
   lc_at (S k) t -> lc_at k (open_var_rec k x t).
 Proof.
   unfold open_var_rec.
-  induction t; simpl; introv H; auto*. case_nat; simple~.
+  induction t; simpl; introv H; autos*. case_nat; simple~.
 Qed.
 
 Lemma lc'_to_lc : forall t,
@@ -575,7 +575,7 @@ Lemma lc'_to_lc : forall t,
 Proof.
   introv. unfold lc'.
   induction t using (@measure_induction _ size).
-  destruct t; simpl; introv T'; simpl in H; auto*.
+  destruct t; simpl; introv T'; simpl in H; autos*.
   apply_fresh lc_abs. apply H. rewrite~ size_open_var.
    apply~ lc_at_open_var_rec.
 Qed.
@@ -611,7 +611,7 @@ Proof. extens. split. applys body_to_body'. applys body'_to_body. Qed.
 
 Lemma lc_at_weaken_ind : forall k1 k2 t,
   lc_at k1 t -> k1 <= k2 -> lc_at k2 t.
-Proof. introv. gen k1 k2. induction t; simpl; introv T Lt; auto*. Qed.
+Proof. introv. gen k1 k2. induction t; simpl; introv T Lt; autos*. Qed.
 
 Lemma lc_at_weaken : forall k t,
   lc' t -> lc_at k t.
@@ -641,7 +641,7 @@ Lemma close_var_body' : forall x t,
   lc' t -> body' (close_var x t).
 Proof.
   introv. unfold lc', body', close_var.
-  generalize 0. induction t; simpl; intros k T; auto*.
+  generalize 0. induction t; simpl; intros k T; autos*.
   case_var~. simpl. nat_math.
 Qed.
 
@@ -649,7 +649,7 @@ Lemma subst_lc' : forall z u t,
   lc' u -> lc' t -> lc' (subst z u t).
 Proof.
   introv U. unfold lc'. generalize 0.
-  induction t; simpl; introv T; auto*.
+  induction t; simpl; introv T; autos*.
   case_var~. apply~ lc_at_weaken.
 Qed.
 
@@ -657,7 +657,7 @@ Lemma subst_body' : forall z u t,
   lc' u -> body' t -> body' (subst z u t).
 Proof.
   introv U. unfold body'. generalize 1.
-  induction t; simpl; introv T; auto*.
+  induction t; simpl; introv T; autos*.
   case_var~. apply~ lc_at_weaken.
 Qed.
 

@@ -93,13 +93,13 @@ Tactic Notation "apply_fresh" constr(T) :=
   apply_fresh_base T gather_vars ltac_no_arg.
 
 Tactic Notation "apply_fresh" "*" constr(T) :=
-  apply_fresh T; auto*.
+  apply_fresh T; autos*.
 
 Tactic Notation "apply_fresh" constr(T) "as" ident(X) :=
   apply_fresh_base T gather_vars X.
 
 Tactic Notation "apply_fresh" "*" constr(T) "as" ident(X) :=
-  apply_fresh T as X; auto*.
+  apply_fresh T as X; autos*.
 
 Hint Constructors term value red typing typings.
 
@@ -345,7 +345,7 @@ Lemma pat_match_terms : forall p t ts,
 Proof.
   induction p; simpl; introv EQ TT;
    try solve [ inversions EQ; auto ]; 
-   destruct t; inversions EQ; inversions TT; auto*.
+   destruct t; inversions EQ; inversions TT; autos*.
   remember (pat_match p1 t1) as K1. symmetry in HeqK1.
    remember (pat_match p2 t2) as K2. symmetry in HeqK2. 
    destruct K1 as [ts1|]; destruct K2 as [ts2|]; try discriminate.
@@ -370,7 +370,7 @@ Qed.
 Lemma value_regular : forall e,
   value e -> term e.
 Proof.
-  induction 1; auto*. 
+  induction 1; autos*. 
 Qed.
 
 (** A reduction relation only holds on pairs of locally-closed terms. *)
@@ -378,7 +378,7 @@ Qed.
 Lemma red_regular : forall e e',
   red e e' -> term e /\ term e'.
 Proof.
-  induction 1; auto* value_regular.
+  induction 1; autos* value_regular.
   forwards~ [Len Ter] : (@pat_match_terms p1 t1 ts).
   split~. apply~ open_terms. rewrite~ <- Len.
 Qed.

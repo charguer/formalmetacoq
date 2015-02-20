@@ -70,7 +70,7 @@ Lemma bigredh_lt : forall n n' t v,
   bigredh n t v -> n < n' -> bigredh n' t v.
 Proof.
   introv H. gen n'. induction H; introv L; 
-   (destruct n' as [|n']; [ false; math | auto* ]).
+   (destruct n' as [|n']; [ false; math | autos* ]).
 Qed.
 
 Lemma bigred_bigredh : forall t v,

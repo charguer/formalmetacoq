@@ -162,7 +162,7 @@ Lemma redh_lt : forall n n' m c e o,
   redh n m c e o -> n < n' -> redh n' m c e o.
 Proof.
   introv H. gen n'. induction H; introv L; 
-   (destruct n' as [|n']; [ false; math | auto* ]).
+   (destruct n' as [|n']; [ false; math | autos* ]).
 Qed.
 
 Lemma red_redh : forall m c e o,

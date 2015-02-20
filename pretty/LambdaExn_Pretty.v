@@ -380,7 +380,7 @@ Lemma redh_lt : forall n n' e o,
   redh n e o -> n < n' -> redh n' e o.
 Proof.
   introv H. gen n'. induction H; introv L; 
-   (destruct n' as [|n']; [ false; math | auto* ]).
+   (destruct n' as [|n']; [ false; math | autos* ]).
 Qed.
 
 Lemma red_redh : forall e o, 
@@ -420,11 +420,11 @@ Proof.
     introv O. inverts* O.
     introv R2 R3. inverts R3 as.
       introv O. inverts* O.
-      auto*.
+      autos*.
   introv R1 R2. inverts* R2.
   introv R1 R2. inverts R2 as.
     introv O. inverts* O. 
-    auto*. 
+    autos*. 
 Qed.
 
 (** [bigdiv] to [diverge] *)

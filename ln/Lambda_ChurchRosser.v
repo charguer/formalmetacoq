@@ -29,7 +29,7 @@ Hint Extern 1 (para (trm_app (trm_abs _) _) (_ ^^ _)) =>
 Lemma red_all_to_out : forall (R : relation), 
   red_all R -> red_refl R -> red_out R.
 Proof.
-  intros_all. auto*.
+  intros_all. autos*.
 Qed.
 
 Lemma red_out_to_rename : forall (R : relation),
@@ -206,7 +206,7 @@ Proof.
     apply_fresh para_red as y; auto.
      apply* (@para_red_rename x).
   (* case: var / var *)
-  auto*.
+  autos*.
   (* case: trm_app / red *)
   destruct~ (IHHS2 t2'0) as [u2 [U2a U2b]].
   destruct (para_abs_inv HS1) as [L2 [t1'x [EQ Ht1'x]]].
@@ -240,7 +240,7 @@ Proof.
   introv H. induction H; introv MtoT.
   destruct (IHiter_1 T) as [P [HP1 HP2]]; auto.
    destruct~ (IHiter_2 P) as [Q [HQ1 HQ2]].
-   exists Q. lets: (@iter_trans para P). auto*.
+   exists Q. lets: (@iter_trans para P). autos*.
   lets L: (para_confluence H MtoT).
   destruct L as [P ?].
   esplit. split. destruct H0. eauto.

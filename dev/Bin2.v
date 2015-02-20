@@ -87,7 +87,7 @@ Lemma lc'_rename : forall t x y,
   lc' t -> lc' (rename x y t).
 Proof.
   introv. unfold rename, lc'. generalize 0.
-  induction t; simpl; intros; auto*.
+  induction t; simpl; intros; autos*.
   case_var~.
 Qed.
 
@@ -457,5 +457,5 @@ Axiom subset_by_notin : forall E F,
   E << F.
 (* TODO: il faudrait mettre mem dans bool ! 
   Proof.
-  introv H IE. unfolds notin. auto*.
+  introv H IE. unfolds notin. autos*.
 *)

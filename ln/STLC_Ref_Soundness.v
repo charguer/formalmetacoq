@@ -22,12 +22,12 @@ Proof.
   induction Typ; introv EQ Ok; subst.
   apply* typing_var. apply* binds_weaken.
   apply_fresh* typing_abs as y. apply_ih_bind* H0.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
 Qed.
 
 (** Typing is preserved by substitution. *)
@@ -44,12 +44,12 @@ Proof.
     binds_cases H0; apply* typing_var.
   apply_fresh typing_abs as y.
    rewrite* subst_open_var. apply_ih_bind* H0.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
-  auto*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
+  autos*.
 Qed.
 
 (** Typing is preserved by an extension of store typing. *)

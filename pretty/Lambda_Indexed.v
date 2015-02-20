@@ -119,11 +119,11 @@ Lemma iredval_red : forall e v,
 Proof.
   introv (n&R). gen e v. induction n using peano_induction.
   asserts IH: (forall m e v, ired m e v -> m < n -> red e v).
-    auto*. clear H.
+    autos*. clear H.
   introv R. inverts R as; auto.
-  introv R1 L1 R2 L2. destruct o1; [ | inverts R2 ]. auto*.
-  introv R1 L1 R2 L2. destruct o2; [ | inverts R2 ]. auto*.
-  introv R1 L1. auto*.
+  introv R1 L1 R2 L2. destruct o1; [ | inverts R2 ]. autos*.
+  introv R1 L1 R2 L2. destruct o2; [ | inverts R2 ]. autos*.
+  introv R1 L1. autos*.
 Qed.
 
 (** [diverge] to [idiverge] *)
@@ -192,7 +192,7 @@ Lemma iredval_bigred : forall t v,
 Proof.
   introv (n&R). gen t v. induction n using peano_induction.
   asserts IH: (forall m t v, ired m t v -> m < n -> bigred t v).
-    auto*. clear H.
+    autos*. clear H.
   introv R. inverts R as; auto.
   introv R1 L1 R2 L2. inverts R2 as R3 L3 R4 L4.
    inverts R4 as R5 L5. unfolds Lo. constructors*.

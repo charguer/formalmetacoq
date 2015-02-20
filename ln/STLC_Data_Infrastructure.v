@@ -102,7 +102,7 @@ Tactic Notation "apply_fresh" constr(T) :=
   apply_fresh_base_simple T gather_vars.
 
 Tactic Notation "apply_fresh" "*" constr(T) :=
-  apply_fresh T; auto*.
+  apply_fresh T; autos*.
 
 Hint Constructors term value red typing typings.
 
@@ -376,7 +376,7 @@ Lemma pat_match_terms : forall p t ts,
 Proof.
   induction p; simpl; introv EQ TT;
    try solve [ inversions EQ; auto ]; 
-   destruct t; inversions EQ; inversions TT; auto*.
+   destruct t; inversions EQ; inversions TT; autos*.
   remember (pat_match p1 t1) as K1. symmetry in HeqK1.
    remember (pat_match p2 t2) as K2. symmetry in HeqK2. 
    destruct K1 as [ts1|]; destruct K2 as [ts2|]; try discriminate.
@@ -403,7 +403,7 @@ Qed.
 Lemma value_regular : forall e,
   value e -> term e.
 Proof.
-  induction 1; auto*. 
+  induction 1; autos*. 
 Qed.
 
 (** A reduction relation only holds on pairs of locally-closed terms. *)
@@ -413,7 +413,7 @@ Lemma red_regular : forall e e',
 Proof.
   induction 1; use value_regular.
   splits*. forward~ (@pat_match_terms p t1 ts) as K.
-  rewrite (proj1 K) in H0, K. auto*.
+  rewrite (proj1 K) in H0, K. autos*.
 Qed.
 
 (** Automation for reasoning on well-formedness. *)

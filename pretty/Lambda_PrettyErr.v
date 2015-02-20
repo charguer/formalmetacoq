@@ -168,7 +168,7 @@ Lemma redh_lt : forall n n' e o,
   redh n e o -> n < n' -> redh n' e o.
 Proof.
   introv H. gen n'. induction H; introv L; 
-   (destruct n' as [|n']; [ false; math | auto* ]).
+   (destruct n' as [|n']; [ false; math | autos* ]).
 Qed.
 
 Lemma red_redh : forall e o, 

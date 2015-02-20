@@ -63,12 +63,12 @@ Ltac simpl_substs := simpl; case_if; tryfalse.
 Lemma bigred_abs_beta : forall o x t3 v2,
    bigred (subst x v2 t3) o ->
    bigred (trm_app (trm_abs x t3) v2) o.
-Proof. introv R. auto*. Defined.
+Proof. introv R. autos*. Defined.
 
 Lemma bigred_abs_beta' : forall o x t3 v2,
    bigred (subst x v2 t3) o ->
    bigred (trm_app (val_abs x t3) v2) o.
-Proof. introv R. auto*. Defined.
+Proof. introv R. autos*. Defined.
 
 Lemma bigdiv_abs_beta : forall x t3 v2,
    bigdiv (subst x v2 t3) ->

@@ -71,7 +71,7 @@ Proof.
        apply~ binds_middle_eq.
       apply TransQ.
         do_rew* concat_assoc (apply_empty* sub_weakening).
-        binds_get H. auto*.
+        binds_get H. autos*.
     apply* (@sub_trans_tvar U). binds_cases H; auto.
   apply* sub_arrow.
   apply_fresh* sub_all as Y. apply_ih_bind* H0.
@@ -90,9 +90,9 @@ Proof.
      by building back what has been deconstructed too much *)
   assert (sub E (typ_all S1 S2) (typ_all T1 T2)). 
     apply_fresh* sub_all as y. 
-  auto*.
+  autos*.
   (* case: all / all *)
-  apply_fresh sub_all as Y. auto*. 
+  apply_fresh sub_all as Y. autos*. 
   applys~ (H0 Y). lets: (IHW T1).
   apply_empty* (@sub_narrowing_aux T1).
 Qed.
@@ -130,7 +130,7 @@ Proof.
     apply (@sub_transitivity Q).
       apply_empty* sub_weakening. 
       rewrite* <- (@subst_tt_fresh Z P Q).
-        binds_get H. auto*.
+        binds_get H. autos*.
         apply* (@notin_fv_wf E).
     apply* (@sub_trans_tvar (subst_tt Z P U)).
       rewrite* (@map_subst_tb_id E Z P).
@@ -172,9 +172,9 @@ Lemma sub_strengthening : forall x U E F S T,
   sub (E & F) S T.
 Proof.
   intros x U E F S T SsubT. 
-  inductions SsubT; introv; auto* wft_strengthen.
+  inductions SsubT; introv; autos* wft_strengthen.
   (* case: fvar trans *)
-  apply* (@sub_trans_tvar U0). binds_cases H; auto*. 
+  apply* (@sub_trans_tvar U0). binds_cases H; autos*. 
   (* case: all *)
   apply_fresh* sub_all as X. apply_ih_bind* H0.
 Qed.
@@ -262,7 +262,7 @@ Lemma typing_inv_abs : forall E S1 e1 T,
 Proof.
   introv Typ. gen_eq e: (trm_abs S1 e1). gen S1 e1.
   induction Typ; intros S1 b1 EQ U1 U2 Sub; inversions EQ.
-  inversions* Sub. auto* (@sub_transitivity T).
+  inversions* Sub. autos* (@sub_transitivity T).
 Qed.
 
 Lemma typing_inv_tabs : forall E S1 e1 T,
@@ -279,7 +279,7 @@ Proof.
    exists T1. let L1 := gather_vars in exists L1.
    intros Y Fr. splits. 
     apply_empty* (@typing_narrowing S1). auto. 
-  auto* (@sub_transitivity T).
+  autos* (@sub_transitivity T).
 Qed. 
 
 (* ********************************************************************** *)
@@ -297,7 +297,7 @@ Proof.
      rewrite* (@subst_ee_intro X).
      apply_empty (@typing_through_subst_ee V).  
        apply* (@typing_sub S2). apply_empty* sub_weakening.
-       auto*.
+       autos*.
   (* case: tapp *)
   inversions Red; try solve [ apply* typing_tapp ].
   destruct~ (typing_inv_tabs Typ (U1:=T1) (U2:=T2)) as [P1 [S2 [L P2]]].
@@ -370,6 +370,6 @@ Proof.
       subst. exists* (open_te e3 T). 
       exists* (trm_tapp e1' T).
   (* case: sub *)
-  auto*.
+  autos*.
 Qed.
 

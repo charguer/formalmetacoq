@@ -1,6 +1,6 @@
 (***************************************************************************
 * Correctness of the CPS-transformation - Infrastructure                   *
-* Arthur Charguéraud, January 2009                                         *
+* Arthur Charguraud, January 2009                                         *
 ***************************************************************************)
 
 Set Implicit Arguments.
@@ -269,6 +269,12 @@ Proof.
   apply* close_var_notin.
 Qed. 
 
+(* ---------------------------------------------------------------------- *)
+(** ** Equal functions return equal results *)
+
+
+
+
 (* Close_var commutes with substitution for fresh names *)
 
 Lemma close_var_subst : forall x t z u, 
@@ -276,12 +282,14 @@ Lemma close_var_subst : forall x t z u,
   close_var x ([z~>u]t) = [z~>u](close_var x t).
 Proof.
   introv Fr Neq. unfold close_var. generalize 0.
-  induction t; intros i; simpl; fequals~. 
+  induction t; intros i; simpl; fequals~.
   case_var; case_var; simpl.
     case_var. rewrite~ close_var_fresh.
+    do 2 case_var~.
     case_var~.
     do 2 case_var~.
 Qed.
+
 (* Close_var and renaming *)
 
 Lemma close_var_rename : forall y x t,
@@ -461,7 +469,7 @@ Qed.
 Lemma eval_regular : forall t v,
   eval t v -> term t /\ term v.
 Proof.
-  induction 1; auto* value_regular.
+  induction 1; autos* value_regular.
 Qed.
 
 
@@ -477,6 +485,4 @@ Hint Extern 1 (term ?t) =>
   | H: eval t _ |- _ => apply (proj1 (eval_regular H))
   | H: eval _ t |- _ => apply (proj2 (eval_regular H))
   end.
-
-
 

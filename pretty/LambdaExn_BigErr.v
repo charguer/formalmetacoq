@@ -173,7 +173,7 @@ Lemma bigredh_lt : forall n n' t b,
   bigredh n t b -> n < n' -> bigredh n' t b.
 Proof.
   introv H. gen n'. induction H; introv L; 
-   (destruct n' as [|n']; [ false; math | auto* ]).
+   (destruct n' as [|n']; [ false; math | autos* ]).
 Qed.
 
 Lemma bigred_bigredh : forall t b,
@@ -235,7 +235,7 @@ Lemma bigred_bigdiv_exclusive : forall t b,
   bigred t b -> bigdiv t -> False.
 Proof.
   lets K: bigred_deterministic.
-  introv R. induction R; introv D; inverts D; auto*.
+  introv R. induction R; introv D; inverts D; autos*.
   forwards* M: K R1. inverts~ M.
    forwards* M: K R2. inverts~ M.
   forwards* M: K R. inverts~ M. false*.

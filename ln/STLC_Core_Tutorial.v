@@ -472,7 +472,7 @@ Tactic Notation "apply_fresh" constr(T) "as" ident(x) :=
 *)
 
 Tactic Notation "apply_fresh" "*" constr(T) "as" ident(x) :=
-  apply_fresh T as x; auto*.
+  apply_fresh T as x; autos*.
 Tactic Notation "apply_fresh" constr(T) :=
   apply_fresh_base T gather_vars ltac_no_arg.
 Tactic Notation "apply_fresh" "*" constr(T) :=
@@ -864,13 +864,13 @@ Qed.
 
 Lemma value_regular : forall e,
   value e -> term e.
-Proof. induction 1; auto*. Qed.
+Proof. induction 1; autos*. Qed.
 
 (** A reduction relation only holds on pairs of locally-closed terms. *)
 
 Lemma red_regular : forall e e',
   red e e' -> term e /\ term e'.
-Proof. induction 1; auto* value_regular. Qed.
+Proof. induction 1; autos* value_regular. Qed.
 
 (** The strength of automation comes from the following custom hints.
     They are easy to set up because the follow a very regular pattern.

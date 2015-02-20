@@ -64,7 +64,7 @@ Tactic Notation "apply_fresh" constr(T) "as" ident(x) :=
   apply_fresh_base T gather_vars x.
 
 Tactic Notation "apply_fresh" "*" constr(T) "as" ident(x) :=
-  apply_fresh T as x; auto*.
+  apply_fresh T as x; autos*.
 
 Hint Constructors term sto_ok value red.
 
@@ -200,7 +200,7 @@ Hint Resolve sto_ok_binds.
 Lemma typing_regular : forall E P e T,
   typing E P e T -> ok E /\ term e.
 Proof.
-  split; induction H; auto*.
+  split; induction H; autos*.
   pick_fresh y; forwards~ K: (H0 y). 
 Qed.
 
@@ -209,7 +209,7 @@ Qed.
 Lemma value_regular : forall e,
   value e -> term e.
 Proof.
-  induction 1; auto*.
+  induction 1; autos*.
 Qed.
 
 (** A reduction relation only holds only on well-formed objects. *)

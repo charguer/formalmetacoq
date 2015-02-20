@@ -87,13 +87,13 @@ Tactic Notation "apply_fresh" constr(T) :=
   apply_fresh_base T gather_vars ltac_no_arg.
 
 Tactic Notation "apply_fresh" "*" constr(T) :=
-  apply_fresh T; auto*.
+  apply_fresh T; autos*.
 
 Tactic Notation "apply_fresh" constr(T) "as" ident(X) :=
   apply_fresh_base T gather_vars X.
 
 Tactic Notation "apply_fresh" "*" constr(T) "as" ident(X) :=
-  apply_fresh T as X; auto*.
+  apply_fresh T as X; autos*.
 
 Hint Constructors term value red typing typings.
 
@@ -346,7 +346,7 @@ Lemma typing_regular : forall E e T,
 Proof.
   split; induction* H.
   pick_fresh x. forwards~ K: (H0 x). inversions* K.
-  auto* Pat_typing_regular.
+  autos* Pat_typing_regular.
 Qed.
 
 (** The value predicate only holds on locally-closed terms. *)
@@ -354,7 +354,7 @@ Qed.
 Lemma value_regular : forall e,
   value e -> term e.
 Proof.
-  induction 1; auto*. 
+  induction 1; autos*. 
 Qed.
 
 (** Pattern-matching regular. *)
@@ -369,7 +369,7 @@ Proof. unfolds* Pat_match. Qed.
 Lemma red_regular : forall e e',
   red e e' -> term e /\ term e'.
 Proof.
-  induction 1; auto* value_regular.
+  induction 1; autos* value_regular.
   destruct H1 as [? [[Eq ?] [? ?]]]. split~.
    apply~ open_terms. rewrite~ <- Eq.
 Qed.

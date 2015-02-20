@@ -223,7 +223,7 @@ Lemma redh_lt : forall n n' e o,
   redh n e o -> n < n' -> redh n' e o.
 Proof.
   introv H. gen n'. induction H; introv L; 
-   (destruct n' as [|n']; [ false; math | auto* ]).
+   (destruct n' as [|n']; [ false; math | autos* ]).
 Qed.
 
 Lemma red_redh : forall e o, 
@@ -261,7 +261,7 @@ Proof.
   gen v t. induction n using peano_induction.
   asserts IH: (forall m t v, redh m t v -> m < n -> bigred t v).
     intros. apply* H. clear H.
-  introv R. inverts R as; auto*. 
+  introv R. inverts R as; autos*. 
   introv R1 R2. inverts R2 as R2 R3. inverts* R3.
 Qed.
  

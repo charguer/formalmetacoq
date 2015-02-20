@@ -120,7 +120,7 @@ Tactic Notation "apply_fresh" constr(T) "as" ident(x) :=
   apply_fresh_base T gather_vars x.
 
 Tactic Notation "apply_fresh" "*" constr(T) "as" ident(x) :=
-  apply_fresh T as x; auto*.
+  apply_fresh T as x; autos*.
 
 
 (* ********************************************************************** *)
@@ -531,7 +531,7 @@ Qed.
 Lemma value_regular : forall e,
   value e -> term e.
 Proof.
-  induction 1; auto*.
+  induction 1; autos*.
 Qed.
 
 (** A reduction relation only holds on pairs of locally-closed terms. *)

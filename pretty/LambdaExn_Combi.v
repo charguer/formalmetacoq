@@ -336,7 +336,7 @@ Lemma credbeh_bigred : forall t b,
 Proof.
   introv (n&R). gen t b. induction n using peano_induction.
   asserts IH: (forall m t b, cred t (out_ter m b) -> m < n -> bigred t b).
-    auto*. clear H.
+    autos*. clear H.
   introv R. inverts R as; auto.
   introv R1 R2 [L2 L1]. inverts L2. inverts L1. inverts R2 as.
      introv A B. inverts A. inverts* B.

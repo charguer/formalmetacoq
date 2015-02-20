@@ -153,7 +153,7 @@ Tactic Notation "apply_fresh" "*" constr(T) :=
 Tactic Notation "apply_fresh" constr(T) "as" ident(x) :=
   apply_fresh_base T gather_vars x.
 Tactic Notation "apply_fresh" "*" constr(T) "as" ident(x) :=
-  apply_fresh T as x; auto*.
+  apply_fresh T as x; autos*.
 *)
 
 Hint Constructors trm.
@@ -316,8 +316,8 @@ Proof.
   unfold open, close_var. generalize 0. gen y.
   induction W; intros y Fr j; simpls.
   case_var; simple*. case_nat*.
-  auto*.
-  auto*.
+  autos*.
+  autos*.
   apply_fresh* term_abs as z.
    unfolds open. rewrite* close_var_rec_open.
 Qed.
@@ -499,7 +499,7 @@ Hint Rewrite
 Tactic Notation "calc_set" :=
   autorewrite with set.
 Tactic Notation "calc_set" "*" := 
-  calc_set; auto*.
+  calc_set; autos*.
 
 Lemma cps_fv : forall t t',
   cps t t' -> fv t' = fv t.

@@ -133,7 +133,7 @@ Tactic Notation "apply_fresh" constr(T) "as" ident(x) :=
   apply_fresh_base T gather_vars x.
 
 Tactic Notation "apply_fresh" "*" constr(T) "as" ident(x) :=
-  apply_fresh T as x; auto*.
+  apply_fresh T as x; autos*.
 
 Hint Constructors term.
 
@@ -204,7 +204,7 @@ Ltac cross :=
   rewrite subst_open_var; try cross.
 
 Tactic Notation "cross" "*" := 
-  cross; auto*.
+  cross; autos*.
 
 
 (* ********************************************************************** *)
@@ -306,7 +306,7 @@ Proof.
   unfold open, close_var. generalize 0. gen y.
   induction W; intros y Fr k; simpls.
   case_var; simpls*. case_nat*.
-  auto*.
+  autos*.
   apply_fresh* term_abs as z.
    unfolds open. rewrite* close_var_rec_open.
 Qed.
