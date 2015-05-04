@@ -95,7 +95,7 @@ Proof.
    as [P3_11 [P3_12 [EQ1 [R1 [L1 S1]]]]].
   destruct (beta_star_prod_any_inv Red2) 
    as [P3_21 [P3_22 [EQ2 [R2 [L2 S2]]]]].
-  subst. inversions EQ2.
+  subst. inversions EQ1.
   split. applys conv_from_beta_star_trans R1 R2.
   exists_fresh. intros x Fr.
    forwards~ K1: (S1 x). forwards~ K2: (S2 x). 
