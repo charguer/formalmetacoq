@@ -1,0 +1,59 @@
+
+(1) Download the TLC library.
+
+    git clone https://gforge.inria.fr/git/tlc/tlc.git ~/tlc
+
+(2) Compile the TLC library.
+      
+    cd ~/tlc/src
+    make
+
+(3) Configure the path to TLC.
+    Assume the current path to be  ~/formalmetacoq/pretty.
+    
+    cd ~/formalmetacoq/pretty
+
+    Create a file named "settings.sh" with the following line:
+      TLC=~/tlc/src/
+
+(4) If Coq 8.5 is not in your $PATH but in some other folder, 
+    add also the line:
+      COQBIN=~/softs/coq-8.5/bin/
+
+(5) Compile the files.
+
+    cd ~/formalmetacoq/pretty
+    make
+   
+(6) Open the files interactively using Coqide
+
+    ./open.sh CombiInterp.v &
+
+
+
+############################################################################
+# You can define your own path to COQBIN and to TLC by creating a file called
+# "settings.sh" and placing the right definitions into it, e.g.
+#
+# TLC=~/tlc/trunk/
+# COQBIN=/var/tmp/coq-8.5/bin/
+
+
+
+# TLC=~/tlc/trunk/
+# COQBIN=/var/tmp/coq-8.5/bin/
+
+
+
+*) requires Coq v8.3pl3 (8.3pl1 and 8.3pl2 probably also work).
+
+*) to compile all files, run
+     make -j
+
+*) to open one file interactively, run
+
+*) if you want to use a local installation of Coq, 
+   create a file called "settings.sh" in the current folder
+   and define in it the path to COQBIN, e.g. by writing:
+      COQBIN=/var/tmp/coq-8.3pl2/bin/
+
