@@ -7,6 +7,7 @@
 #
 # Note that COQBIN should be the same as that used to compile TLC.
 # Make sure to do "make clean" after any change to "settings.sh".
+#
 # You may add "TLC_DEPENDENCY=true" to include TLC sources in dependencies. 
 
 -include settings.sh

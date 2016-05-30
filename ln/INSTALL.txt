@@ -9,9 +9,9 @@
     make
 
 (3) Configure the path to TLC.
-    Assume the current path to be  ~/formalmetacoq/pretty.
+    Assume the current path to be  ~/formalmetacoq/ln.
     
-    cd ~/formalmetacoq/pretty
+    cd ~/formalmetacoq/ln
 
     Create a file named "settings.sh" with the following line:
       TLC=~/tlc/src/
@@ -28,6 +28,5 @@
 (6) Open the files interactively using CoqIDE.
     (For proof general, you'll need to adapt the script.)
 
-    ./open.sh Lambda_Pretty.v &
-
+    ./open.sh STLC_Core_Soundness.v &
 

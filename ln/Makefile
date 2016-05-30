@@ -8,6 +8,8 @@
 # Note that TLC should have no leading slash, whereas COQBIN should have one.
 # Note that if you rebind COQBIN you need to do the same in the TLC folder.
 # Note that if you add a settings.sh file, you will need to do "make depend".
+#
+# You may add "TLC_DEPENDENCY=true" to include TLC sources in dependencies. 
 
 # Default paths are as follows:
 
@@ -124,8 +126,16 @@ EXPERIMENTAL= $(MUT) $(PATOPEN)
 ############################################################################
 
 ALL_SRC=$(ALL:=.v)
-TLC_SRC=$(wildcard $(TLC)/*.v)
+
+TLC_SRC=
+ifdef TLC_DEPENDENCY
+	TLC_SRC=$(wildcard $(TLC)/*.v)
+endif
+
 DEP_SRC=$(ALL_SRC) $(TLC_SRC)
+
+
+############################################################################
 
 .PHONY: all tlc clean 
 .SUFFIXES: .v .vo 
@@ -167,9 +177,12 @@ ifeq ($(findstring $(MAKECMDGOALS),depend clean),)
 include .depend
 endif
 
-clean :
+clean:
 	rm -f *.vo .depend *.deps *.dot *.glob
+
+clean_tlc:
 	@rm -f $(TLC)/*.vo $(TLC)/*.glob $(TLC)/*.v.d || echo ok  
+
 
 ############################################################################
 #
