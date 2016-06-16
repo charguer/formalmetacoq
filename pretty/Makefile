@@ -7,13 +7,12 @@
 #
 # Note that COQBIN should be the same as that used to compile TLC.
 # Make sure to do "make clean" after any change to "settings.sh".
-# You may add "TLC_DEPENDENCY=true" to include TLC sources in dependencies. 
 
 -include settings.sh
 
 #######################################################
 
-DEV_LAMBDA=\
+DEV_LAMBDA :=\
 	Lambda_Syntax \
 	Lambda_Big \
 	Lambda_Pretty \
@@ -26,21 +25,21 @@ DEV_LAMBDA=\
 	Lambda_Typing_CombiErr_Sound 
  #	Lambda_Trace \
 
-DEV_LAMBDAEXN=\
+DEV_LAMBDAEXN :=\
 	LambdaExn_Syntax \
 	LambdaExn_Big \
 	LambdaExn_Pretty \
 	LambdaExn_Combi 
 
 
-DEV_LAMBDAEXNERR=\
+DEV_LAMBDAEXNERR :=\
 	LambdaExn_Interp \
 	LambdaExn_CombiErr \
 	LambdaExn_BigErr \
 	LambdaExn_Interp_CombiErr_Match \
 	LambdaExn_Interp_BigErr_Match
 
-DEV_CORECAML=\
+DEV_CORECAML :=\
 	CoreCaml_Syntax \
 	CoreCaml_Pretty \
 	CoreCaml_Small \
@@ -48,7 +47,7 @@ DEV_CORECAML=\
 
 #	CoreCaml_Interp \
 
-DEV_LAMBDAEXNSUM=\
+DEV_LAMBDAEXNSUM :=\
 	LambdaExnSum_Syntax \
 	LambdaExnSum_Pretty \
 	LambdaExnSum_Combi \
@@ -60,14 +59,14 @@ DEV_LAMBDAEXNSUM=\
 #	LambdaExnSum_EncodeExn_Combi_Correct \
 #	LambdaExnSum_EncodeExn_Small_Correct \
 
-DEV_COMMAND=\
+DEV_COMMAND :=\
 
 #	Command_Syntax \
 #	Command_Pretty \
 #	Command_Small \
 
 # TODO: sort at the end
-DEV_BASE=\
+DEV_BASE :=\
 	Common \
 	$(DEV_CORECAML) \
 	$(DEV_COMMAND) \
@@ -81,14 +80,11 @@ DEV_BASE=\
 
 #######################################################
 
-DEV_SRC=$(DEV_BASE:=.v)
+PWD := $(shell pwd)
 
-TLC_SRC=
-ifdef TLC_DEPENDENCY
-	TLC_SRC=$(wildcard $(TLC)/*.v)
-endif
+V := $(addprefix $(PWD)/, $(DEV_BASE:=.v))
 
-FILES=$(DEV_SRC) $(TLC_SRC)
+V_AUX := $(wildcard $(TLC)/*.v)
 
 
 ##############################################################
@@ -96,8 +92,8 @@ FILES=$(DEV_SRC) $(TLC_SRC)
 
 all: proof
 
-V := $(FILES)
-COQINCLUDE := -R $(TLC) TLC -R . PRETTY 
+COQINCLUDE := -R $(TLC) TLC -R $(PWD) PRETTY 
+
 include $(TLC)/Makefile.coq
 
 

@@ -144,7 +144,7 @@ Proof.
   rewrite <- (add_zero x). rewrite (add_zero x).
   constructor. apply IH.
 Qed.
-Print bisim_refl_5.
+(*Print bisim_refl_5.*)
 
 Lemma bisim_refl_5a : forall s, bisim s s.
 Proof.
@@ -152,7 +152,7 @@ Proof.
   sets_eq s'': s'. subst s''.
   apply IH.
 Qed.
-Print bisim_refl_5a.
+(*Print bisim_refl_5a.*)
 
 
 (** Proof of reflexivity via tactic, using [eq_rect] *)
@@ -416,3 +416,6 @@ Admitted.
 
 
 
+(*
+
+*)
