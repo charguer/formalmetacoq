@@ -2,11 +2,18 @@
 # You can define your own path to COQBIN and to TLC by creating a file called
 # "settings.sh" and placing the right definitions into it, e.g.
 #
-# TLC=~/tlc/trunk/
-# COQBIN=/var/tmp/coq-8.5/bin/
+# TLC=~/tlc/src/
+# COQBIN=~/softs/coq-8.5/bin/
 #
-# Note that COQBIN should be the same as that used to compile TLC.
-# Make sure to do "make clean" after any change to "settings.sh".
+# Note that TLC should have no leading slash, whereas COQBIN should have one.
+# Note that if you rebind COQBIN you need to do the same in the TLC folder.
+# Note that if you add a settings.sh file, you will need to do "make depend".
+#
+
+# Default paths are as follows:
+
+TLC=tlc
+COQBIN=
 
 -include settings.sh
 
@@ -109,7 +116,6 @@ MUT :=\
 	STLC_Mut_Soundness
 
 EXPERIMENTAL := $(MUT) $(PATOPEN)
-
 
 
 #######################################################

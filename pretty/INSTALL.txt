@@ -1,0 +1,33 @@
+
+(1) Download the TLC library.
+
+    git clone https://gforge.inria.fr/git/tlc/tlc.git ~/tlc
+
+(2) Compile the TLC library.
+      
+    cd ~/tlc/src
+    make
+
+(3) Configure the path to TLC.
+    Assume the current path to be  ~/formalmetacoq/pretty.
+    
+    cd ~/formalmetacoq/pretty
+
+    Create a file named "settings.sh" with the following line:
+      TLC=~/tlc/src/
+
+(4) If Coq 8.5 is not in your $PATH but in some other folder, 
+    add also the line:
+      COQBIN=~/softs/coq-8.5/bin/
+
+(5) Compile the files.
+
+    cd ~/formalmetacoq/pretty
+    make
+   
+(6) Open the files interactively using CoqIDE.
+    (For proof general, you'll need to adapt the script.)
+
+    ./open.sh Lambda_Pretty.v &
+
+
