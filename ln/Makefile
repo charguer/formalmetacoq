@@ -132,6 +132,7 @@ V_AUX := $(wildcard $(TLC)/*.v)
 
 all: proof
 
+COQFLAGS := -W -implicit-core-hint-db,-undeclared-scope
 COQINCLUDE := -R $(TLC) TLC -R $(PWD) LN 
 
 include $(TLC)/Makefile.coq
