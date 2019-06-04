@@ -411,7 +411,7 @@ Require Import LibWf.
 Lemma cps_fix : forall t, 
   cps t = Cps cps t.
 Proof.
-  applys~ (FixFun_fix (measure trm_size)). applys measure_wf.
+  applys~ (FixFun_fix (measure trm_size)). applys wf_measure.
   intros f1 f2 t IH. unfolds measure.
   unfolds. destruct t; simpl in IH; fequals.
   do 2 (rewrite IH; try math). auto.

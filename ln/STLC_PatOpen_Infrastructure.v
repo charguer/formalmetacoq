@@ -458,7 +458,7 @@ Proof.
   intros ys. induction ys; try destruct IHys; split; simple~.
 Qed.
 
-Implicit Arguments fresh_length [xs L n].
+Arguments fresh_length [xs] [L] [n].
 
 Lemma red_regular : forall e e',
   red e e' -> term e /\ term e'.

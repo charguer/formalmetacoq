@@ -510,7 +510,7 @@ Proof.
    destruct (eq_push_inv H0) as [? [? ?]]. subst~. 
 Qed.
 
-Implicit Arguments wf_left [E F].
+Arguments wf_left [E] [F].
 
 
 (* ********************************************************************** *)

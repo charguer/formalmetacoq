@@ -88,7 +88,7 @@ Inductive bag (A:Type) : Type :=
   | bag_one : A -> bag A
   | bag_concat : bag A -> bag A -> bag A.
 
-Implicit Arguments bag_empty [[A]].
+Arguments bag_empty {A}.
 
 Fixpoint bag_fold (A B:Type) (f:B->A->B) (i:B) (b:bag A) : B :=
   match b with

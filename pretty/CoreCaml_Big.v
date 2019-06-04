@@ -107,7 +107,7 @@ Inductive binary_pure : prim -> val -> val -> beh -> Prop :=
       binary_pure prim_mul n1 n2 (n1*n2) 
   | binary_pure_div_notzero : forall n1 n2,
       n2 <> 0 ->
-      binary_pure prim_div n1 n2 (Zdiv n1 n2) 
+      binary_pure prim_div n1 n2 (Z.div n1 n2) 
   | binary_pure_div_zero : forall n1 n2,
       binary_pure prim_div n1 0 (beh_exn (val_exn constr_div_by_zero)).
 

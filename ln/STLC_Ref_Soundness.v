@@ -114,13 +114,13 @@ Proof.
   exists P. splits~ 3. 
     inversions Typ. 
      destruct~ ((proj33 TypSto) l T) as [t [Hast Typt]].
-     rewrite~ (binds_func H4 Hast).
+     rewrite~ (binds_functional H4 Hast).
   pres IHTyp t1' mu'. exists* P'. 
   exists P. inversions Typ1. splits~ 3.
     destruct TypSto as [StoOk [Dom Map]]. splits~ 3.
      intros. tests: (l = l0). 
-       exists t2. split~. rewrite~ (binds_func H H6).
-       destruct (Map _ _ H) as [t [Has Typ]]. exists* t.  
+       exists t2. split~. rewrite~ (binds_functional H H6).
+       destruct (Map _ _ H) as [t [Has Typ]]. exists* t.
   pres IHTyp1 t1' mu'. exists* P'. 
   pres IHTyp2 t2' mu'. exists* P'.
 Qed.
@@ -147,14 +147,14 @@ Proof.
      exists* (trm_loc l) (mu & l ~ t1).
     exists* (trm_ref t1') mu'. 
   right. destruct~ IHTyp as [Val1 | [t1' [mu' Red1]]].
-    inversions Val1; inversions Typ.  
-     destruct ((proj33 H0) _ _ H5) as [t' [Has' Typt']].
+    inversions Val1; inversions Typ.
+     destruct ((proj33 H) _ _ H5) as [t' [Has' Typt']].
      exists* t' mu.
     exists* (trm_get t1') mu'.
-  right. destruct~ IHTyp1 as [Val1 | [t1' [mu' Red1]]]. 
+  right. destruct~ IHTyp1 as [Val1 | [t1' [mu' Red1]]].
     destruct~ IHTyp2 as [Val2 | [t2' [mu' Red2]]].
-      inversions Val1; inversions Typ1.  
-       destruct ((proj33 H0) _ _ H5) as [t' [Has' Typt']].
+      inversions Val1; inversions Typ1.
+       destruct ((proj33 H) _ _ H5) as [t' [Has' Typt']].
        exists* trm_unit (mu & l ~ t2). 
       exists* (trm_set t1 t2') mu'. 
     exists* (trm_set t1' t2) mu'.

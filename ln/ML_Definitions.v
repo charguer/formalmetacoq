@@ -26,7 +26,7 @@ Inductive typ : Set :=
 
 Definition typ_def := typ_unit.
 Instance typ_inhab : Inhab typ.
-Proof. intros. apply (prove_Inhab typ_unit). Defined.
+Proof. intros. apply (Inhab_of_val typ_unit). Defined.
 
 (** Computing free variables of a type.
     Needed to say that typ_exn is closed
@@ -182,7 +182,7 @@ Inductive trm : Set :=
 
 Definition trm_def := trm_unit.
 Instance trm_inhab : Inhab trm.
-Proof. intros. apply (prove_Inhab trm_unit). Defined.
+Proof. intros. apply (Inhab_of_val trm_unit). Defined.
 
 (** Arity of a pattern. *)
 

@@ -22,7 +22,7 @@ Inductive trm : Set :=
   | trm_abs  : trm -> trm.
 
 Instance trm_inhab : Inhab trm.
-Proof. intros. apply (prove_Inhab (trm_bvar 0)). Qed.
+Proof. intros. apply (Inhab_of_val (trm_bvar 0)). Qed.
 
 
 (* ********************************************************************** *)

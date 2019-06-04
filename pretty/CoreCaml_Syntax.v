@@ -127,7 +127,7 @@ Parameter substs : forall (i:inst) (t:trm), trm.
 (** [val] is inhabited *)
 
 Instance val_inhab : Inhab val.
-Proof. intros. apply (prove_Inhab (val_cst (cst_bool true))). Qed.
+Proof. intros. apply (Inhab_of_val (val_cst (cst_bool true))). Qed.
 
 (** Shortnames for lists of terms and values *)
 

@@ -97,7 +97,7 @@ Ltac neq_any :=
         | false x2_neq_x3; assumption ].
 
 Ltac simpl_subst :=
-  repeat (case_if; try neq_any; try imp_any).
+  repeat (case_if; subst; try neq_any; try imp_any).
 
 Lemma tr_val_subst : forall x v t, 
   fresh (trm_vars not_used t \u \{x}) 3 L ->

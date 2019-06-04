@@ -204,7 +204,7 @@ Lemma subst_id : forall f x v t,
   subst x v t = t. 
 Proof.
   induction t; introv F; simpls; fequals~.
-  case_if*. notin_false.
+  case_if*. subst. notin_false.
   case_if*. applys IHt. destruct f; simpls~.
    applys~ notin_remove_inv F.
 Qed.

@@ -169,7 +169,7 @@ Admitted.
 Hint Resolve red_not_div.
 
 Instance trm_inhab : Inhab trm.
-Proof. applys prove_Inhab (trm_val (val_int 0)). Qed.
+Proof. applys Inhab_of_val (trm_val (val_int 0)). Qed.
 
 Definition trm_of_out o : trm :=
   match o with

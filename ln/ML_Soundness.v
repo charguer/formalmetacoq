@@ -25,7 +25,7 @@ Lemma pat_typing_typ_subst : forall Z U Us p T,
   Us \= p ~: T ->
   LibList.map (typ_subst Z U) Us \= p ~: typ_subst Z U T.
 Proof.
-  induction 1; simpls*. rew_map; auto. rew_map; auto.
+  induction 1; simpls*. rew_listx; auto. rew_listx; auto.
 Qed.  
 
 (* ********************************************************************** *)
@@ -220,10 +220,10 @@ Lemma typing_trm_substs : forall Us E P xs ts t T,
 Proof.
   introv EQ Typts Typt Val. gen Us ts t T.
   induction xs; destruct ts; intros; tryfalse.
-  inversions Typts. inversions Val. rew_map in Typt. 
+  inversions Typts. inversions Val. rew_listx in Typt. 
    rewrite singles_nil,concat_empty_r in Typt. auto.
-  rew_length in EQ. inverts EQ as EQ.
-   inversions Typts. inversions Val. rew_map in Typt. 
+  rew_list in EQ. inverts EQ as EQ.
+   inversions Typts. inversions Val. rew_listx in Typt. 
    rewrite singles_cons in Typt. rewrite concat_assoc in Typt.
    simpl. apply* (@IHxs Us0).
    apply_empty* typing_trm_subst. 
@@ -366,7 +366,7 @@ Proof.
    inversions Typ1.
    pick_fresh f. pick_fresh x. rewrite~ (@substs_intro (x::f::nil)).
     apply_empty* (@typing_trm_substs (S::(typ_arrow S T)::nil)).
-      rew_map. do 2 rewrite singles_cons. rewrite singles_nil.
+      rew_listx. do 2 rewrite singles_cons. rewrite singles_nil.
        rewrite concat_empty_l. applys* H8.
       do 2 rewrite trm_fv_list_cons. rewrite trm_fv_list_nil. auto.
   exists P. splits~ 3. inversions Typ1. inversions* H4.
@@ -382,12 +382,12 @@ Proof.
   exists P. splits~ 3. 
    inversions Typ. 
    destruct~ ((proj44 TypSto) l T) as [t [Hast Typt]].
-   rewrite~ (binds_func H4 Hast).
+   rewrite~ (binds_functional H4 Hast).
   pres IHTyp t1' mu'. exists* P'.
   exists P. inversions Typ1. splits~ 3. 
    destruct TypSto as [PhiOk [StoOk [Dom Map]]]. splits~ 4.
     intros. tests: (l = l0). 
-      exists t2. split~. rewrite~ (binds_func H H7).
+      exists t2. split~. rewrite~ (binds_functional H H7).
       destruct (Map _ _ H) as [t [Has Typ]]. exists* t.  
   pres IHTyp1 t1' mu'. exists* P'.
   pres IHTyp2 t2' mu'. exists* P'.
@@ -437,7 +437,7 @@ Proof.
       inversions Typ1; inversion Val1. 
         branch 3. exists* (t0 ^^ (t2::nil)) mu.
         branch 3. exists* (t0 ^^ (t2::(trm_fix t0)::nil)) mu. 
-        branch 3. subst. inversions H. inversions Val2; inversions Typ2. 
+        branch 3. subst. inversions H1. inversions H0. inversions Val2; inversions Typ2. 
            exists* (trm_nat (n + n0)) mu.
            inversions H5.
         branch 1. inversions Val2; inversions Typ2. 
@@ -471,7 +471,7 @@ Proof.
   destruct~ IHTyp as [Val1 | [[e Fail] | [t1' [mu' Red1]]]].
     inversions Val1; inversions Typ.
       inversion H4.  
-      destruct ((proj44 H0) _ _ H6) as [t' [Has' Typt']].
+      destruct ((proj44 H) _ _ H6) as [t' [Has' Typt']].
        branch 3. exists* t' mu.
     branch 2. exists* e.
     branch 3. exists* (trm_get t1') mu'.
@@ -479,7 +479,7 @@ Proof.
     destruct~ IHTyp2 as [Val2 | [[e Fail] | [t2' [mu' Red2]]]].
       inversions Val1; inversions Typ1.  
         inversion H4.
-        destruct ((proj44 H0) _ _ H6) as [t' [Has' Typt']].
+        destruct ((proj44 H) _ _ H6) as [t' [Has' Typt']].
          branch 3. exists* trm_unit (mu & l ~ t2).
       branch 2. exists* e. 
       branch 3. exists* (trm_set t1 t2') mu'. 

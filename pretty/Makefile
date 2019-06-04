@@ -68,6 +68,7 @@ DEV_COMMAND :=\
 # TODO: sort at the end
 DEV_BASE :=\
 	Common \
+	LibHeap \
 	$(DEV_CORECAML) \
 	$(DEV_COMMAND) \
 	$(DEV_LAMBDAEXNSUM) \

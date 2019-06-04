@@ -229,7 +229,7 @@ Proof.
   simpl. simpl_subst.
   rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ].
   applys* bigred_tr_bind_ret. simpl. simpl_subst.
-  subst v1. applys bigred_abs_beta'. fold tr_trm.
+  try subst v1. applys bigred_abs_beta'. fold tr_trm.
   asserts~ Fr1: (fresh (trm_vars not_used t1) 3 L).
   forwards M1: fresh_bigred R1 Fr1. simpl in M1.
   asserts~ Fr2: (fresh (trm_vars not_used t2) 3 L).
@@ -305,7 +305,7 @@ Proof.
   simpl. simpl_subst.
   rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ].
   applys* bigdiv_tr_bind_ret. simpl. simpl_subst.
-  subst v1. applys bigdiv_abs_beta'. fold tr_trm.
+  try subst v1. applys bigdiv_abs_beta'. fold tr_trm.
   asserts~ Fr1: (fresh (trm_vars not_used t1) 3 L).
   forwards M1: fresh_bigred R1 Fr1. simpl in M1.
   asserts~ Fr2: (fresh (trm_vars not_used t2) 3 L).

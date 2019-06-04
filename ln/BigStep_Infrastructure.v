@@ -34,7 +34,8 @@ Notation "[ z ~> u ] t" := (subst z u t) (at level 68).
 
 Notation "{ k ~> u } t" := (open_rec k u t) (at level 67)
   : infrastructure_scope.
-Open Local Scope infrastructure_scope.
+
+Local Open Scope infrastructure_scope.
 
 
 (* ********************************************************************** *)

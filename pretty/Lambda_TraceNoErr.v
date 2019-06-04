@@ -129,7 +129,7 @@ Proof. introv H. induction* H. Qed.
 (** Proof that [cored] on a finite trace implies [red] *)
 
 Hint Extern 1 (length _ < length _) =>
-   unfold one_step; rew_length; math.
+   unfold one_step; rew_list; math.
 
 
 Theorem cored_ter_red : forall f e v,

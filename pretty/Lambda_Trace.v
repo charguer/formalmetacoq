@@ -191,7 +191,7 @@ Lemma trans_sim_core : forall P L i,
   coredn (length L) (trans P) (trans L) i.
 Proof.
   cofix IH. introv H.
-  inverts H; rew_length; simpl.
+  inverts H; rew_list; simpl.
   constructors*.
   applys* coredn_epsilon.
   constructors*.
@@ -387,7 +387,7 @@ Proof. introv H. induction* H. Qed.
 (** Proof that [cored] on a finite trace implies [red] *)
 
 Hint Extern 1 (length _ < length _) =>
-   unfold one_step; rew_length; math.
+   unfold one_step; rew_list; math.
 
 (*
 Theorem cored_ter_red : forall f e v,

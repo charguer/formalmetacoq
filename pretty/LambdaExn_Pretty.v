@@ -246,14 +246,14 @@ Qed.
 Corollary cored_not_diverge_red : forall e o,
   cored e o -> ~ diverge e -> red e o.
 Proof.
-  introv C D. apply not_not_elim. intros R.
+  introv C D. apply not_not_inv. intros R.
   apply D. applys* cored_not_red_diverge. 
 Qed. 
 
 Corollary cored_to_diverge_or_red : forall e o,
   cored e o -> diverge e \/ red e o.
 Proof.
-  introv C. apply classic_left. intros.
+  introv C. apply or_classic_l. intros.
   applys* cored_not_red_diverge.
 Qed.
 

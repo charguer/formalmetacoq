@@ -6,9 +6,6 @@
 Set Implicit Arguments.
 Require Export Command_Syntax.
 
-Axiom skipT : forall (A:Type), A.
-Implicit Arguments skipT [[A]].
-
 Implicit Types h : heap.
 Implicit Types s : stack.
 Implicit Types n : int.
@@ -18,9 +15,7 @@ Implicit Types a : act.
 Implicit Types c : cmd.
 Implicit Types p : prog.
 
-
 Definition novar := O.
-
 
 
 (*==========================================================*)

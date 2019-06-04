@@ -49,7 +49,7 @@ CoInductive colist (A:Type) : Type :=
   | colist_nil : colist A
   | colist_cons : A -> colist A -> colist A.
 
-Implicit Arguments colist_nil [[A]].
+Arguments colist_nil {A}.
 
 Notation "x :::: s" := (colist_cons x s) (at level 30, right associativity).
 
@@ -125,14 +125,14 @@ Inductive colist_finite (A:Type) : colist A -> Prop :=
       colist_finite s ->
       colist_finite (x::::s).
 
-Implicit Arguments colist_finite [[A]].
+Arguments colist_finite {A}.
 
 CoInductive colist_infinite (A:Type) : colist A -> Prop :=
   | colist_infinite_cons : forall x s,
       colist_infinite s ->
       colist_infinite (x::::s).
 
-Implicit Arguments colist_infinite [[A]].
+Arguments colist_infinite {A}.
 
 Hint Constructors colist_finite.
 
@@ -142,7 +142,7 @@ Proof. unfolds~ colist_one. Qed.
 
 Hint Resolve colist_finite_one.
 
-Implicit Arguments colist_append [A].
+Arguments colist_append [A].
 
 Notation "'cnil'" := (colist_nil).
 
@@ -249,7 +249,9 @@ CoInductive bisimilar (A:Type) : binary (stream A) :=
 
 (** Bisimilarity modulo Leibnitz *)
 
-Notation "x === y" := (bisimilar x y) (at level 68).
+(* Declare Scope bisimilar_scope. *)
+Notation "x === y" := (bisimilar x y) (at level 68) : bisimilar_scope.
+Open Scope bisimilar_scope.
 
 (** Bisimilarity is an equivalence *)
 

@@ -77,7 +77,7 @@ Parameter substs : forall (i:inst) (t:trm), trm.
 (** [val] is inhabited *)
 
 Instance val_inhab : Inhab val.
-Proof. intros. apply (prove_Inhab (val_cst (cst_bool true))). Qed.
+Proof. intros. apply (Inhab_of_val (val_cst (cst_bool true))). Qed.
 
 (** Coercions *)
 (*
@@ -338,7 +338,7 @@ Inductive step : binary conf :=
   | step_binary_div_notzero : forall n1 n2 m,
       n2 <> 0 ->
       (trm_binary prim_div n1 n2) / m ---> 
-      (Zdiv n1 n2) / m
+      (Z.div n1 n2) / m
   | step_binary_div_zero : forall n1 n2 m,
       (trm_binary prim_div n1 0) / m ---> 
       (trm_error constr_div_by_zero) / m

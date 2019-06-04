@@ -178,7 +178,7 @@ End BigredInd.
 Hint Constructors red.
 
 Instance val_Inhab : Inhab val.
-Proof. apply (prove_Inhab (val_int 0)). Qed.
+Proof. apply (Inhab_of_val (val_int 0)). Qed.
 
 Instance loc_Comparable : Comparable loc.
 (*Proof. constructor ; apply eq_nat_dec. Qed.*)

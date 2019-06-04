@@ -92,7 +92,7 @@ Lemma typing_prod_inv : forall E U T P,
 Proof.
   introv Typ. gen_eq P1: (trm_prod U T). 
   induction Typ; intros; subst; tryfalse.
-  inversions H2. exists* i k.
+  inversions EQP1. exists* i k.
   destruct~ IHTyp1 as [i' [k' [EQi [TypU [Univ [L TypT]]]]]].
   exists i' k'. autos* (@less_trans T0).
 Qed.
@@ -105,7 +105,7 @@ Lemma typing_abs_inv : forall E V t P,
 Proof.
   introv Typ. gen_eq u: (trm_abs V t).
   induction Typ; intros; subst; tryfalse.
-  inversions H1. exists* T i.
+  inversions EQu. exists* T i.
   destruct~ IHTyp1 as [T' [i' [TypP [LeP [L TypB]]]]].
   exists T' i'. autos* (@less_trans T).
 Qed.

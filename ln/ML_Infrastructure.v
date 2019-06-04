@@ -238,7 +238,7 @@ Proof. intros. unfold typ_fv_list. rew_list~. Qed.
 Lemma typ_fv_list_app : forall ts1 ts2,
   typ_fv_list (ts1 ++ ts2) = typ_fv_list ts1 \u typ_fv_list ts2.
 Proof.
-  induction ts1; intros; rew_app.
+  induction ts1; intros; rew_list.
   rewrite* union_empty_l.
   rewrite typ_fv_list_cons. rewrite IHts1. rewrite* union_assoc.
 Qed.
@@ -254,7 +254,7 @@ Proof. intros. unfold trm_fv_list. rew_list~. Qed.
 Lemma trm_fv_list_app : forall ts1 ts2,
   trm_fv_list (ts1 ++ ts2) = trm_fv_list ts1 \u trm_fv_list ts2.
 Proof.
-  induction ts1; intros; rew_app.
+  induction ts1; intros; rew_list.
   rewrite* union_empty_l.
   rewrite trm_fv_list_cons. rewrite IHts1. rewrite* union_assoc.
 Qed.
@@ -281,7 +281,7 @@ Lemma typings_concat : forall E P ts1 Us1 ts2 Us2,
   typings E P (ts1++ts2) (Us1++Us2).
 Proof.
   induction ts1; introv Typ1 Typ2; inversions Typ1; simpls*.
-  rew_app; autos*.
+  rew_list; autos*.
 Qed.
 
 
@@ -328,7 +328,7 @@ Lemma subst_fresh_list : forall z u ts,
   z \notin trm_fv_list ts ->
   ts = LibList.map (trm_subst z u) ts.
 Proof.
-  induction ts; intros Fr; rew_map.
+  induction ts; intros Fr; rew_listx.
   auto. rewrite trm_fv_list_cons in Fr. 
    fequal. rewrite~ subst_fresh. auto.
 Qed.
@@ -375,7 +375,7 @@ Lemma subst_open_vars : forall x ys u t,
 Proof.
   introv Fr Tu. rewrite* subst_open. 
   unfold trm_fvars. f_equal.
-  induction ys; rew_map. auto.
+  induction ys; rew_listx. auto.
   rew_list in Fr. simpl in Fr. destruct Fr.
    simpl. case_var. f_equal*.
 Qed.
@@ -393,7 +393,7 @@ Proof.
    destruct Tu; destruct us; tryfalse. simpl; auto.
   inversions H0. rew_list in Fr. simpl in Fr. destruct Fr as [Fra Frxs].
   rew_list in H. simpl in H. inverts H.
-  simpl. rewrite app_last. rewrite trm_fvars_cons.
+  simpl. rewrite app_cons_r. rewrite trm_fvars_cons.
   rewrite trm_fv_list_cons in Frxs,Fra.
   forwards K: (IHxs us (vs++t0::nil)); clear IHxs.
     rewrite trm_fv_list_app. rewrite trm_fv_list_cons. rewrite~ trm_fv_list_nil.
@@ -401,7 +401,7 @@ Proof.
     split~. inversions Tv. apply* Forall_app.
   rewrite K. clear K. 
   f_equal. rewrite~ subst_open. rewrite~ subst_fresh.
-  f_equal. rew_map. simpl. case_var; tryfalse.
+  f_equal. rew_listx. simpl. case_var; tryfalse.
   f_equal. apply~ subst_fresh_list.
   f_equal. apply* subst_fresh_trm_fvars.
 Qed.
@@ -594,7 +594,7 @@ Proof.
   induction ts; simpl; intros Fr.
   auto.
   rewrite typ_fv_list_cons in Fr.
-   rew_map. f_equal. rewrite~ typ_subst_fresh. auto.
+   rew_listx. f_equal. rewrite~ typ_subst_fresh. auto.
 Qed.
 
 Lemma typ_subst_fresh_trm_fvars : forall z u xs,
@@ -603,9 +603,9 @@ Lemma typ_subst_fresh_trm_fvars : forall z u xs,
 Proof.
   intros. apply typ_subst_fresh_list.
   induction xs.
-  unfold typ_fvars. rew_map. rewrite~ typ_fv_list_nil. 
-  unfold typ_fvars. rew_map. 
-   rew_length in H. simpl in H. destruct H.
+  unfold typ_fvars. rew_listx. rewrite~ typ_fv_list_nil. 
+  unfold typ_fvars. rew_listx. 
+   rew_list in H. simpl in H. destruct H.
    rewrite typ_fv_list_cons. simple~.
 Qed.
 
@@ -641,8 +641,8 @@ Proof.
   rewrite* typ_subst_open. f_equal.
   induction Ys.
   auto.
-  rew_length in Fr. simpl in Fr. destruct Fr.
-   unfold typ_fvars. rew_map. simpl. case_var. f_equal*.
+  rew_list in Fr. simpl in Fr. destruct Fr.
+   unfold typ_fvars. rew_listx. simpl. case_var. f_equal*.
 Qed.
 
 (** Opening up an abstraction of body t with a term u is the same as opening
@@ -657,16 +657,16 @@ Proof.
   induction Xs; introv Fr Tu Tv.
   destruct Us. auto. inverts Tu; false.
   destruct Us. inverts Tu; false. simpl. 
-  destruct Tu as [E M]. rew_length in *. simpl in Fr. inverts Fr.
+  destruct Tu as [E M]. rew_list in *. simpl in Fr. inverts Fr.
   rewrite typ_fv_list_cons in *. rewrite typ_fvars_cons.
-  inversions M. rewrite app_last.
+  inversions M. rewrite app_cons_r.
   forwards K: (IHXs Us (Vs++t::nil)); clear IHXs.
      rewrite typ_fv_list_app. rewrite typ_fv_list_cons. rewrite~ typ_fv_list_nil.
     auto. 
     split~. inversions Tv. apply* Forall_app.  
   rewrite K. clear K. 
   f_equal. rewrite~ typ_subst_open. rewrite~ typ_subst_fresh.
-  f_equal. rew_map. simpl. case_var; tryfalse.
+  f_equal. rew_listx. simpl. case_var; tryfalse.
   f_equal. apply~ typ_subst_fresh_list.
   f_equal. apply* typ_subst_fresh_trm_fvars.
 Qed.
@@ -710,8 +710,8 @@ Proof.
   unfold types, list_for_n.
   induction Ts; destruct n; simpl; intros TU [EQ TT]. 
   auto. auto. inversion EQ.
-  rew_length in EQ. rew_list. inversions TT. 
-   forwards [M ?]: (IHTs n). auto. auto. rewrite~ M. 
+  rew_list in EQ. rew_listx. inversions TT. 
+   forwards [M ?]: (IHTs n). auto. auto. rewrite~ M.
 Qed.
 
 (** ** Opening a body with a list of types gives a type *)
@@ -814,8 +814,8 @@ Lemma factorize_map : forall Z U xs Us,
  = (map (sch_subst Z U) (xs ~* (LibList.map (Sch 0) Us))).
 Proof.
   induction xs; introv E; destruct Us; tryfalse.
-  rew_map. rewrite singles_nil. rewrite~ map_empty.
-  rew_length in E. inverts E. do 2 rewrite LibList.map_cons.
+  rew_listx. rewrite singles_nil. rewrite~ map_empty.
+  rew_list in E. inverts E. do 2 rewrite LibList.map_cons.
   rewrite map_cons. do 2 rewrite singles_cons.
   rewrite map_push. fequals~. 
 Qed.
@@ -909,7 +909,7 @@ Lemma red_regular : forall c c',
   /\ (sto_ok (snd c) /\ sto_ok (snd c')).
 Proof.
   lets: value_regular. induction 1; simpl; jauto.
-  splits_all~. forwards~ K: pat_match_terms H4.
+  repeat splits~. forwards~ K: pat_match_terms H4.
    rewrite (proj1 K) in H2, K. apply* open_terms.
   lets: (fails_regular H2). jauto.
 Qed.
@@ -918,7 +918,7 @@ Qed.
 
 Lemma pat_typing_arity : forall Us p T,
   Us \= p ~: T -> length Us = pat_arity p.
-Proof. introv H. induction H; rew_length; simpl; auto. Qed.
+Proof. introv H. induction H; rew_list; simpl; auto. Qed.
 
 Lemma pat_typing_arity_elim : forall xs Us p T L,
   Us \= p ~: T -> fresh L (pat_arity p) xs -> length xs = length Us.
