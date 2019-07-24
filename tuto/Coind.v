@@ -167,7 +167,7 @@ exact(
   end).
 Defined.    
 
-Implicit Arguments eq_rect' [A].
+Arguments eq_rect' [A].
 
 CoFixpoint bisim_refl_5' s : bisim s s :=
   match s as s0 return (bisim s0 s0) with
@@ -190,7 +190,7 @@ exact(
   end).
 Qed.    
 
-Implicit Arguments eq_rect'' [A].
+Arguments eq_rect'' [A].
 
 (* Not guarded
 CoFixpoint bisim_refl_5'' s : bisim s s :=
@@ -222,8 +222,10 @@ Proof.
   cofix IH. intros [x s'].
   apply (@let_lemma_prop' True).
     auto. intros.
-    Guarded.
-  constructor. Guarded. apply IH. 
+  (* Guarded. *)
+  constructor. 
+  (* Guarded. *) 
+  apply IH. 
   (* Guarded. 
     Sub-expression "let_lemma_prop' I (fun _ : True => bisim_cons x (IH s'))" not
     in guarded form 
@@ -235,8 +237,9 @@ Proof.
   cofix IH. intros [x s']. constructor. 
   apply (@let_lemma_prop' True).
     auto. intros.
-    Guarded.
-   Guarded. apply IH.
+    (* Guarded. *)
+   (* Guarded. *)
+   apply IH.
   (* Guarded. 
     Sub-expression "let_lemma_prop' I (fun _ : True => bisim_cons x (IH s'))" not
     in guarded form 
