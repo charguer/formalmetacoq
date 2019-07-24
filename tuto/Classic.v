@@ -5,6 +5,7 @@
 
 Set Implicit Arguments.
 Require Import Plus Omega.
+Require Equivalence Even.
 
 (** By default, Coq features a constructive logic and provides a 
     relatively weak notion of equality. This contrasts with most
@@ -1042,7 +1043,7 @@ Definition pos := { n:nat | n > 0 }.
 Definition new_pos (n:nat) (H:n>0) : pos :=
   exist (fun n => n > 0) n H.
 
-Implicit Arguments new_pos []. 
+Arguments new_pos : clear implicits. 
 
 (** If we want to prove two values of type [pos] equal, then we need
     to show not only that the two underlying natural numbers are equal, 
@@ -1119,7 +1120,7 @@ Admitted. (* the proof uses proof irrelevance *)
     operator, and use this function to define the quotient type [A/R]. *) 
 
 Module Quotient.
-Require Import Equivalence.
+Import Equivalence.
 
 Parameter A : Type.
 Parameter IA : Inhab A. Existing Instance IA.
@@ -1259,7 +1260,7 @@ End Quotient.
 (** * Recursive functions *)
 
 Module FixedPoints.
-Require Import Even.
+Import Even.
 
 (** The epsilon operator can be used to define the "optimal fixed
     point combinator". This combinator can be used to define (partial)
@@ -1405,7 +1406,7 @@ Parameter FixFun_fix : forall A (R:A->A->Prop) (P:A->Prop)
   f = FixFun F -> well_founded R -> contractive P F R ->
   (forall x, P x -> f x = F f x).
 
-Implicit Arguments FixFun_fix [A B F f].
+Arguments FixFun_fix [A] R P [B] [H] F f.
 
 (** Using this property, we can prove that [f n = F f n] holds for
     any even [n]. To achieve this, we instantiate the well-founded 
@@ -1554,7 +1555,7 @@ Parameter FixFun2_fix : forall A1 A2 (R:A1*A2->A1*A2->Prop)
      F f1 x1 x2 = F f2 x1 x2) ->
   (forall x1 x2, P x1 x2 -> f x1 x2 = F f x1 x2).
 
-Implicit Arguments FixFun2_fix [A1 A2 B IB F f].
+Arguments FixFun2_fix [A1] [A2] R P [B] [IB] [F] [f].
 
 (** The function [div] terminates when [m <> 0] because the
     first argument strictly decreases on each recursive call.
