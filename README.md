@@ -12,11 +12,11 @@ Description
      See the paper Pretty Big Step Semantics (ESOP'13)
      http://www.chargueraud.org/research/2012/pretty/pretty.pdf
 
-   - Folder `Tuto` contains two files with course notes:
+   - Folder `Tuto` contains course notes:
 
       + File `Classic` is a tutorial on using classical logic in Coq
       
-      + File `Coind` is a tutorial on basics of coinduction
+      + File `Coind` are incomplete notes on coinduction
 
 
 Compilation
