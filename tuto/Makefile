@@ -31,7 +31,7 @@ V_AUX := $(wildcard $(TLC)/*.v)
 ##############################################################
 # Rules
 
-all: proof
+all: vo
 
 COQINCLUDE := -R $(TLC) TLC -R $(PWD) TUTO 
 

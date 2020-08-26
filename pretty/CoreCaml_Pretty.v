@@ -31,7 +31,7 @@ Implicit Types z : bool.
 Inductive beh :=
   | beh_ret : val -> beh
   | beh_exn : val -> beh.
-  
+
 Coercion beh_ret : val >-> beh.
 
 (** Grammar of outcomes *)
@@ -62,7 +62,7 @@ Inductive ext : Type :=
   | ext_for_1 : var -> dir -> out -> trm -> trm -> ext
   | ext_for_2 : var -> dir -> int -> out -> trm -> ext
   | ext_for_3 : var -> dir -> int -> int -> trm -> ext
-  | ext_match_1 : out -> branches -> ext 
+  | ext_match_1 : out -> branches -> ext
   | ext_try_1 : out -> branches -> ext
   | ext_assert_1 : out -> ext
   | ext_build_1 : (vals -> val) -> vals -> ext
@@ -70,7 +70,7 @@ Inductive ext : Type :=
   | ext_list_2 : out -> trms -> vals -> (vals -> ext) -> ext
   | ext_lablist_1 : labtrms -> labvals -> (labvals -> ext) -> ext
   | ext_lablist_2 : out -> lab -> labtrms -> labvals -> (labvals -> ext) -> ext
-  | ext_branches_1 : beh -> val -> branches -> ext 
+  | ext_branches_1 : beh -> val -> branches -> ext
   | ext_branches_2 : beh -> val -> branches -> out -> trm -> ext.
 
 Coercion ext_trm : trm >-> ext.
@@ -135,11 +135,11 @@ Inductive matching (i : inst) : val -> pat -> Prop :=
   | matching_alias : forall x v p,
       matching i v p ->
       LibEnv.binds x v i ->
-      matching i v (pat_alias p x) 
+      matching i v (pat_alias p x)
   | matching_or : forall v p p1 p2,
       matching i v p ->
       (p = p1 \/ p = p2) ->
-      matching i v (pat_or p1 p2) 
+      matching i v (pat_or p1 p2)
   | matching_cst : forall c,
       matching i c (pat_cst c)
   | matching_constr : forall k vs ps,
@@ -151,12 +151,12 @@ Inductive matching (i : inst) : val -> pat -> Prop :=
   | matching_record_nil : forall avs,
       matching i (val_tuple avs) (pat_tuple nil)
   | matching_record_cons : forall avs a v p aps,
-      LibList.Assoc a v avs ->
+      LibListAssoc.Assoc a v avs ->
       matching i v p ->
       matching i (val_record avs) (pat_record aps) ->
       matching i (val_record avs) (pat_record ((a,p)::aps)).
 
-Definition mismatching v p := 
+Definition mismatching v p :=
   forall i, ~ matching i v p.
 
 (** Semantics of primitive equality *)
@@ -185,14 +185,14 @@ Inductive binary_pure : prim -> val -> val -> beh -> Prop :=
       primitive_eq v1 v2 z ->
       binary_pure prim_eq v1 v2 z
   | binary_pure_add : forall n1 n2,
-      binary_pure prim_add n1 n2 (n1+n2) 
+      binary_pure prim_add n1 n2 (n1+n2)
   | binary_pure_sub : forall n1 n2,
-      binary_pure prim_sub n1 n2 (n1-n2) 
+      binary_pure prim_sub n1 n2 (n1-n2)
   | binary_pure_mul : forall n1 n2,
-      binary_pure prim_mul n1 n2 (n1*n2) 
+      binary_pure prim_mul n1 n2 (n1*n2)
   | binary_pure_div_notzero : forall n1 n2,
       n2 <> 0 ->
-      binary_pure prim_div n1 n2 (Z.div n1 n2) 
+      binary_pure prim_div n1 n2 (Z.div n1 n2)
   | binary_pure_div_zero : forall n1,
       binary_pure prim_div n1 0 (beh_exn (val_exn constr_div_by_zero)).
 
@@ -224,7 +224,7 @@ Inductive red : mem -> ext -> out -> Prop :=
       red m (trm_tuple ts) o
   | red_record : forall ats As ts m o,
       (As,ts) = LibList.split ats ->
-      red m (ext_list_1 ts nil 
+      red m (ext_list_1 ts nil
               (fun vs => ext_record_1 (LibList.combine As vs))) o ->
       red m (trm_record ats) o
   | red_unary : forall o1 f t1 m o,
@@ -275,7 +275,7 @@ Inductive red : mem -> ext -> out -> Prop :=
   | red_app_2_match : forall oy p i t4 t5 t3 v2 m m0 o,
       matching i v2 p ->
       t4 = substs i t3 ->
-      t5 = match oy with 
+      t5 = match oy with
          | None => t4
          | Some y => (subst y (val_abs oy p t3) t4) end ->
       red m t5 o ->
@@ -298,13 +298,13 @@ Inductive red : mem -> ext -> out -> Prop :=
       red m0 (ext_let_1 p (out_ter m v1) t2) o
   | red_let_1_mismatch : forall p v1 t2 m m0,
       mismatching v1 p ->
-      red m0 (ext_let_1 p (out_ter m v1) t2) 
+      red m0 (ext_let_1 p (out_ter m v1) t2)
              (out_ter m (beh_exn constr_matching_failure))
 
   | red_record_1 : forall avs m1 m2 l,
       fresh m1 l ->
       m2 = Heap.write m1 l (val_record avs) ->
-      red m1 (ext_record_1 avs) 
+      red m1 (ext_record_1 avs)
              (out_ter m2 l)
   | red_get : forall t1 a m o1 o,
       red m t1 o1 ->
@@ -312,8 +312,8 @@ Inductive red : mem -> ext -> out -> Prop :=
       red m (trm_get t1 a) o
   | red_get_1 : forall avs l a m v m0,
       Heap.binds m l (val_record avs) ->
-      LibList.Assoc a v avs ->
-      red m0 (ext_get_1 (out_ter m l) a) 
+      LibListAssoc.Assoc a v avs ->
+      red m0 (ext_get_1 (out_ter m l) a)
              (out_ter m v)
   | red_set : forall o1 a t1 t2 m o,
       red m t1 o1 ->
@@ -337,7 +337,7 @@ Inductive red : mem -> ext -> out -> Prop :=
       red m t2 o ->
       red m0 (ext_if_1 (out_ter m true) t2 ot3) o
   | red_if_1_false_none : forall t2 m m0,
-      red m0 (ext_if_1 (out_ter m false) t2 None) 
+      red m0 (ext_if_1 (out_ter m false) t2 None)
              (out_ter m val_unit)
   | red_if_1_false_some : forall t2 t3 m m0 o,
       red m t3 o ->
@@ -364,7 +364,7 @@ Inductive red : mem -> ext -> out -> Prop :=
       red m (ext_for_3 x dir_upto n1 n2 t3) o
   | red_for_3_upto_gt : forall x n1 n2 t3 m o,
       n1 > n2 ->
-      red m (ext_for_3 x dir_upto n1 n2 t3) 
+      red m (ext_for_3 x dir_upto n1 n2 t3)
             (out_ter m val_unit)
   | red_for_3_upto_geq : forall x n1 n2 t3 m o,
       n1 >= n2 ->
@@ -372,7 +372,7 @@ Inductive red : mem -> ext -> out -> Prop :=
       red m (ext_for_3 x dir_downto n1 n2 t3) o
   | red_for_3_upto_lt : forall x n1 n2 t3 m o,
       n1 < n2 ->
-      red m (ext_for_3 x dir_downto n1 n2 t3) 
+      red m (ext_for_3 x dir_downto n1 n2 t3)
             (out_ter m val_unit)
 
   | red_match : forall t1 bs m o1 o,
@@ -441,5 +441,5 @@ Inductive red : mem -> ext -> out -> Prop :=
   | red_branches_2_false : forall B t v bs m m0 o,
       red m (ext_branches_1 B v bs) o ->
       red m0 (ext_branches_2 B v bs (out_ter m false) t) o.
-      
+
 

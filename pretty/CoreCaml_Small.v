@@ -42,11 +42,11 @@ with trm : Type :=
   | trm_get : trm -> lab -> trm
   | trm_set : trm -> lab -> trm -> trm
   | trm_if : trm -> trm -> option trm -> trm
-  | trm_while : trm -> trm -> trm 
+  | trm_while : trm -> trm -> trm
   | trm_for : var -> dir -> trm -> trm -> trm -> trm
-  | trm_match : trm -> list branch -> trm 
+  | trm_match : trm -> list branch -> trm
   | trm_try : trm -> list branch -> trm
-  | trm_assert : trm -> trm 
+  | trm_assert : trm -> trm
   | trm_rand : trm
 
 (** including intermediate forms for the semantics *)
@@ -56,7 +56,7 @@ with trm : Type :=
   | trm_try_1 : val -> list branch -> trm
   | trm_try_2 : val -> list branch -> trm -> trm -> trm
 
-with branch : Type := 
+with branch : Type :=
   | branch_intro : pat -> option trm -> trm -> branch.
 
 (** Representation of the memory store *)
@@ -160,11 +160,11 @@ Inductive matching (i : inst) : val -> pat -> Prop :=
   | matching_alias : forall x v p,
       matching i v p ->
       LibEnv.binds x v i ->
-      matching i v (pat_alias p x) 
+      matching i v (pat_alias p x)
   | matching_or : forall v p p1 p2,
       matching i v p ->
       (p = p1 \/ p = p2) ->
-      matching i v (pat_or p1 p2) 
+      matching i v (pat_or p1 p2)
   | matching_cst : forall c,
       matching i c (pat_cst c)
   | matching_constr : forall k vs ps,
@@ -176,12 +176,12 @@ Inductive matching (i : inst) : val -> pat -> Prop :=
   | matching_record_nil : forall avs,
       matching i (val_tuple avs) (pat_tuple nil)
   | matching_record_cons : forall avs a v p aps,
-      LibList.Assoc a v avs ->
+      LibListAssoc.Assoc a v avs ->
       matching i v p ->
       matching i (val_record avs) (pat_record aps) ->
       matching i (val_record avs) (pat_record ((a,p)::aps)).
 
-Definition mismatching v p := 
+Definition mismatching v p :=
   forall i, ~ matching i v p.
 
 (** Semantics of primitive equality *)
@@ -214,7 +214,7 @@ Inductive ctx :=
   | ctx_if : ctx -> trm -> option trm -> ctx
   | ctx_for_1 : var -> dir -> ctx -> trm -> trm -> ctx
   | ctx_for_2 : var -> dir -> val -> ctx -> trm -> ctx
-  | ctx_match : ctx -> list branch -> ctx 
+  | ctx_match : ctx -> list branch -> ctx
   | ctx_try : ctx -> list branch -> ctx
   | ctx_assert : ctx -> ctx
   | ctx_match_1 : val -> list branch -> ctx -> trm -> ctx
@@ -255,7 +255,7 @@ Fixpoint ctx_apply C t :=
 (** Contexts that do not contain [try] construct *)
 
 Fixpoint ctx_notry C :=
-  let r := ctx_notry in 
+  let r := ctx_notry in
   match C with
   | ctx_try C' bs => False
   | ctx_hole => True
@@ -292,18 +292,18 @@ Definition conf := (trm * mem)%type.
 
 (** Reduction *)
 
-Reserved Notation "t1 '/' m1 '--->' t2 '/' m2" 
+Reserved Notation "t1 '/' m1 '--->' t2 '/' m2"
   (at level 40, m1 at level 30, t2 at level 30, m2 at level 30).
 
 Inductive step : binary conf :=
 
   | step_ctx : forall C t1 m1 t2 m2,
       t1 / m1 ---> t2 / m2 ->
-      (ctx_apply C t1) / m1 ---> 
+      (ctx_apply C t1) / m1 --->
       (ctx_apply C t2) / m2
-  | step_raise : forall C v m, 
+  | step_raise : forall C v m,
       ctx_notry C ->
-      (ctx_apply C (trm_raise v)) / m ---> 
+      (ctx_apply C (trm_raise v)) / m --->
       (trm_raise v) / m
 
   | step_abs : forall oy p t m,
@@ -317,55 +317,55 @@ Inductive step : binary conf :=
       (val_tuple vs) / m
 
   | step_unary_not : forall r m,
-      (trm_unary prim_not r) / m ---> 
+      (trm_unary prim_not r) / m --->
       (neg r) / m
   | step_unary_neg : forall n m,
-      (trm_unary prim_not n) / m ---> 
+      (trm_unary prim_not n) / m --->
       (cst_int (-n)) / m
   | step_binary_eq : forall v1 v2 r m,
       primitive_eq v1 v2 r ->
-      (trm_binary prim_eq v1 v2) / m ---> 
+      (trm_binary prim_eq v1 v2) / m --->
       r / m
   | step_binary_add : forall n1 n2 m,
-      (trm_binary prim_add n1 n2) / m ---> 
+      (trm_binary prim_add n1 n2) / m --->
       (n1+n2) / m
   | step_binary_sub : forall n1 n2 m,
-      (trm_binary prim_sub n1 n2) / m ---> 
+      (trm_binary prim_sub n1 n2) / m --->
       (n1-n2) / m
   | step_binary_mul : forall n1 n2 m,
-      (trm_binary prim_mul n1 n2) / m ---> 
+      (trm_binary prim_mul n1 n2) / m --->
       (n1*n2) / m
   | step_binary_div_notzero : forall n1 n2 m,
       n2 <> 0 ->
-      (trm_binary prim_div n1 n2) / m ---> 
+      (trm_binary prim_div n1 n2) / m --->
       (Z.div n1 n2) / m
   | step_binary_div_zero : forall n1 n2 m,
-      (trm_binary prim_div n1 0) / m ---> 
+      (trm_binary prim_div n1 0) / m --->
       (trm_error constr_div_by_zero) / m
   | step_lazy_binary_and_true : forall v1 t2 m,
-      (trm_lazy_binary prim_and true t2) / m ---> 
+      (trm_lazy_binary prim_and true t2) / m --->
       t2 / m
   | step_lazy_binary_and_false : forall v1 t2 m,
-      (trm_lazy_binary prim_and false t2) / m ---> 
+      (trm_lazy_binary prim_and false t2) / m --->
       false / m
   | step_lazy_binary_or_true : forall v1 t2 m,
-      (trm_lazy_binary prim_or true t2) / m ---> 
+      (trm_lazy_binary prim_or true t2) / m --->
       true / m
   | step_lazy_binary_or_false : forall v1 t2 m,
-      (trm_lazy_binary prim_or false t2) / m ---> 
+      (trm_lazy_binary prim_or false t2) / m --->
       t2 / m
 
   | step_app_mismatch : forall p oy t3 v2 m,
       mismatching v2 p ->
-      (trm_app (val_abs oy p t3) v2) / m ---> 
+      (trm_app (val_abs oy p t3) v2) / m --->
       (trm_error constr_matching_failure) / m
   | step_app_match : forall i p oy t3 t4 t5 v2 m,
       matching i v2 p ->
       t4 = substs i t3 ->
-      t5 = match oy with 
+      t5 = match oy with
          | None => t4
          | Some y => (subst y (val_abs oy p t3) t4) end ->
-      (trm_app (val_abs None p t3) v2) / m ---> 
+      (trm_app (val_abs None p t3) v2) / m --->
       t5 / m
 
   | step_seq : forall v1 t2 m,
@@ -387,7 +387,7 @@ Inductive step : binary conf :=
       l / m2
   | step_get : forall l a v avs m,
       Heap.binds m l (val_record avs) ->
-      LibList.Assoc a v avs ->
+      LibListAssoc.Assoc a v avs ->
       (trm_get l a) / m --->
       v / m
   | step_set : forall l a v avs m1 m2,
@@ -426,63 +426,63 @@ Inductive step : binary conf :=
       val_unit / m
 
   | step_match_nil : forall v m,
-      (trm_match v nil) / m ---> 
+      (trm_match v nil) / m --->
       (trm_error constr_matching_failure) / m
-  | step_match_cons_mismatch : forall v p bs ot1 t2 m, 
+  | step_match_cons_mismatch : forall v p bs ot1 t2 m,
       mismatching v p ->
-      (trm_match v ((branch_intro p ot1 t2)::bs)) / m ---> 
+      (trm_match v ((branch_intro p ot1 t2)::bs)) / m --->
       (trm_match v bs) / m
-  | step_match_cons_match_unguarded : forall v p bs t2 i m, 
+  | step_match_cons_match_unguarded : forall v p bs t2 i m,
       matching i v p ->
-      (trm_match v ((branch_intro p None t2)::bs)) / m ---> 
+      (trm_match v ((branch_intro p None t2)::bs)) / m --->
       (substs i t2) / m
-  | step_match_cons_match_guarded : forall v p bs t1 t2 i m, 
+  | step_match_cons_match_guarded : forall v p bs t1 t2 i m,
       matching i v p ->
-      (trm_match v ((branch_intro p (Some t1) t2)::bs)) / m ---> 
+      (trm_match v ((branch_intro p (Some t1) t2)::bs)) / m --->
       (trm_match_1 v bs (substs i t1) (substs i t2)) / m
-  | step_match_1_true : forall v bs t2 m, 
-      (trm_match_1 v bs true t2) / m ---> 
+  | step_match_1_true : forall v bs t2 m,
+      (trm_match_1 v bs true t2) / m --->
       t2 / m
-  | step_match_1_false : forall v bs t2 m, 
-      (trm_match_1 v bs false t2) / m ---> 
+  | step_match_1_false : forall v bs t2 m,
+      (trm_match_1 v bs false t2) / m --->
       (trm_match v bs) / m
 
   | step_try_val : forall v bs m,
       (trm_try v bs) / m ---> v / m
   | step_try_raise : forall v bs m,
-      (trm_try (trm_raise v) bs) / m ---> 
+      (trm_try (trm_raise v) bs) / m --->
       (trm_try_1 v bs) / m
   | step_try_1_nil : forall v m,
-      (trm_try_1 v nil) / m ---> 
+      (trm_try_1 v nil) / m --->
       (trm_raise v) / m
-  | step_try_1_cons_mismatch : forall v p bs ot1 t2 m, 
+  | step_try_1_cons_mismatch : forall v p bs ot1 t2 m,
       mismatching v p ->
-      (trm_try_1 v ((branch_intro p ot1 t2)::bs)) / m ---> 
+      (trm_try_1 v ((branch_intro p ot1 t2)::bs)) / m --->
       (trm_try_1 v bs) / m
-  | step_try_1_cons_match_unguarded : forall v p bs t2 i m, 
+  | step_try_1_cons_match_unguarded : forall v p bs t2 i m,
       matching i v p ->
-      (trm_try_1 v ((branch_intro p None t2)::bs)) / m ---> 
+      (trm_try_1 v ((branch_intro p None t2)::bs)) / m --->
       (substs i t2) / m
-  | step_try_1_cons_match_guarded : forall v p bs t1 t2 i m, 
+  | step_try_1_cons_match_guarded : forall v p bs t1 t2 i m,
       matching i v p ->
-      (trm_try_1 v ((branch_intro p (Some t1) t2)::bs)) / m ---> 
+      (trm_try_1 v ((branch_intro p (Some t1) t2)::bs)) / m --->
       (trm_try_2 v bs (substs i t1) (substs i t2)) / m
-  | step_try_2_true : forall v bs t2 m, 
-      (trm_try_2 v bs true t2) / m ---> 
+  | step_try_2_true : forall v bs t2 m,
+      (trm_try_2 v bs true t2) / m --->
       t2 / m
-  | step_try_2_false : forall v bs t2 m, 
-      (trm_try_2 v bs false t2) / m ---> 
+  | step_try_2_false : forall v bs t2 m,
+      (trm_try_2 v bs false t2) / m --->
       (trm_try_1 v bs) / m
 
-  | step_assert_true : forall m, 
-      (trm_assert true) / m ---> 
+  | step_assert_true : forall m,
+      (trm_assert true) / m --->
       val_unit / m
-  | step_assert_false : forall m, 
-      (trm_assert false) / m ---> 
+  | step_assert_false : forall m,
+      (trm_assert false) / m --->
       (trm_error constr_assert_failure) / m
 
-  | step_rand : forall m z, 
-      trm_rand / m ---> 
+  | step_rand : forall m z,
+      trm_rand / m --->
       (val_cst z) / m
 
 where "t1 / m1 ---> t2 / m2" := (step (t1:trm,m1) (t2:trm,m2)).

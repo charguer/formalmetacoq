@@ -6,7 +6,8 @@
 **************************************************************************)
 
 Set Implicit Arguments.
-From TLC Require Import LibTactics LibReflect LibList LibSet LibExec.
+From TLC Require Import LibTactics LibReflect LibList LibListAssoc
+  LibSet LibExec.
 Generalizable Variable K V.
 
 
@@ -527,7 +528,7 @@ Lemma indom_dec_spec : forall `{Comparable K} V (h:heap K V) k,
   indom_dec h k = isTrue (indom h k).
 Proof.
   intros. unfold indom, dom, indom_dec.
-  induction h as [|[k' v'] h]; simpl.
+  induction h as [|[k' v'] h]; simpl; rew_listx.
   rewrite in_empty_eq. rew_bool_eq~.
   rewrite in_union_eq. rewrite in_single_eq. rewrite IHh.
    extens. rew_bool_eq*.

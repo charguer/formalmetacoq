@@ -91,7 +91,7 @@ V_AUX := $(wildcard $(TLC)/*.v)
 ##############################################################
 # Rules
 
-all: proof
+all: vo
 
 COQFLAGS := -W -implicit-core-hint-db,-undeclared-scope
 COQINCLUDE := -R $(TLC) TLC -R $(PWD) PRETTY 

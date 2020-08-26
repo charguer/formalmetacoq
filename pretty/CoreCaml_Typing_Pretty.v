@@ -48,21 +48,21 @@ Inductive cst_typing : cst -> typ -> Prop :=
 Inductive primtyping : prim -> typ -> Prop :=
   | prim_typing_eq : forall T,
       prim_typing prim_eq (T --> T --> typ_bool)
-  | prim_typing_not : 
+  | prim_typing_not :
       prim_typing prim_not (typ_bool --> typ_bool)
-  | prim_typing_and : 
+  | prim_typing_and :
       prim_typing prim_and (typ_bool --> typ_bool -> typ_bool)
-  | prim_typing_or : 
+  | prim_typing_or :
       prim_typing prim_or (typ_bool --> typ_bool --> typ_bool)
-  | prim_typing_neg : 
+  | prim_typing_neg :
       prim_typing prim_neg (typ_int --> typ_int)
-  | prim_typing_add : 
+  | prim_typing_add :
       prim_typing prim_add (typ_int --> typ_int --> typ_int)
-  | prim_typing_sub : 
+  | prim_typing_sub :
       prim_typing prim_sub (typ_int --> typ_int --> typ_int)
-  | prim_typing_mul : 
+  | prim_typing_mul :
       prim_typing prim_mul (typ_int --> typ_int --> typ_int)
-  | prim_typing_div : 
+  | prim_typing_div :
       prim_typing prim_div (typ_int --> typ_int --> typ_int).
 
 
@@ -70,7 +70,7 @@ Inductive primtyping : prim -> typ -> Prop :=
 (* ** Typing of patterns *)
 
 Inductive pat_typing : env -> pat -> typ -> Prop :=
-  | pat_typing_var : forall E x T, 
+  | pat_typing_var : forall E x T,
       binds E x T ->
       pat_typing E (pat_var x) T
   | pat_typing_wild : forall E T,
@@ -85,7 +85,7 @@ Inductive pat_typing : env -> pat -> typ -> Prop :=
       pat_typing E (pat_or p1 p2) T
   | pat_typing_cst : forall E c T,
       cst_typing c T ->
-      pat_typing E c T 
+      pat_typing E c T
   | pat_typing_constr : forall E k ps Ts T,
       constr_typing k Ts T ->
       Forall2 (pat_typing E) ps Ts ->
@@ -104,7 +104,7 @@ Inductive pat_typing : env -> pat -> typ -> Prop :=
   | matching_record_nil : forall avs,
       matching i (val_tuple avs) (pat_tuple nil)
   | matching_record_cons : forall avs a v p aps,
-      LibList.Assoc a v avs ->
+      LibListAssoc.Assoc a v avs ->
       matching i v p ->
       matching i (val_record avs) (pat_record aps) ->
       matching i (val_record avs) (pat_record ((a,p)::aps)).
@@ -130,7 +130,7 @@ Inductive trm_typing : env -> trm -> typ -> Prop :=
       typing (E & x ~~ U) t1 T ->
       typing E (trm_abs x t1) (typ_arrow U T)
   | trm_typing_app : forall T1 T2 E t1 t2,
-      typing E t1 (typ_arrow T1 T2) -> 
+      typing E t1 (typ_arrow T1 T2) ->
       typing E t2 T1 ->
       typing E (trm_app t1 t2) T2.
 
@@ -151,11 +151,11 @@ Inductive trm : Type :=
   | trm_get : trm -> lab -> trm
   | trm_set : trm -> lab -> trm -> trm
   | trm_if : trm -> trm -> option trm -> trm
-  | trm_while : trm -> trm -> trm 
+  | trm_while : trm -> trm -> trm
   | trm_for : var -> dir -> trm -> trm -> trm -> trm
-  | trm_match : trm -> list branch -> trm 
+  | trm_match : trm -> list branch -> trm
   | trm_try : trm -> list branch -> trm
-  | trm_assert : trm -> trm 
+  | trm_assert : trm -> trm
 
 *)
 
@@ -218,7 +218,7 @@ with ctx_typing : sto -> ctx -> env :=
 (* ** Typing of memory *)
 
 Definition mem_typing S m :=
-  forall l v, Heap.binds m l v -> 
+  forall l v, Heap.binds m l v ->
   exists T, Heap.binds S l T /\ val_typing S v T.
 
 
@@ -226,10 +226,10 @@ Definition mem_typing S m :=
 (* ** Typing of behaviors *)
 
 Inductive beh_typing : sto -> beh -> Typ -> Prop :=
-  | beh_typing_ret : forall S v T, 
+  | beh_typing_ret : forall S v T,
       val_typing S v T ->
       beh_typing S (beh_ret v) T
-  | beh_typing_exn : forall S v T, 
+  | beh_typing_exn : forall S v T,
       val_typing S v typ_exn ->
       beh_typing S (beh_exn v) T.
 
@@ -238,11 +238,11 @@ Inductive beh_typing : sto -> beh -> Typ -> Prop :=
 (* ** Typing of outcomes *)
 
 Inductive out_typing : sto -> out -> Typ -> Prop :=
-  | out_typing_beh : forall S B T, 
+  | out_typing_beh : forall S B T,
       mem_typing S m ->
       beh_typing S B T ->
       out_typing S (out_ter m B) T
-  | out_typing_div : forall S T, 
+  | out_typing_div : forall S T,
       out_typing S out_div T.
 
 
@@ -254,7 +254,7 @@ Inductive out_typing : sto -> out -> Typ -> Prop :=
 Inductive ext_typing : sto -> ext -> typ -> Prop :=
   | ext_typing_trm : forall t T,
       trm_typing empty t T ->
-      ext_typing S (ext_trm t) T 
+      ext_typing S (ext_trm t) T
   | ext_typing_app_1 : forall S t T1 T2,
       out_typing S o1 (T1 --> T2) ->
       trm_typing S t2 T1 ->
@@ -287,13 +287,13 @@ Inductive ext : Type :=
   | ext_for_1 : var -> dir -> out -> trm -> trm -> ext
   | ext_for_2 : var -> dir -> int -> out -> trm -> ext
   | ext_for_3 : var -> dir -> int -> int -> trm -> ext
-  | ext_match_1 : out -> branches -> ext 
+  | ext_match_1 : out -> branches -> ext
   | ext_try_1 : out -> branches -> ext
   | ext_assert_1 : out -> ext
   | ext_list_1 : trms -> vals -> (vals -> ext) -> ext
   | ext_list_2 : out -> trms -> vals -> (vals -> ext) -> ext
   | ext_lablist_1 : labtrms -> labvals -> (labvals -> ext) -> ext
   | ext_lablist_2 : out -> lab -> labtrms -> labvals -> (labvals -> ext) -> ext
-  | ext_branches_1 : beh -> val -> branches -> ext 
+  | ext_branches_1 : beh -> val -> branches -> ext
   | ext_branches_2 : beh -> val -> branches -> out -> trm -> ext.
 *)
