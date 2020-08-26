@@ -711,7 +711,7 @@ Proof.
   induction Ts; destruct n; simpl; intros TU [EQ TT]. 
   auto. auto. inversion EQ.
   rew_list in EQ. rew_listx. inversions TT. 
-   forwards [M ?]: (IHTs n). auto. auto. rewrite~ M.
+   forwards [M ?]: (IHTs n). auto. auto. rewrite~ M. rew_listx~.
 Qed.
 
 (** ** Opening a body with a list of types gives a type *)

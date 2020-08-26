@@ -341,7 +341,7 @@ Proof.
    rewrite~ (@substs_intro (x::nil)).
      simpl. apply_empty* typing_trm_subst.
       apply* (@has_scheme_from_vars L1).
-     rewrite trm_fv_list_cons, trm_fv_list_nil. auto.
+     rewrite trm_fv_list_cons, trm_fv_list_nil. rew_list~.
   exists P. splits~ 3. clear H1 IHTyp1 IHTyp2.
    forwards~ Wts: (@pat_match_terms _ _ _ H13).
    pick_freshes (pat_arity p) xs.
@@ -361,14 +361,14 @@ Proof.
    rewrite~ (@substs_intro (x::nil)).
      simpl. apply_empty* typing_trm_subst.
       apply* has_scheme_from_typ.
-     rewrite trm_fv_list_cons, trm_fv_list_nil. auto.
+     rewrite trm_fv_list_cons, trm_fv_list_nil. rew_list~.
   exists P. splits~ 3. 
    inversions Typ1.
    pick_fresh f. pick_fresh x. rewrite~ (@substs_intro (x::f::nil)).
     apply_empty* (@typing_trm_substs (S::(typ_arrow S T)::nil)).
       rew_listx. do 2 rewrite singles_cons. rewrite singles_nil.
        rewrite concat_empty_l. applys* H8.
-      do 2 rewrite trm_fv_list_cons. rewrite trm_fv_list_nil. auto.
+      do 2 rewrite trm_fv_list_cons. rewrite trm_fv_list_nil. rew_list~.
   exists P. splits~ 3. inversions Typ1. inversions* H4.
   pres IHTyp1 t1' mu'. exists* P'.
   pres IHTyp2 t2' mu'. exists* P'.
