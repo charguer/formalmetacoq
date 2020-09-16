@@ -214,7 +214,7 @@ Qed.
 Class Comparable (A:Type) := make_comparable {
   comparable : forall (x y:A), Decidable (x = y) }.
 
-Hint Resolve @comparable : typeclass_instances.
+Hint Resolve comparable : typeclass_instances.
 
 (** In classical logic, any type is comparable; of course,
     we do not want to use this lemma as an instance because
@@ -308,7 +308,7 @@ Arguments empty {K} {V}.
 (** Properties *)
 
 Section HeapParameters.
-Context `{Comparable K} `{Inhab V}.
+Context K (HK:Comparable K) V (HV:Inhab V).
 Implicit Types h : heap K V.
 
 Parameter indom_equiv_binds : forall h k,
@@ -359,6 +359,8 @@ Parameter read_option_def : forall h k,
   read_option h k = (If indom h k then Some (read h k) else None).
 
 End HeapParameters.
+
+Arguments binds_equiv_read : clear implicits.
 
 Parameter indom_decidable : forall `{Comparable K} V (h:heap K V) k,
   Decidable (indom h k).
@@ -412,7 +414,7 @@ Arguments empty {K} {V}.
 
 
 Section HeapParameters.
-Context `{HK: Comparable K} `{IV: Inhab V}.
+Context (K:Type) (HK: Comparable K) (V:Type) (IV: Inhab V).
 Implicit Types h : heap K V.
 (* --TODO: do the right proof using *)
 
@@ -429,6 +431,8 @@ Lemma binds_equiv_read : forall h k,
   indom h k -> (forall v, (binds h k v) = (read h k = v)).
 Proof using HK IV.
 Admitted. (* File will be soon deprecated *)
+
+Arguments binds_equiv_read : clear implicits.
 
 Lemma dom_write : forall h r v,
   dom (write h r v) = dom h \u \{r}.
@@ -524,7 +528,7 @@ Fixpoint mem_assoc B `{Comparable A} k (l : list (A * B)) : bool :=
 Definition indom_dec `{Comparable K} V (h:heap K V) (k:K) : bool :=
   mem_assoc k h.
 
-Lemma indom_dec_spec : forall `{Comparable K} V (h:heap K V) k,
+Lemma indom_dec_spec : forall (CK:Comparable K) V (h:heap K V) k,
   indom_dec h k = isTrue (indom h k).
 Proof.
   intros. unfold indom, dom, indom_dec.
@@ -536,7 +540,7 @@ Admitted. (* File will be soon deprecated *)
 
 End HeapParameters.
 
-Lemma indom_decidable : forall `{Comparable K} V (h:heap K V) k,
+Lemma indom_decidable : forall K (CK:Comparable K) V (h:heap K V) k,
   Decidable (indom h k).
 Proof.
   intros. applys decidable_make (indom_dec h k).
@@ -574,7 +578,7 @@ Lemma binds_functional : forall h k v v',
   binds h k v -> binds h k v' -> v = v'.
 Proof using HK HV.
   introv B1 B2. forwards: binds_indom B1. forwards: binds_indom B2.
-  rewrite binds_equiv_read in B1,B2; congruence.
+  rewrite (@binds_equiv_read K HK V HV) in B1, B2; auto. congruence.
 Qed.
 
 (** read--binds *)
@@ -585,7 +589,7 @@ Proof using. introv H. rewrite~ <- binds_equiv_read. apply* binds_indom. Qed.
 
 Lemma read_binds : forall h k v,
   read h k = v -> indom h k -> binds h k v.
-Proof using. introv H D. rewrite~ binds_equiv_read. Qed.
+Proof using. introv H D. erewrite binds_equiv_read; auto. Qed.
 
 (** read-write *)
 
@@ -696,10 +700,10 @@ Proof using HV. introv R. rewrite* <- @binds_equiv_read_option in R. Qed.
 
 Lemma not_indom_read_option : forall h k,
   ~ indom h k -> read_option h k = None.
-Proof using HV. introv. rewrite not_indom_equiv_read_option. autos*. Qed.
+Proof using HV. introv. erewrite not_indom_equiv_read_option; autos*. Qed.
 
 Lemma read_option_not_indom : forall h k,
   read_option h k = None -> ~ indom h k.
-Proof using HV. introv. rewrite not_indom_equiv_read_option. autos*. Qed.
+Proof using HV. introv. erewrite not_indom_equiv_read_option; autos*. Qed.
 
 End HeapFacts.
