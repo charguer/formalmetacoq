@@ -4,8 +4,8 @@
 **************************************************************************)
 
 Set Implicit Arguments.
-Require Import Plus Omega Lia.
-Require Equivalence Even.
+Require Import Coq.micromega.Lia Coq.Arith.Plus Coq.Arith.Wf_nat.
+Require Coq.Classes.Equivalence Coq.Arith.Even.
 
 (** By default, Coq features a constructive logic and provides a
     relatively weak notion of equality. This contrasts with most
@@ -1421,10 +1421,13 @@ Arguments FixFun_fix [A] R P [B] [H] F f.
 Ltac math := first [ simpl; lia | elimtype False; lia ].
 
 Lemma even_minus_2 : forall n,
-  even n -> n <> 0 -> n <> 1 -> even (n - 2).
+  even n ->
+  n <> 0 ->
+  n <> 1 ->
+  even (n - 2).
 Proof.
   intros. inversion H. math. inversion H2.
-  simpl. rewrite <- minus_n_O. auto.
+  simpl. replace (n1 - 0) with n1. auto. lia.
 Qed.
 
 (** The proof of the fixed point equation is then as follows. It
@@ -1704,9 +1707,9 @@ Proof.
   intros. induction k. simpl.
   rewrite gcd_fix; unfold Gcd. case_if. auto. case_if. auto.
   rewrite gcd_fix; unfold Gcd. case_if.
-    subst. rewrite mult_0_r. auto.
+    subst. lia.
     simpl. case_if. auto. rewrite If_l.
-      rewrite minus_plus. auto.
+      replace ((n + (k * n)) - n) with (k * n). auto. lia.
       apply le_plus_l.
 Qed.
 
