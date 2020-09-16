@@ -1,10 +1,9 @@
+SUBDIRS=tuto ln pretty
 
-all:
-	make -C tuto
-	make -C ln
-	make -C pretty
+default: all
 
-clean:
-	make -C tuto clean
-	make -C ln clean
-	make -C pretty clean
+$(SUBDIRS)::
+	$(MAKE) -C $@ $(MAKECMDGOALS)
+
+all clean : $(SUBDIRS)
+

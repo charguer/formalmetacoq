@@ -178,7 +178,7 @@ Definition trm_of_out o : trm :=
   | out_div => arbitrary
   end.
 
-Fixpoint trm_of_ext e : trm :=
+Definition trm_of_ext e : trm :=
   let r := trm_of_out in
   match e with
   | ext_trm t => t
