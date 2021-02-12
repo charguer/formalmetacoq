@@ -71,4 +71,26 @@ Proof.
 Qed.
 
 
+(* ********************************************************************** *)
+(** * Alternative proofs, exploiting the fact that the language is deterministic *)
+
+(** Alternative: a single induction for preservation and progress. *)
+
+Hint Constructors typing.
+
+Lemma preservation_and_progress_result : forall t T,
+  empty |= t ~: T ->
+     value t 
+  \/ (exists t', t --> t' /\ empty |= t' ~: T).
+Proof.
+  introv Typ. lets Typ': Typ. inductions Typ.
+  false* binds_empty_inv.
+  left*.
+  right. destruct~ IHTyp1 as [Val1 | [t1' [Red1 Typ1']]].
+    destruct~ IHTyp2 as [Val2 | [t2' [Red2 Typ2']]].
+      inversions Typ1; inversions Val1. exists* (t0 ^^ t2). splits*.
+      { pick_fresh x. rewrite* (@subst_intro x). apply_empty* typing_subst. }
+      exists* (trm_app t1 t2').
+    exists* (trm_app t1' t2).
+Qed.
 
