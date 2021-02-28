@@ -51,11 +51,16 @@ Lemma safe_iff : forall t,
 Proof using.
   unfolds safe. iff M.
   { introv R. lets S: M R. unfolds stuck.
-    rew_logic in S. (* classical logic *) 
+    rew_logic in S. (* classical logic *)
     apply S. }
   { introv R (N1&N2). forwards [S|S]: M R.
     { false. } { unfolds canred. false. } }
 Qed.
+
+(** Type soundness asserts that all well-typed terms execute safely *)
+
+Definition soundness :=
+  forall t T, (empty |= t ~: T) -> safe t.
 
 (** Preservation for empty environments is a restricted form of
     preservation that suffices for establishing safety. *)
@@ -65,19 +70,19 @@ Definition preservation_for_empty := forall t t' T,
   t --> t' ->
   empty |= t' ~: T.
 
-Lemma preservation_for_empty_of_preservation : 
+Lemma preservation_for_empty_of_preservation :
   preservation ->
   preservation_for_empty.
 Proof using. introv Pre HT HR. applys Pre HT HR. Qed.
 
-(** From preservation (for empty environemnts) and progress, 
-    we can derive that all well-typed terms are safe, by induction 
+(** From preservation (for empty environemnts) and progress,
+    we can derive that all well-typed terms are safe, by induction
     on the reduction sequence. *)
 
-Lemma safe_from_preservation_and_progress :
+Lemma soundness_of_preservation_and_progress :
   preservation ->
   progress ->
-  forall t T, (empty |= t ~: T) -> safe t.
+  soundness.
 Proof using.
   introv Pre Pro HT. rewrite safe_iff. introv R. gen T.
   induction R.
@@ -97,9 +102,10 @@ Definition deterministic :=
     t --> t2' ->
     t1' = t2'.
 
-(** Statement of the preservation+progress combined into one. *)
+(** Statement of the preservation+progress combined into one,
+    for deterministic language. *)
 
-Definition combined_soundness :=
+Definition combined_deterministic_soundness :=
   forall t T,
     empty |= t ~: T ->
        value t
@@ -117,14 +123,14 @@ Qed.
 (** Proof that this statement entails preservation (for empty environments)
     and progress. *)
 
-Lemma combined_soundness_inv :
-  combined_soundness ->
+Lemma combined_deterministic_soundness_inv :
+  combined_deterministic_soundness ->
   deterministic ->
      preservation_for_empty
   /\ progress.
 Proof using.
   introv Com Det. split.
-  { introv HT HR. lets [HV|(t''&HR'&HT')]: Com HT. 
+  { introv HT HR. lets [HV|(t''&HR'&HT')]: Com HT.
     { false red_value_inv HR HV. }
     { lets E: Det HR HR'. subst t''. applys HT'. } }
   { introv HT. lets [HV|(t'&HR&HT')]: Com HT. { left*. } { right*. } }
@@ -135,8 +141,8 @@ Qed.
 
 Hint Constructors typing.
 
-Lemma combined_soundness_result :
-  combined_soundness.
+Lemma combined_deterministic_soundness_result :
+  combined_deterministic_soundness.
 Proof.
   introv Typ. lets Typ': Typ. inductions Typ.
   false* binds_empty_inv.
@@ -148,4 +154,45 @@ Proof.
       exists* (trm_app t1 t2').
     exists* (trm_app t1' t2).
 Qed.
+
+
+(* ********************************************************************** *)
+(** Generic type soundness result for cps-small-step *)
+
+Implicit Type P : trm -> Prop.
+
+(** Axiomatization of a cps-small-step semantics *)
+
+Parameter cpssmall : trm -> (trm -> Prop) -> Prop.
+
+Parameter cpssmall_characterization : forall t P,
+  cpssmall t P <->
+    (   (exists t', t --> t')
+     /\ (forall t', t --> t' -> P t')).
+
+(** Statement of the soundness property using cps-small-step. *)
+
+Definition cpssmall_soundness :=
+  forall t T,
+    empty |= t ~: T ->
+       value t
+    \/ cpssmall t (fun t' => empty |= t' ~: T).
+
+Lemma soundness_of_cpssmall_soundness :
+  cpssmall_soundness ->
+  soundness.
+Proof using.
+  introv Sou. introv HT. rewrite safe_iff. introv HR. gen T. 
+  induction HR.
+  { intros. lets [M|M]: Sou HT. 
+    { left*. } 
+    { right. rewrite* cpssmall_characterization in M. } }
+  { introv HT. lets [HV|M]: Sou HT. 
+    { false* red_value_inv HV. }
+    { rewrite cpssmall_characterization in M. destruct M as (M1&M2).
+      applys IHHR. applys* M2. } }
+Qed.
+
+
+
 
