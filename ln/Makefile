@@ -25,6 +25,7 @@ CORE :=\
 	STLC_Core_Definitions \
 	STLC_Core_Infrastructure \
 	STLC_Core_Soundness \
+	STLC_Core_Safety \
 	STLC_Core_Adequacy \
 	STLC_Core_FullBeta \
 	STLC_Core_Light \
@@ -85,7 +86,7 @@ MLCORE :=\
 ISK :=\
    ISK_Confluence
 
-DEV_BASE := $(BIG) $(EXN) $(REF) $(CORE) $(CPS) $(ISK) $(LAMBDA) $(COC) $(ML) $(FSUB) $(JAR)
+DEV_BASE := $(CORE) $(BIG) $(EXN) $(REF) $(CPS) $(ISK) $(LAMBDA) $(COC) $(ML) $(FSUB) $(JAR)
 	
 
 
