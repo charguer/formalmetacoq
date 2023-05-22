@@ -1,4 +1,4 @@
-# Arthur's Formal Metatheory in Coq
+# Arthur Charguéraud's Formal Metatheory in Coq
 
 
 Description
@@ -15,20 +15,19 @@ Description
    - Folder `Tuto` contains course notes:
 
       + File `Classic` is a tutorial on using classical logic in Coq
-      
+
       + File `Coind` are incomplete notes on coinduction
 
 
 Compilation
 ===========
 
-The files should compile with Coq v8.10, v8.11 or v8.12.
+The files should compile with Coq v8.15.
 
 The compilation of the files depends on the TLC library.
 TLC is available from `opam`, package named `coq-tlc`.
 
 TLC can also be installed by hand.
-For Coq v8.10 or more recent:
 
 ```
   git clone git@github.com:charguer/tlc.git
@@ -36,11 +35,20 @@ For Coq v8.10 or more recent:
   make install
 ```
 
+The command for compiling all files:
+
+```
+   make -j4 all
+```
+
+The command `make -j4 vos` processes all files in a faster way,
+to make them ready for interactive use.
+
 
 License
 =======
 
-All files in TLC are distributed under the MIT X11 license. See the LICENSE file.
+All files are distributed under the MIT X11 license. See the LICENSE file.
 
 Authors
 =======

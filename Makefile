@@ -5,5 +5,5 @@ default: all
 $(SUBDIRS)::
 	$(MAKE) -C $@ $(MAKECMDGOALS)
 
-all clean : $(SUBDIRS)
+all proofs vo vos vok clean : $(SUBDIRS)
 
