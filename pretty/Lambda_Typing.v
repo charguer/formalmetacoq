@@ -4,7 +4,8 @@
 *************************************************************)
 
 Set Implicit Arguments.
-Require Import Lambda_Syntax LibLN LibInt.
+Require Import Lambda_Syntax.
+From TLC Require Import LibLN LibInt.
 
 Implicit Types v : val.
 Implicit Types t : trm.
@@ -43,6 +44,6 @@ Inductive typing : env typ -> trm -> typ -> Prop :=
       typing (E & x ~~ U) t1 T ->
       typing E (trm_abs x t1) (typ_arrow U T)
   | typing_app : forall T1 T2 E t1 t2,
-      typing E t1 (typ_arrow T1 T2) -> 
+      typing E t1 (typ_arrow T1 T2) ->
       typing E t2 T1 ->
       typing E (trm_app t1 t2) T2.

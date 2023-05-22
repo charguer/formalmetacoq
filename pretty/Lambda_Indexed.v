@@ -17,7 +17,7 @@ Implicit Types e : ext.
 (************************************************************)
 (* ** Semantics *)
 
-(** Order on the indices, [Lo o n n'] is 
+(** Order on the indices, [Lo o n n'] is
     equivalent to [o = out_div \/ n < n']. *)
 
 Definition Lo o (n n':nat) :=
@@ -98,7 +98,7 @@ Hint Constructors red.
 
 Lemma red_ired : forall e o,
   red e o -> exists n, ired n e o.
-Proof. 
+Proof.
   unfold iredval. introv H.
   forwards (n&M): red_redh (rm H).
   exists ((n+n+n)%nat).
@@ -143,7 +143,7 @@ Hint Resolve ired_app_1_div_zero ired_app_2_div_zero.
 
 Lemma diverge_idiverge : forall e,
   diverge e -> idiverge e.
-Proof. 
+Proof.
   unfold idiverge. introv R. exists O. gen e. cofix IH.
   introv R. inverts R as.
   introv R1 R2. lets [(n1&M1)|M1]: cored_red_or_diverge R1; constructors*.
@@ -176,7 +176,7 @@ Hint Constructors bigred.
 
 Lemma bigred_iredval : forall t v,
   bigred t v -> iredval t v.
-Proof. 
+Proof.
   unfold iredval. introv H.
   forwards (n&M): bigred_bigredh (rm H).
   exists ((n+n+n)%nat).
@@ -197,7 +197,7 @@ Proof.
   introv R1 L1 R2 L2. inverts R2 as R3 L3 R4 L4.
    inverts R4 as R5 L5. unfolds Lo. constructors*.
 Qed.
- 
+
 (** [bigdiv] to [idiverge] *)
 
 Lemma ired_bigred : forall n t v,
@@ -207,9 +207,9 @@ Proof. introv R. apply* iredval_bigred. exists* n. Qed.
 Lemma bigdiv_idiverge : forall t,
   bigdiv t -> idiverge t.
 Proof.
-  introv R. exists O. gen t. cofix IH. 
+  introv R. exists O. gen t. cofix IH.
   introv H. inverts H as.
-  introv R1. applys* ired_app O. 
+  introv R1. applys* ired_app O.
   introv R1 R2. forwards (n1&M1): bigred_iredval R1.
    applys ired_app O. eauto. eauto. applys* ired_app_1 O. auto.
   introv R1 R2 R3. forwards (n1&M1): bigred_iredval R1.

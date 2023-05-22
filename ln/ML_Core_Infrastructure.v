@@ -4,7 +4,9 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import List LibLN ML_Core_Definitions.
+From Coq Require Import List.
+From TLC Require Import LibLN.
+Require Import ML_Core_Definitions.
 
 
 (* ====================================================================== *)
@@ -29,12 +31,12 @@ Definition typ_fv_list :=
 
 (** Computing free variables of a type scheme. *)
 
-Definition sch_fv M := 
+Definition sch_fv M :=
   typ_fv (sch_type M).
 
 (** Computing free type variables of the values of an environment. *)
 
-Definition env_fv := 
+Definition env_fv :=
   fv_in_values sch_fv.
 
 (** Computing free variables of a term. *)
@@ -67,26 +69,26 @@ Fixpoint typ_substs (Zs : list var) (Us : list typ) (T : typ)
   match Zs, Us with
   | Z::Zs', U::Us' => typ_substs Zs' Us' (typ_subst Z U T)
   | _, _ => T
-  end.    
+  end.
 
 (** Substitution for names for schemes. *)
 
-Definition sch_subst Z U M := 
+Definition sch_subst Z U M :=
   Sch (sch_arity M) (typ_subst Z U (sch_type M)).
 
 (** Iterated substitution for schemes. *)
 
-Definition sch_substs Zs Us M := 
+Definition sch_substs Zs Us M :=
   Sch (sch_arity M) (typ_substs Zs Us (sch_type M)).
 
 (** Substitution for name in a term. *)
 
 Fixpoint trm_subst (z : var) (u : trm) (t : trm) {struct t} : trm :=
   match t with
-  | trm_bvar i    => trm_bvar i 
+  | trm_bvar i    => trm_bvar i
   | trm_fvar x    => If x = z then u else (trm_fvar x)
-  | trm_abs t1    => trm_abs (trm_subst z u t1) 
-  | trm_let t1 t2 => trm_let (trm_subst z u t1) (trm_subst z u t2) 
+  | trm_abs t1    => trm_abs (trm_subst z u t1)
+  | trm_let t1 t2 => trm_let (trm_subst z u t1) (trm_subst z u t2)
   | trm_app t1 t2 => trm_app (trm_subst z u t1) (trm_subst z u t2)
   end.
 
@@ -145,7 +147,7 @@ Hint Extern 1 (types _ _) => split; auto.
 Lemma fv_list_map : forall ts1 ts2,
   typ_fv_list (ts1 ++ ts2) = typ_fv_list ts1 \u typ_fv_list ts2.
 Proof.
-  induction ts1; simpl; intros. 
+  induction ts1; simpl; intros.
   rewrite* union_empty_l.
   rewrite IHts1. rewrite* union_assoc.
 Qed.
@@ -160,14 +162,14 @@ Lemma trm_open_rec_core :forall t j v i u, i <> j ->
   {j ~> v}t = {i ~> u}({j ~> v}t) -> t = {i ~> u}t.
 Proof.
   induction t; introv Neq Equ;
-  simpl in *; inversion* Equ; f_equal*.  
-  case_nat*. case_nat*. 
+  simpl in *; inversion* Equ; f_equal*.
+  case_nat*. case_nat*.
 Qed.
 
 Lemma trm_open_rec : forall t u,
   term t -> forall k, t = {k ~> u}t.
 Proof.
-  induction 1; intros; simpl; f_equal*. 
+  induction 1; intros; simpl; f_equal*.
   unfolds trm_open. pick_fresh x.
    apply* (@trm_open_rec_core t1 0 (trm_fvar x)).
   unfolds trm_open. pick_fresh x.
@@ -176,15 +178,15 @@ Qed.
 
 (** Substitution for a fresh name is identity. *)
 
-Lemma trm_subst_fresh : forall x t u, 
+Lemma trm_subst_fresh : forall x t u,
   x \notin trm_fv t ->  [x ~> u] t = t.
 Proof.
-  intros. induction t; simpls; f_equal*. case_var*. 
+  intros. induction t; simpls; f_equal*. case_var*.
 Qed.
 
 (** Substitution distributes on the open operation. *)
 
-Lemma trm_subst_open : forall x u t1 t2, term u -> 
+Lemma trm_subst_open : forall x u t1 t2, term u ->
   [x ~> u] (t1 ^^ t2) = ([x ~> u]t1) ^^ ([x ~> u]t2).
 Proof.
   intros. unfold trm_open. generalize 0.
@@ -204,7 +206,7 @@ Qed.
 (** Opening up an abstraction of body t with a term u is the same as opening
   up the abstraction with a fresh name x and then substituting u for x. *)
 
-Lemma trm_subst_intro : forall x t u, 
+Lemma trm_subst_intro : forall x t u,
   x \notin (trm_fv t) -> term u ->
   t ^^ u = [x ~> u](t ^ x).
 Proof.
@@ -227,25 +229,25 @@ Hint Resolve trm_subst_term.
 
 (** Conversion from locally closed abstractions and bodies *)
 
-Lemma term_abs_to_body : forall t1, 
+Lemma term_abs_to_body : forall t1,
   term (trm_abs t1) -> term_body t1.
 Proof.
   intros. unfold term_body. inversion* H.
 Qed.
 
-Lemma body_to_term_abs : forall t1, 
+Lemma body_to_term_abs : forall t1,
   term_body t1 -> term (trm_abs t1).
 Proof.
   intros. inversion* H.
 Qed.
 
-Lemma term_let_to_body : forall t1 t2, 
+Lemma term_let_to_body : forall t1 t2,
   term (trm_let t1 t2) -> term_body t2.
 Proof.
   intros. unfold term_body. inversion* H.
 Qed.
 
-Lemma body_to_term_let : forall t1 t2, 
+Lemma body_to_term_let : forall t1 t2,
   term_body t2 -> term t1 -> term (trm_let t1 t2).
 Proof.
   intros. inversion* H.
@@ -254,11 +256,11 @@ Qed.
 Hint Resolve body_to_term_abs body_to_term_let.
 
 Hint Extern 1 (term_body ?t) =>
-  match goal with 
-  | H: context [trm_abs t] |- _ => 
-    apply term_abs_to_body 
-  | H: context [trm_let ?t1 t] |- _ => 
-    apply (@term_let_to_body t1) 
+  match goal with
+  | H: context [trm_abs t] |- _ =>
+    apply term_abs_to_body
+  | H: context [trm_let ?t1 t] |- _ =>
+    apply (@term_let_to_body t1)
   end.
 
 (** ** Opening a body with a term gives a term *)
@@ -285,11 +287,11 @@ Qed.
 
 (** Substitution for a fresh name is identity. *)
 
-Lemma typ_subst_fresh : forall X U T, 
-  X \notin typ_fv T -> 
+Lemma typ_subst_fresh : forall X U T,
+  X \notin typ_fv T ->
   typ_subst X U T = T.
 Proof.
-  intros. induction T; simpls; f_equal*. case_var*. 
+  intros. induction T; simpls; f_equal*. case_var*.
 Qed.
 
 Lemma typ_subst_fresh_list : forall z u ts,
@@ -308,8 +310,8 @@ Proof.
   induction xs; simpls. auto. destruct H. auto.
 Qed.
 
-Lemma typ_substs_fresh : forall xs us t, 
-  fresh (typ_fv t) (length xs) xs -> 
+Lemma typ_substs_fresh : forall xs us t,
+  fresh (typ_fv t) (length xs) xs ->
   typ_substs xs us t = t.
 Proof.
   induction xs; simpl; intros us t Fr.
@@ -319,19 +321,19 @@ Qed.
 
 (** Substitution distributes on the open operation. *)
 
-Lemma typ_subst_open : forall X U T1 T2, type U -> 
-  typ_subst X U (typ_open T1 T2) = 
+Lemma typ_subst_open : forall X U T1 T2, type U ->
+  typ_subst X U (typ_open T1 T2) =
    typ_open (typ_subst X U T1) (List.map (typ_subst X U) T2).
 Proof.
   intros. induction T1; intros; simpl; f_equal*.
-  apply list_map_nth. apply* typ_subst_fresh. 
+  apply list_map_nth. apply* typ_subst_fresh.
   case_var*. apply* typ_open_type.
 Qed.
 
 (** Substitution and open_var for distinct names commute. *)
 
-Lemma typ_subst_open_vars : forall X Ys U T, 
-  fresh \{X} (length Ys) Ys -> 
+Lemma typ_subst_open_vars : forall X Ys U T,
+  fresh \{X} (length Ys) Ys ->
   type U ->
      typ_open_vars (typ_subst X U T) Ys
    = typ_subst X U (typ_open_vars T Ys).
@@ -345,32 +347,32 @@ Qed.
 (** Opening up an abstraction of body t with a term u is the same as opening
   up the abstraction with a fresh name x and then substituting u for x. *)
 
-Lemma typ_substs_intro_ind : forall T Xs Us Vs, 
-  fresh (typ_fv T \u typ_fv_list Vs \u typ_fv_list Us) (length Xs) Xs -> 
+Lemma typ_substs_intro_ind : forall T Xs Us Vs,
+  fresh (typ_fv T \u typ_fv_list Vs \u typ_fv_list Us) (length Xs) Xs ->
   types (length Xs) Us ->
   types (length Vs) Vs ->
   typ_open T (Vs ++ Us) = typ_substs Xs Us (typ_open T (Vs ++ (typ_fvars Xs))).
 Proof.
-  induction Xs; simpl; introv Fr Tu Tv; 
+  induction Xs; simpl; introv Fr Tu Tv;
    destruct Tu; destruct Us; tryfalse.
   auto.
   inversions H0. lets [Fr1 _]: Fr. simpls.
   rewrite app_last.
   forwards K: (IHXs Us (Vs++t::nil)); clear IHXs.
     rewrite* fv_list_map.
-    auto. 
-    split~. inversions Tv. apply* Forall_app.  
-  rewrite K. clear K. 
+    auto.
+    split~. inversions Tv. apply* Forall_app.
+  rewrite K. clear K.
   f_equal. rewrite~ typ_subst_open. rewrite~ typ_subst_fresh.
   f_equal. rewrite map_app.
   simpl. case_var; tryfalse*.
-  rewrite <- app_last. 
+  rewrite <- app_last.
   f_equal. apply~ typ_subst_fresh_list.
   f_equal. apply* typ_subst_fresh_trm_fvars.
 Qed.
 
-Lemma typ_substs_intro : forall Xs Us T, 
-  fresh (typ_fv T \u typ_fv_list Us) (length Xs) Xs -> 
+Lemma typ_substs_intro : forall Xs Us T,
+  fresh (typ_fv T \u typ_fv_list Us) (length Xs) Xs ->
   types (length Xs) Us ->
   (typ_open T Us) = typ_substs Xs Us (typ_open_vars T Xs).
 Proof.
@@ -401,11 +403,11 @@ Qed.
 (** List of types are stable by type substitution *)
 
 Lemma typ_subst_type_list : forall Z U Ts n,
-  type U -> types n Ts -> 
+  type U -> types n Ts ->
   types n (List.map (typ_subst Z U) Ts).
 Proof.
   unfold types, list_for_n.
-  induction Ts; destruct n; simpl; intros TU [EQ TT]. 
+  induction Ts; destruct n; simpl; intros TU [EQ TT].
   auto. auto. inversion EQ.
   inversions TT. forwards*: (IHTs n).
 Qed.
@@ -414,9 +416,9 @@ Qed.
 
 Lemma typ_open_types : forall T Us,
   typ_body (length Us) T ->
-  types (length Us) Us -> 
+  types (length Us) Us ->
   type (typ_open T Us).
-Proof. 
+Proof.
   introv [L K] WT. pick_freshes (length Us) Xs. lets Fr': Fr.
   rewrite (fresh_length Fr) in WT, Fr'.
   rewrite* (@typ_substs_intro Xs). apply* typ_substs_types.
@@ -428,8 +430,8 @@ Qed.
 
 (** Substitution for a fresh name is identity. *)
 
-Lemma sch_subst_fresh : forall X U M, 
-  X \notin sch_fv M -> 
+Lemma sch_subst_fresh : forall X U M,
+  X \notin sch_fv M ->
   sch_subst X U M = M.
 Proof.
   intros. destruct M as [n T]. unfold sch_subst.
@@ -442,7 +444,7 @@ Lemma sch_subst_fold : forall Z U T n,
   Sch n (typ_subst Z U T) = sch_subst Z U (Sch n T).
 Proof.
   auto.
-Qed. 
+Qed.
 
 (** Distributivity of type substitution on opening of scheme. *)
 
@@ -458,7 +460,7 @@ Qed.
 (** Distributivity of type substitution on opening of scheme with variables. *)
 
 Lemma sch_subst_open_vars : forall Z U M Xs,
-   fresh (\{Z}) (length Xs) Xs -> 
+   fresh (\{Z}) (length Xs) Xs ->
    type U ->
     typ_subst Z U (sch_open_vars M Xs)
   = sch_open_vars (sch_subst Z U M) Xs.
@@ -481,7 +483,7 @@ Hint Resolve sch_subst_type.
 
 (** Scheme arity is preserved by type substitution. *)
 
-Lemma sch_subst_arity : forall X U M, 
+Lemma sch_subst_arity : forall X U M,
   sch_arity (sch_subst X U M) = sch_arity M.
 Proof.
   auto.
@@ -493,7 +495,7 @@ Lemma sch_open_types : forall M Us,
   scheme M ->
   types (sch_arity M) Us ->
   type (sch_open M Us).
-Proof. 
+Proof.
   unfold scheme, sch_open. intros [n T] Us WB [Ar TU].
   simpls. subst n. apply* typ_open_types.
 Qed.
@@ -514,17 +516,17 @@ Lemma typing_regular : forall E e T,
 Proof.
   splits 3; induction* H.
   (* ok *)
-  pick_fresh y. forwards~: (H1 y). 
+  pick_fresh y. forwards~: (H1 y).
   pick_fresh y. forwards~: (H2 y).
-  (* term *) 
+  (* term *)
   apply_fresh* term_let as y.
     pick_freshes (sch_arity M) Xs.
     forwards*: (H0 Xs).
   (* type *)
-  pick_fresh y. forwards~: (H1 y). 
-  pick_fresh y. forwards~: (H2 y).   
+  pick_fresh y. forwards~: (H1 y).
+  pick_fresh y. forwards~: (H2 y).
   inversion* IHtyping1.
-Qed. 
+Qed.
 
 (** The value predicate only holds on locally-closed terms. *)
 

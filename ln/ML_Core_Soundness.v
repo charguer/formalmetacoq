@@ -4,28 +4,28 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import List LibLN 
-  ML_Core_Definitions
-  ML_Core_Infrastructure.
+From Coq Require Import List.
+From TLC Require Import LibLN.
+Require Import ML_Core_Definitions ML_Core_Infrastructure.
 
 (* ********************************************************************** *)
 (** Typing schemes for expressions *)
 
-Definition has_scheme_vars L E t M := forall Xs, 
+Definition has_scheme_vars L E t M := forall Xs,
   fresh L (sch_arity M) Xs ->
   E |= t ~: (M ^ Xs).
 
 Definition has_scheme E t M := forall Vs,
-  types (sch_arity M) Vs -> 
+  types (sch_arity M) Vs ->
   E |= t ~: (M ^^ Vs).
 
 (* ********************************************************************** *)
 (** Type substitution preserves typing *)
 
 Lemma typing_typ_subst : forall F Z U E t T,
-  Z \notin (env_fv E) -> 
-  type U -> 
-  E & F |= t ~: T -> 
+  Z \notin (env_fv E) ->
+  type U ->
+  E & F |= t ~: T ->
   E & (map (sch_subst Z U) F) |= t ~: (typ_subst Z U T).
 Proof.
   introv. intros WVs Dis Typ. gen_eq G: (E & F). gen F.
@@ -39,7 +39,7 @@ Proof.
       autos*.
     rewrite~ sch_subst_arity. apply* typ_subst_type_list.
   apply_fresh* typing_abs as y.
-   rewrite sch_subst_fold.   
+   rewrite sch_subst_fold.
    apply_ih_map_bind* H1.
   apply_fresh* (@typing_let (sch_subst Z U M) (L1 \u \{Z})) as y.
     simpl in Fry. rewrite* <- sch_subst_open_vars.
@@ -51,13 +51,13 @@ Qed.
 (** Iterated type substitution preserves typing *)
 
 Lemma typing_typ_substs : forall Zs Us E t T,
-  fresh (env_fv E) (length Zs) Zs -> 
+  fresh (env_fv E) (length Zs) Zs ->
   types (length Zs) Us ->
-  E |= t ~: T -> 
+  E |= t ~: T ->
   E |= t ~: (typ_substs Zs Us T).
 Proof.
   induction Zs; destruct Us; simpl; introv Fr WU Tt;
-   destruct Fr; inversions WU; 
+   destruct Fr; inversions WU;
    simpls; try solve [ auto | false* ].
   inversions H2. inversions H1.
   apply* IHZs. apply_empty* typing_typ_subst.
@@ -92,7 +92,7 @@ Qed.
 (** Typing is preserved by weakening *)
 
 Lemma typing_weaken : forall G E F t T,
-   (E & G) |= t ~: T -> 
+   (E & G) |= t ~: T ->
    ok (E & F & G) ->
    (E & F & G) |= t ~: T.
 Proof.
@@ -107,24 +107,24 @@ Qed.
 (* ********************************************************************** *)
 (** Typing is preserved by term substitution *)
 
-Lemma typing_trm_subst : forall F M E t T z u, 
+Lemma typing_trm_subst : forall F M E t T z u,
   E & z ~ M & F |= t ~: T ->
-  has_scheme E u M -> 
+  has_scheme E u M ->
   term u ->
   E & F |= (trm_subst z u t) ~: T.
 Proof.
-  introv Typt. intros Typu Wu. 
+  introv Typt. intros Typu Wu.
   gen_eq G: (E & z ~ M & F). gen F.
   induction Typt; introv EQ; subst; simpl trm_subst.
   case_var.
     binds_get H0. apply_empty* typing_weaken.
     binds_cases H0; apply* typing_var.
-  apply_fresh* typing_abs as y. 
-   rewrite* trm_subst_open_var. 
-   apply_ih_bind* H1. 
-  apply_fresh* (@typing_let M0 L1) as y. 
-   rewrite* trm_subst_open_var. 
-   apply_ih_bind* H2. 
+  apply_fresh* typing_abs as y.
+   rewrite* trm_subst_open_var.
+   apply_ih_bind* H1.
+  apply_fresh* (@typing_let M0 L1) as y.
+   rewrite* trm_subst_open_var.
+   apply_ih_bind* H2.
   autos*.
 Qed.
 
@@ -135,17 +135,17 @@ Lemma preservation_result : preservation.
 Proof.
   introv Typ. gen t'.
   induction Typ; introv Red; subst; inversions Red.
-  pick_fresh x. rewrite* (@trm_subst_intro x). 
-   apply_empty* typing_trm_subst. 
-   apply* (@has_scheme_from_vars L1). 
+  pick_fresh x. rewrite* (@trm_subst_intro x).
+   apply_empty* typing_trm_subst.
+   apply* (@has_scheme_from_vars L1).
   apply* (@typing_let M L1).
-  inversions Typ1. pick_fresh x. 
-   rewrite* (@trm_subst_intro x). 
+  inversions Typ1. pick_fresh x.
+   rewrite* (@trm_subst_intro x).
    apply_empty* typing_trm_subst.
    apply* has_scheme_from_typ.
   autos*.
   autos*.
-Qed. 
+Qed.
 
 (* ********************************************************************** *)
 (** Progress: typed terms are values or can reduce *)
@@ -153,17 +153,17 @@ Qed.
 Lemma progress_result : progress.
 Proof.
   introv Typ. gen_eq E: (empty:env). lets Typ': Typ.
-  induction Typ; intros; subst. 
+  induction Typ; intros; subst.
   false* binds_empty_inv.
-  left*. 
+  left*.
   right. pick_freshes (sch_arity M) Ys.
-    destruct~ (@H0 Ys) as [Val1 | [t1' Red1]]. 
-      exists* (t2 ^^ t1). 
+    destruct~ (@H0 Ys) as [Val1 | [t1' Red1]].
+      exists* (t2 ^^ t1).
       exists* (trm_let t1' t2).
-  right. destruct~ IHTyp1 as [Val1 | [t1' Red1]]. 
-    destruct~ IHTyp2 as [Val2 | [t2' Red2]]. 
+  right. destruct~ IHTyp1 as [Val1 | [t1' Red1]].
+    destruct~ IHTyp2 as [Val2 | [t2' Red2]].
       inversions Typ1; inversion Val1. exists* (t0 ^^ t2).
-      exists* (trm_app t1 t2'). 
+      exists* (trm_app t1 t2').
     exists* (trm_app t1' t2).
 Qed.
 

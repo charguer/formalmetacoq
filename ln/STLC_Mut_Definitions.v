@@ -4,7 +4,7 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN.
+From TLC Require Import LibLN.
 Implicit Types x : var.
 
 (** Grammar of types. *)
@@ -34,7 +34,7 @@ Fixpoint trm_open_rec (k : nat) (u : val) (t : trm) {struct t} : trm :=
   match t with
   | trm_val v1    => trm_val (val_open_rec k u v1)
   | trm_app v1 t2 => trm_app (val_open_rec k u v1) (trm_open_rec k u t2)
-  end 
+  end
 with val_open_rec (k : nat) (u : val) (v : val) {struct v} : val :=
   match v with
   | val_bvar i  => If k = i then u else v
@@ -55,8 +55,8 @@ Inductive term : trm -> Prop :=
       value v ->
       term (trm_val v)
   | term_app : forall v1 t2,
-      value v1 -> 
-      term t2 -> 
+      value v1 ->
+      term t2 ->
       term (trm_app v1 t2)
 with value : val -> Prop :=
   | value_var : forall x,
@@ -76,10 +76,10 @@ Reserved Notation "E \= v ~: T" (at level 69).
 
 Inductive typing_trm : env -> trm -> typ -> Prop :=
   | typing_trm_val : forall E v T,
-      E \= v ~: T -> 
+      E \= v ~: T ->
       E |= (trm_val v) ~: T
   | typing_trm_app : forall S T E v1 t2,
-      E \= v1 ~: (typ_arrow S T) -> 
+      E \= v1 ~: (typ_arrow S T) ->
       E |= t2 ~: S ->
       E |= (trm_app v1 t2) ~: T
 
@@ -91,7 +91,7 @@ with typing_val : env -> val -> typ -> Prop :=
       binds x T E ->
       E \= (val_fvar x) ~: T
   | typing_val_abs : forall L E U T t1,
-      (forall x, x \notin L -> 
+      (forall x, x \notin L ->
         (E & x ~ U) |= t1 ^ x ~: T) ->
       E \= (val_abs t1) ~: (typ_arrow U T)
 
@@ -117,7 +117,7 @@ Definition preservation := forall E t t' T,
   t --> t' ->
   E |= t' ~: T.
 
-Definition progress := forall t T, 
+Definition progress := forall t T,
   empty |= t ~: T ->
      exists v, t = trm_val v
   \/ exists t', t --> t'.

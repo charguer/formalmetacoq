@@ -4,7 +4,8 @@
 *************************************************************)
 
 Set Implicit Arguments.
-Require Export LibVar Common.
+From TLC Require Export LibVar.
+Require Export Common.
 
 
 (*==========================================================*)
@@ -42,7 +43,7 @@ Fixpoint subst (x:var) (v:val) (t:trm) : trm :=
   | trm_val v1 => trm_val v1
   | trm_var y => If x = y then v else t
   | trm_abs y t3 => trm_abs y (If x = y then t3 else s t3)
-  | trm_app t1 t2 => trm_app (s t1) (s t2)  
+  | trm_app t1 t2 => trm_app (s t1) (s t2)
   | trm_inj b t1 => trm_inj b (s t1)
   | trm_case t1 t2 t3 => trm_case (s t1) (s t2) (s t3)
   | trm_try t1 t2 => trm_try (s t1) (s t2)
@@ -58,7 +59,7 @@ Fixpoint subst (x:var) (v:val) (t:trm) : trm :=
 Inductive vars_opt := not_used | not_free.
 
 Definition add_bound f E (x:var) :=
-  match f with 
+  match f with
   | not_used => E \u \{x}
   | not_free => E \- \{x}
   end.
@@ -76,7 +77,7 @@ Fixpoint trm_vars (f:vars_opt) (t:trm) : vars :=
   | trm_case t1 t2 t3 => (r t1) \u (r t2) \u (r t3)
   | trm_try t1 t2 => (r t1) \u (r t2)
   | trm_raise t1 => (r t1)
-  end 
+  end
 
 with val_vars (f:vars_opt) (v:val) : vars :=
   match v with
@@ -118,7 +119,7 @@ Lemma notin_remove_weaken : forall E F (x:var),
 Proof. intros. applys~ notin_remove_r. Qed.
 
 Lemma notin_to_fresh : forall xs n E F,
-  fresh E n xs -> 
+  fresh E n xs ->
   (forall x, x \notin E -> x \notin F) ->
   fresh F n xs.
 Proof.
@@ -126,7 +127,7 @@ Proof.
   auto.
   destruct n. false. simpls. destruct Fr.
    split~. applys* IHxs.
-Qed. 
+Qed.
 
 Lemma fresh_remove_weaken : forall E F n xs,
   fresh E n xs ->
@@ -178,8 +179,8 @@ Qed.
 Lemma notin_remove_single_inv : forall A x y (E:fset A),
   x \notin (E \- \{y}) -> x <> y -> x \notin E.
 Proof.
-  introv H1 H2. applys* notin_remove_inv. 
-  rewrite~ notin_singleton. 
+  introv H1 H2. applys* notin_remove_inv.
+  rewrite~ notin_singleton.
 Qed.
 
 
@@ -199,16 +200,16 @@ Qed.
 
 (** Substitution is the identity function on fresh vars *)
 
-Lemma subst_id : forall f x v t, 
-  x \notin trm_vars f t -> 
-  subst x v t = t. 
+Lemma subst_id : forall f x v t,
+  x \notin trm_vars f t ->
+  subst x v t = t.
 Proof.
   induction t; introv F; simpls; fequals~.
   case_if*. subst. notin_false.
   case_if*. applys IHt. destruct f; simpls~.
    applys~ notin_remove_inv F.
 Qed.
-  
+
 Lemma subst_notin : forall t x y v,
   x \notin (trm_vars not_used t) ->
   x \notin (val_vars not_used v) ->
@@ -219,10 +220,10 @@ Lemma fresh_subst : forall xs n t y v,
   fresh (trm_vars not_used t) n xs ->
   fresh (val_vars not_used v) n xs ->
   fresh (trm_vars not_used (subst y v t)) n xs.
-Proof. 
+Proof.
   induction xs; introv Frt Frv.
   auto.
-  destruct n. false. simpls. 
+  destruct n. false. simpls.
    destruct Frt. destruct Frv.
    hint subst_notin. auto.
 Qed.

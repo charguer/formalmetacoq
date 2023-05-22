@@ -46,9 +46,9 @@ Implicit Types e : ext.
 (** Non-regular behaviors *)
 
 Inductive abort : out -> Prop :=
-  | abort_exn : forall n v, 
+  | abort_exn : forall n v,
      abort (out_ter n (res_exn v))
-  | abort_div : 
+  | abort_div :
      abort out_div.
 
 (** Partial order on the outcomes *)
@@ -66,7 +66,7 @@ Inductive before : binary out :=
   | before_ter : forall n n' r,
       n < n' ->
       before (out_ter n r) (out_ter n' r)
-  | before_div : 
+  | before_div :
       before out_div out_div.
 
 Definition faster_before o1 o2 o :=
@@ -80,8 +80,8 @@ CoInductive cred : ext -> out -> Prop :=
   | cred_abs : forall n x t,
       cred (trm_abs x t) (out_ter n (val_abs x t))
   | cred_app : forall o1 o2 o t1 t2,
-      cred t1 o1 -> 
-      cred (ext_app_1 o1 t2) o2 -> 
+      cred t1 o1 ->
+      cred (ext_app_1 o1 t2) o2 ->
       faster_before o1 o2 o ->
       cred (trm_app t1 t2) o
   | cred_app_1_abort : forall o1 o t2,
@@ -89,8 +89,8 @@ CoInductive cred : ext -> out -> Prop :=
       before o1 o ->
       cred (ext_app_1 o1 t2) o
   | cred_app_1 : forall o2 o3 o n v1 t2,
-      cred t2 o2 -> 
-      cred (ext_app_2 v1 o2) o3 -> 
+      cred t2 o2 ->
+      cred (ext_app_2 v1 o2) o3 ->
       faster_before o2 o3 o ->
       cred (ext_app_1 (out_ter n v1) t2) o
   | cred_app_2_abort : forall o2 v1 o,
@@ -98,7 +98,7 @@ CoInductive cred : ext -> out -> Prop :=
       before o2 o ->
       cred (ext_app_2 v1 o2) o
   | cred_app_2 : forall o3 o n x t3 v2,
-      cred (subst x v2 t3) o3 -> 
+      cred (subst x v2 t3) o3 ->
       before o3 o ->
       cred (ext_app_2 (val_abs x t3) (out_ter n v2)) o
   | cred_inj : forall o1 o2 b t1 o,
@@ -113,8 +113,8 @@ CoInductive cred : ext -> out -> Prop :=
   | cred_inj_1 : forall n b v1,
       cred (ext_inj_1 b (out_ter n v1)) (out_ter n (val_inj b v1))
   | cred_case : forall o1 o2 t1 t2 t3 o,
-      cred t1 o1 -> 
-      cred (ext_case_1 o1 t2 t3) o2 -> 
+      cred t1 o1 ->
+      cred (ext_case_1 o1 t2 t3) o2 ->
       faster_before o1 o2 o ->
       cred (trm_case t1 t2 t3) o
   | cred_case_1_abort : forall o1 t2 t3 o,
@@ -122,22 +122,22 @@ CoInductive cred : ext -> out -> Prop :=
       before o1 o ->
       cred (ext_case_1 o1 t2 t3) o
   | cred_case_1_true : forall o1 n v1 t2 t3 o,
-      cred (trm_app t2 v1) o1 -> 
+      cred (trm_app t2 v1) o1 ->
       before o1 o ->
       cred (ext_case_1 (out_ter n (val_inj true v1)) t2 t3) o
   | cred_case_1_false : forall o1 n v1 t2 t3 o,
-      cred (trm_app t3 v1) o1 -> 
+      cred (trm_app t3 v1) o1 ->
       before o1 o ->
       cred (ext_case_1 (out_ter n (val_inj false v1)) t2 t3) o
   | cred_try : forall o1 o2 t1 t2 o,
-      cred t1 o1 -> 
-      cred (ext_try_1 o1 t2) o2 -> 
+      cred t1 o1 ->
+      cred (ext_try_1 o1 t2) o2 ->
       faster_before o1 o2 o ->
       cred (trm_try t1 t2) o
   | cred_try_1_val : forall n v1 t2,
       cred (ext_try_1 (out_ter n v1) t2) (out_ter n v1)
   | cred_try_1_exn : forall o1 n v1 t2 o,
-      cred (trm_app t2 v1) o1 -> 
+      cred (trm_app t2 v1) o1 ->
       before o1 o ->
       cred (ext_try_1 (out_ter n (res_exn v1)) t2) o
   | cred_try_1_div : forall t2,
@@ -175,7 +175,7 @@ Hint Extern 1 (_ <= _) => abstracts math.
 Definition map f o :=
   match o with
   | out_ter n v => out_ter (f n) v
-  | out_div => out_div 
+  | out_div => out_div
   end.
 
 Definition add d o := map (fun n => (n+d)%nat) o.
@@ -191,11 +191,11 @@ Lemma before_le_l : forall o n n' b,
 Proof. introv O L. inverts* O. Qed.
 
 Lemma faster_before_le_l : forall o1 o2 n n' b,
-  faster_before o1 o2 (out_ter n b) -> n <= n' -> 
+  faster_before o1 o2 (out_ter n b) -> n <= n' ->
   faster_before o1 o2 (out_ter n' b).
-Proof.  
+Proof.
   hint faster_le_l, before_le_l.
-  unfold faster_before. introv [O1 O2] L. split*. 
+  unfold faster_before. introv [O1 O2] L. split*.
 Qed.
 
 Hint Resolve faster_before_le_l.
@@ -215,7 +215,7 @@ Lemma before_succ' : forall o,
 Proof. intros. destruct o; simple~. Qed.
 
 Lemma before_add : forall n m o,
-  n < m -> 
+  n < m ->
   before (add n o) (add m o).
 Proof. intros. destruct o; simple~. Qed.
 
@@ -267,10 +267,10 @@ Proof. intros. apply~ faster_before_zero. Qed.
 (** Additional automation *)
 
 Lemma faster_before_max : forall n1 n2 b1 b2,
-  faster_before (out_ter n1 b1) (out_ter n2 b2) 
+  faster_before (out_ter n1 b1) (out_ter n2 b2)
                 (out_ter (S (max n1 n2)) b2).
-Proof. 
-  intros. forwards [[? ?]|[? ?]]: max_cases n1 n2; split~. 
+Proof.
+  intros. forwards [[? ?]|[? ?]]: max_cases n1 n2; split~.
 Qed.
 
 Ltac max_resolve :=

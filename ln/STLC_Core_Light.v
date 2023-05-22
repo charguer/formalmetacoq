@@ -9,7 +9,7 @@
    turned on at the top of the file Lib_Tactic.v. *)
 
 Set Implicit Arguments.
-Require Import LibLN.
+From TLC Require Import LibLN.
 
 (* ********************************************************************** *)
 (** * Definitions *)
@@ -53,8 +53,8 @@ Inductive term : trm -> Prop :=
       (forall x, x \notin L -> term (t1 ^ x)) ->
       term (trm_abs t1)
   | term_app : forall t1 t2,
-      term t1 -> 
-      term t2 -> 
+      term t1 ->
+      term t2 ->
       term (trm_app t1 t2).
 
 (** Environment is an associative list mapping variables to types. *)
@@ -71,11 +71,11 @@ Inductive typing : env -> trm -> typ -> Prop :=
       binds x T E ->
       E |= (trm_fvar x) ~: T
   | typing_abs : forall L E U T t1,
-      (forall x, x \notin L -> 
+      (forall x, x \notin L ->
         (E & x ~ U) |= t1 ^ x ~: T) ->
       E |= (trm_abs t1) ~: (typ_arrow U T)
   | typing_app : forall S T E t1 t2,
-      E |= t1 ~: (typ_arrow S T) -> 
+      E |= t1 ~: (typ_arrow S T) ->
       E |= t2 ~: S ->
       E |= (trm_app t1 t2) ~: T
 
@@ -84,7 +84,7 @@ where "E |= t ~: T" := (typing E t T).
 (** Definition of values (only abstractions are values) *)
 
 Inductive value : trm -> Prop :=
-  | value_abs : forall t1, 
+  | value_abs : forall t1,
       term (trm_abs t1) -> value (trm_abs t1).
 
 (** Reduction relation - one step in call-by-value *)
@@ -154,7 +154,7 @@ Ltac gather_vars :=
 Ltac pick_fresh Y :=
   let L := gather_vars in (pick_fresh_gen L Y).
 
-(** Tactic [apply_fresh T as y] takes a lemma T of the form 
+(** Tactic [apply_fresh T as y] takes a lemma T of the form
     [forall L ..., (forall x, x \notin L, P x) -> ... -> Q.]
     instantiate L to be the set of variables occuring in the
     context (by [gather_vars]), then introduces for the premise
@@ -178,15 +178,15 @@ Hint Constructors term value red.
 Axiom subst_open_var : forall x y u t, y <> x -> term u ->
   ([x ~> u]t) ^ y = [x ~> u] (t ^ y).
 
-Axiom subst_intro : forall x t u, 
+Axiom subst_intro : forall x t u,
   x \notin (fv t) -> term u ->
   t ^^ u = [x ~> u](t ^ x).
 
-(** Assume well-formedness always holds. The purpose of these tactics is 
+(** Assume well-formedness always holds. The purpose of these tactics is
     to save the user from fixing the details when he first wants
-    to set up the basic architecture of the proof. These assumptions 
+    to set up the basic architecture of the proof. These assumptions
     can be exploited to prove "False" and thus proof any proposition to be
-    true, but this has to be done on purpose. Completing a proof of 
+    true, but this has to be done on purpose. Completing a proof of
     subject reduction without an explicit hack of these assumption is
     likely to be a very good starting point towards a complete formalization. *)
 
@@ -202,7 +202,7 @@ Hint Extern 1 (ok _) => skip.
 (** Typing is preserved by weakening. *)
 
 Lemma typing_weaken : forall G E F t T,
-   (E & G) |= t ~: T -> 
+   (E & G) |= t ~: T ->
    ok (E & F & G) ->
    (E & F & G) |= t ~: T.
 Proof.
@@ -245,22 +245,22 @@ Proof.
   apply* typing_app.
 Qed.
 
-(** Progress (a well-typed term is either a value or it can 
+(** Progress (a well-typed term is either a value or it can
   take a step of reduction). *)
 
-Lemma progress_result : forall t T, 
+Lemma progress_result : forall t T,
   empty |= t ~: T ->
-     value t 
+     value t
   \/ exists t', t --> t'.
 Proof.
   introv Typ. gen_eq E: (empty : env). lets Typ': Typ.
   induction Typ; intros; subst.
-  false* binds_empty_inv. 
+  false* binds_empty_inv.
   left*.
   right. destruct~ IHTyp1 as [Val1 | [t1' Red1]].
     destruct~ IHTyp2 as [Val2 | [t2' Red2]].
       inversions Typ1; inversions Val1. exists* (t0 ^^ t2).
-      exists* (trm_app t1 t2'). 
+      exists* (trm_app t1 t2').
     exists* (trm_app t1' t2).
 Qed.
 

@@ -4,7 +4,7 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN.
+From TLC Require Import LibLN.
 
 (* ********************************************************************** *)
 (** * Description of the Language *)
@@ -43,15 +43,15 @@ Inductive type : typ -> Prop :=
   | type_var : forall X,
       type (typ_fvar X)
   | type_arrow : forall T1 T2,
-      type T1 -> 
-      type T2 -> 
+      type T1 ->
+      type T2 ->
       type (typ_arrow T1 T2)
   | type_all : forall L T1 T2,
       type T1 ->
       (forall X, X \notin L -> type (T2 open_tt_var X)) ->
       type (typ_all T1 T2).
 
-(** Binding are either mapping type or term variables. 
+(** Binding are either mapping type or term variables.
  [X ~<: T] is a subtyping asumption and [x ~: T] is
  a typing assumption *)
 
@@ -71,18 +71,18 @@ Definition env := LibEnv.env bind.
   that T is a type *)
 
 Inductive wft : env -> typ -> Prop :=
-  | wft_top : forall E, 
+  | wft_top : forall E,
       wft E typ_top
   | wft_var : forall U E X,
       binds X (bind_sub U) E ->
-      wft E (typ_fvar X) 
+      wft E (typ_fvar X)
   | wft_arrow : forall E T1 T2,
-      wft E T1 -> 
-      wft E T2 -> 
+      wft E T1 ->
+      wft E T2 ->
       wft E (typ_arrow T1 T2)
   | wft_all : forall L E T1 T2,
       wft E T1 ->
-      (forall X, X \notin L -> 
+      (forall X, X \notin L ->
         wft (E & X ~<: T1) (T2 open_tt_var X)) ->
       wft E (typ_all T1 T2).
 
@@ -160,7 +160,7 @@ Definition subst_tb (Z : var) (P : typ) (b : bind) : bind :=
 
 Hint Constructors type wft ok okt.
 
-Hint Resolve 
+Hint Resolve
   sub_top sub_refl_tvar sub_arrow.
 
 (** Gathering free names already used in the proofs *)
@@ -178,7 +178,7 @@ Ltac pick_fresh x :=
   let L := gather_vars in (pick_fresh_gen L x).
 
 (** "apply_fresh T as x" is used to apply inductive rule which
-   use an universal quantification over a cofinite set *)    
+   use an universal quantification over a cofinite set *)
 
 Tactic Notation "apply_fresh" constr(T) "as" ident(x) :=
   apply_fresh_base T gather_vars x.
@@ -205,7 +205,7 @@ Tactic Notation "apply_empty" constr(F) :=
 Tactic Notation "apply_empty" "*" constr(F) :=
   apply_empty F; autos*.
 
-(** Tactic to undo when Coq does too much simplification *)   
+(** Tactic to undo when Coq does too much simplification *)
 
 Ltac unsimpl_map_bind :=
   match goal with |- context [ ?B (subst_tt ?Z ?P ?U) ] =>
@@ -223,7 +223,7 @@ Tactic Notation "unsimpl_map_bind" "*" :=
 Lemma type_from_wft : forall E T,
   wft E T -> type T.
 Proof.
-  induction 1; eauto. 
+  induction 1; eauto.
 Qed.
 
 (** Through weakening *)
@@ -245,7 +245,7 @@ Qed.
 
 Lemma wft_narrow : forall V F U T E X,
   wft (E & X ~<: V & F) T ->
-  ok (E & X ~<: U & F) -> 
+  ok (E & X ~<: U & F) ->
   wft (E & X ~<: U & F) T.
 Proof.
   intros. gen_eq (E & X ~<: V & F) as K. gen E F.
@@ -267,7 +267,7 @@ Qed.
 Lemma ok_from_okt : forall E,
   okt E -> ok E.
 Proof.
-  induction 1; auto. 
+  induction 1; auto.
 Qed.
 
 Hint Extern 1 (ok _) => apply ok_from_okt.
@@ -308,8 +308,8 @@ Lemma okt_narrow : forall V E F U X,
   okt (E & X ~<: U & F).
 Proof.
   induction F as [|(Y,B)]; simpl; introv Ok Wf; env_fix; inversions Ok.
-  auto. 
-  apply okt_sub; auto. use wft_narrow. 
+  auto.
+  apply okt_sub; auto. use wft_narrow.
 Qed.
 
 (** Automation *)
@@ -328,7 +328,7 @@ Proof.
   induction 1. autos*. autos*. autos*. autos*. (* Coq bug here? *)
   split. autos*. split;
    apply_fresh* wft_all as Y;
-    destructi~ (H1 Y); apply_empty* (@wft_narrow T1). 
+    destructi~ (H1 Y); apply_empty* (@wft_narrow T1).
 Qed.
 
 (** Automation *)
@@ -358,8 +358,8 @@ Hint Extern 1 (type ?T) =>
 (** Reflexivity (1) *)
 
 Lemma sub_reflexivity : forall E T,
-  okt E -> 
-  wft E T -> 
+  okt E ->
+  wft E T ->
   sub E T T .
 Proof.
   introv Ok WI. poses W (type_from_wft WI). gen E.
@@ -371,7 +371,7 @@ Qed.
 (** Weakening (2) *)
 
 Lemma sub_weakening : forall E F G S T,
-   sub (E & G) S T -> 
+   sub (E & G) S T ->
    okt (E & F & G) ->
    sub (E & F & G) S T.
 Proof.
@@ -382,7 +382,7 @@ Proof.
   (* case: all *)
   apply_fresh* sub_all as Y. apply_ih_bind* H0.
 Qed.
- 
+
 (* ********************************************************************** *)
 (** Narrowing and transitivity (3) *)
 
@@ -408,7 +408,7 @@ Proof.
   apply* sub_refl_tvar.
   case (X == Z); intros EQ; subst.
     apply (@sub_trans_tvar P); puts (@okt_narrow Q).
-      apply* binds_mid. 
+      apply* binds_mid.
       apply TransQ.
         do_rew* concat_assoc (apply_empty* sub_weakening).
         binds_get H. autos*.
@@ -425,15 +425,15 @@ Proof.
   gen E S T. gen_eq Q as Q' eq. gen Q' eq.
   induction W; intros Q' EQ E S SsubQ;
     induction SsubQ; try discriminate; inversions EQ;
-      intros T QsubT; inversions QsubT; 
+      intros T QsubT; inversions QsubT;
         eauto 4 using sub_trans_tvar.
   (* case: all / top -> only needed to fix well-formedness,
      by building back what has been deconstructed too much *)
-  assert (sub E (typ_all S1 S2) (typ_all T1 T2)). 
-    apply_fresh* sub_all as y. 
+  assert (sub E (typ_all S1 S2) (typ_all T1 T2)).
+    apply_fresh* sub_all as y.
   autos*.
   (* case: all / all *)
-  apply_fresh sub_all as Y. autos*. 
+  apply_fresh sub_all as Y. autos*.
   forward~ (H0 Y) as K. apply (K (T2 open_tt_var Y)); auto.
   puts (IHW T1). apply_empty* (@sub_narrowing_aux T1).
 Qed.
@@ -443,8 +443,8 @@ Lemma sub_narrowing : forall Q E F Z P S T,
   sub (E & Z ~<: Q & F) S T ->
   sub (E & Z ~<: P & F) S T.
 Proof.
-  intros. 
-  apply* sub_narrowing_aux. 
+  intros.
+  apply* sub_narrowing_aux.
   apply* sub_transitivity.
 Qed.
 

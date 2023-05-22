@@ -4,7 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN Fsub_Definitions Fsub_Infrastructure.
+From TLC Require Import LibLN.
+Require Import Fsub_Definitions Fsub_Infrastructure.
 
 (** In parentheses are given the label of the corresponding
   lemma in the description of the POPLMark Challenge. *)
@@ -17,8 +18,8 @@ Require Import LibLN Fsub_Definitions Fsub_Infrastructure.
 (** Reflexivity (1) *)
 
 Lemma sub_reflexivity : forall E T,
-  okt E -> 
-  wft E T -> 
+  okt E ->
+  wft E T ->
   sub E T T .
 Proof.
   introv Ok WI. lets W: (wft_type WI). gen E.
@@ -30,7 +31,7 @@ Qed.
 (** Weakening (2) *)
 
 Lemma sub_weakening : forall E F G S T,
-   sub (E & G) S T -> 
+   sub (E & G) S T ->
    okt (E & F & G) ->
    sub (E & F & G) S T.
 Proof.
@@ -40,7 +41,7 @@ Proof.
   (* case: all *)
   apply_fresh* sub_all as Y. apply_ih_bind* H0.
 Qed.
- 
+
 (* ********************************************************************** *)
 (** Narrowing and transitivity (3) *)
 
@@ -59,7 +60,7 @@ Lemma sub_narrowing_aux : forall Q F E Z P S T,
   sub E P Q ->
   sub (E & Z ~<: P & F) S T.
 Proof.
-  introv TransQ SsubT PsubQ. 
+  introv TransQ SsubT PsubQ.
   inductions SsubT; introv.
   apply* sub_top.
   apply* sub_refl_tvar.
@@ -84,15 +85,15 @@ Proof.
   gen E S T. set_eq Q' EQ: Q. gen Q' EQ.
   induction W; intros Q' EQ E S SsubQ;
     induction SsubQ; try discriminate; inversions EQ;
-      intros T QsubT; inversions keep QsubT; 
+      intros T QsubT; inversions keep QsubT;
         eauto 4 using sub_trans_tvar.
   (* case: all / top -> only needed to fix well-formedness,
      by building back what has been deconstructed too much *)
-  assert (sub E (typ_all S1 S2) (typ_all T1 T2)). 
-    apply_fresh* sub_all as y. 
+  assert (sub E (typ_all S1 S2) (typ_all T1 T2)).
+    apply_fresh* sub_all as y.
   autos*.
   (* case: all / all *)
-  apply_fresh sub_all as Y. autos*. 
+  apply_fresh sub_all as Y. autos*.
   applys~ (H0 Y). lets: (IHW T1).
   apply_empty* (@sub_narrowing_aux T1).
 Qed.
@@ -102,8 +103,8 @@ Lemma sub_narrowing : forall Q E F Z P S T,
   sub (E & Z ~<: Q & F) S T ->
   sub (E & Z ~<: P & F) S T.
 Proof.
-  intros. 
-  apply* sub_narrowing_aux. 
+  intros.
+  apply* sub_narrowing_aux.
   apply* sub_transitivity.
 Qed.
 
@@ -128,17 +129,17 @@ Proof.
       apply* (@wft_var (subst_tt Z P U)). unsimpl_map_bind*.
    case_var.
     apply (@sub_transitivity Q).
-      apply_empty* sub_weakening. 
+      apply_empty* sub_weakening.
       rewrite* <- (@subst_tt_fresh Z P Q).
         binds_get H. autos*.
         apply* (@notin_fv_wf E).
     apply* (@sub_trans_tvar (subst_tt Z P U)).
       rewrite* (@map_subst_tb_id E Z P).
-        binds_cases H; unsimpl_map_bind*. 
+        binds_cases H; unsimpl_map_bind*.
   apply* sub_arrow.
   apply_fresh* sub_all as X.
    unsimpl (subst_tb Z P (bind_sub T1)).
-   do 2 rewrite* subst_tt_open_tt_var. 
+   do 2 rewrite* subst_tt_open_tt_var.
    apply_ih_map_bind* H0.
 Qed.
 
@@ -149,10 +150,10 @@ Qed.
 (** Weakening (5) *)
 
 Lemma typing_weakening : forall E F G e T,
-   typing (E & G) e T -> 
+   typing (E & G) e T ->
    okt (E & F & G) ->
    typing (E & F & G) e T.
-Proof. 
+Proof.
   introv Typ. gen F. inductions Typ; introv Ok.
   apply* typing_var. apply* binds_weaken.
   apply_fresh* typing_abs as x. forwards~ K: (H x).
@@ -171,10 +172,10 @@ Lemma sub_strengthening : forall x U E F S T,
   sub (E & x ~: U & F) S T ->
   sub (E & F) S T.
 Proof.
-  intros x U E F S T SsubT. 
+  intros x U E F S T SsubT.
   inductions SsubT; introv; autos* wft_strengthen.
   (* case: fvar trans *)
-  apply* (@sub_trans_tvar U0). binds_cases H; autos*. 
+  apply* (@sub_trans_tvar U0). binds_cases H; autos*.
   (* case: all *)
   apply_fresh* sub_all as X. apply_ih_bind* H0.
 Qed.
@@ -228,10 +229,10 @@ Lemma typing_through_subst_te : forall Q E F Z e T P,
   sub E P Q ->
   typing (E & map (subst_tb Z P) F) (subst_te Z P e) (subst_tt Z P T).
 Proof.
-  introv Typ PsubQ. 
+  introv Typ PsubQ.
   inductions Typ; introv; simpls subst_tt; simpls subst_te.
   apply* typing_var. rewrite* (@map_subst_tb_id E Z P).
-   binds_cases H0; unsimpl_map_bind*. 
+   binds_cases H0; unsimpl_map_bind*.
   apply_fresh* typing_abs as y.
     unsimpl (subst_tb Z P (bind_typ V)).
     rewrite* subst_te_open_ee_var.
@@ -241,9 +242,9 @@ Proof.
     unsimpl (subst_tb Z P (bind_sub V)).
     rewrite* subst_te_open_te_var.
     rewrite* subst_tt_open_tt_var.
-    apply_ih_map_bind* H0. 
+    apply_ih_map_bind* H0.
   rewrite* subst_tt_open_tt. apply* typing_tapp.
-    apply* sub_through_subst_tt. 
+    apply* sub_through_subst_tt.
   apply* typing_sub. apply* sub_through_subst_tt.
 Qed.
 
@@ -254,7 +255,7 @@ Qed.
 (** Inversions for Typing (13) *)
 
 Lemma typing_inv_abs : forall E S1 e1 T,
-  typing E (trm_abs S1 e1) T -> 
+  typing E (trm_abs S1 e1) T ->
   forall U1 U2, sub E T (typ_arrow U1 U2) ->
      sub E U1 S1
   /\ exists S2, exists L, forall x, x \notin L ->
@@ -266,7 +267,7 @@ Proof.
 Qed.
 
 Lemma typing_inv_tabs : forall E S1 e1 T,
-  typing E (trm_tabs S1 e1) T -> 
+  typing E (trm_tabs S1 e1) T ->
   forall U1 U2, sub E T (typ_all U1 U2) ->
      sub E U1 S1
   /\ exists S2, exists L, forall X, X \notin L ->
@@ -277,25 +278,25 @@ Proof.
   induction H; intros S1 b EQ U1 U2 Sub; inversion EQ.
   inversions Sub. splits. auto.
    exists T1. let L1 := gather_vars in exists L1.
-   intros Y Fr. splits. 
-    apply_empty* (@typing_narrowing S1). auto. 
+   intros Y Fr. splits.
+    apply_empty* (@typing_narrowing S1). auto.
   autos* (@sub_transitivity T).
-Qed. 
+Qed.
 
 (* ********************************************************************** *)
 (** Preservation Result (20) *)
 
 Lemma preservation_result : preservation.
 Proof.
-  introv Typ. gen e'. induction Typ; introv Red; 
+  introv Typ. gen e'. induction Typ; introv Red;
    try solve [ inversion Red ].
-  (* case: app *) 
+  (* case: app *)
   inversions Red; try solve [ apply* typing_app ].
   destruct~ (typing_inv_abs Typ1 (U1:=T1) (U2:=T2)) as [P1 [S2 [L P2]]].
     apply* sub_reflexivity.
     pick_fresh X. forwards~ K: (P2 X). destruct K.
      rewrite* (@subst_ee_intro X).
-     apply_empty (@typing_through_subst_ee V).  
+     apply_empty (@typing_through_subst_ee V).
        apply* (@typing_sub S2). apply_empty* sub_weakening.
        autos*.
   (* case: tapp *)
@@ -321,12 +322,12 @@ Qed.
 (** Canonical Forms (14) *)
 
 Lemma canonical_form_abs : forall t U1 U2,
-  value t -> typing empty t (typ_arrow U1 U2) -> 
+  value t -> typing empty t (typ_arrow U1 U2) ->
   exists V, exists e1, t = trm_abs V e1.
 Proof.
   introv Val Typ. gen_eq E: (@empty bind).
   gen_eq T: (typ_arrow U1 U2). gen U1 U2.
-  induction Typ; introv EQT EQE; 
+  induction Typ; introv EQT EQE;
    try solve [ inversion Val | inversion EQT | eauto ].
     subst. inversion H.
       false (binds_empty_inv H0).
@@ -334,12 +335,12 @@ Proof.
 Qed.
 
 Lemma canonical_form_tabs : forall t U1 U2,
-  value t -> typing empty t (typ_all U1 U2) -> 
+  value t -> typing empty t (typ_all U1 U2) ->
   exists V, exists e1, t = trm_tabs V e1.
 Proof.
   introv Val Typ. gen_eq E: (@empty bind).
   gen_eq T: (typ_all U1 U2). gen U1 U2.
-  induction Typ; introv EQT EQE; 
+  induction Typ; introv EQT EQE;
    try solve [ inversion Val | inversion EQT | eauto ].
     subst. inversion H.
       false* binds_empty_inv.
@@ -356,18 +357,18 @@ Proof.
   (* case: var *)
   false* binds_empty_inv.
   (* case: abs *)
-  left*. 
+  left*.
   (* case: app *)
   right. destruct* IHTyp1 as [Val1 | [e1' Rede1']].
     destruct* IHTyp2 as [Val2 | [e2' Rede2']].
       destruct (canonical_form_abs Val1 Typ1) as [S [e3 EQ]].
-        subst. exists* (open_ee e3 e2). 
+        subst. exists* (open_ee e3 e2).
   (* case: tabs *)
-  left*. 
+  left*.
   (* case: tapp *)
-  right. destruct~ IHTyp as [Val1 | [e1' Rede1']]. 
-    destruct (canonical_form_tabs Val1 Typ) as [S [e3 EQ]]. 
-      subst. exists* (open_te e3 T). 
+  right. destruct~ IHTyp as [Val1 | [e1' Rede1']].
+    destruct (canonical_form_tabs Val1 Typ) as [S [e3 EQ]].
+      subst. exists* (open_te e3 T).
       exists* (trm_tapp e1' T).
   (* case: sub *)
   autos*.

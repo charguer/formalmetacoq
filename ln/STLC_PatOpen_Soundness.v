@@ -4,9 +4,9 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import List LibLN 
-  STLC_PatOpen_Definitions 
-  STLC_PatOpen_Infrastructure.
+From Coq Require Import List.
+From TLC Require Import LibLN.
+Require Import STLC_PatOpen_Definitions STLC_PatOpen_Infrastructure.
 
 
 (* ********************************************************************** *)
@@ -15,15 +15,15 @@ Require Import List LibLN
 (** Typing is preserved by weakening. *)
 
 Lemma typing_weaken : forall G E F t T,
-   (E & G) |= t ~: T -> 
+   (E & G) |= t ~: T ->
    ok (E & F & G) ->
    (E & F & G) |= t ~: T.
 Proof.
   introv Typ. inductions Typ gen G end; introv Ok.
   apply* typing_var. apply* binds_weaken.
-  apply_fresh* typing_abs. 
+  apply_fresh* typing_abs.
    do_rew* concat_assoc (apply* H0).
-  apply_fresh* typing_let as xs. 
+  apply_fresh* typing_let as xs.
     do_rew* concat_assoc (apply* H2).
   autos*.
   autos*.
@@ -42,13 +42,13 @@ Proof.
   sets_eq r: (get x m). symmetry in EQr. destruct r.
     fold (binds x t m) in EQr.
      lets T1 B Typt: (Typm _ _ EQr).
-        (*TODO: x in dom m, therefore x # F*) 
+        (*TODO: x in dom m, therefore x # F*)
      skip_rewrite (T = T1). (* car binds x T M *)
      apply_empty* typing_weaken.
     apply~ typing_var.
     eapply binds_remove. eauto.
     rewrite <- Dom. apply~ get_none_inv.
-  apply_fresh typing_abs. 
+  apply_fresh typing_abs.
    rewrite (@subst_open_vars).
    do_rew concat_assoc (apply* H0).
   apply_fresh* typing_let as xs.
@@ -68,11 +68,11 @@ Lemma typing_pattern_match : forall p t T E m M,
   M \= p ~: T ->
   typings E m M.
 Proof.
-  introv Pat. inductions Pat gen E M T end; 
+  introv Pat. inductions Pat gen E M T end;
    introv Typt Typp; intros y vy By.
   inverts Typp. exists T.
    destruct (binds_single_inv By). subst~.
-  inverts Typp. false.  
+  inverts Typp. false.
   inverts Typp as K11 K12 Dis. inverts Typt.
    skip Bcase: (binds y vy i1 \/ binds y vy i2). clear By.
    destruct Bcase as [B | B].
@@ -87,16 +87,16 @@ Qed.
 
 (** Preservation (typing is preserved by reduction). *)
 
-Lemma pat_match_terms : forall xs ts p t, 
-  pat_match p t (xs ~* ts) -> forall L n, 
+Lemma pat_match_terms : forall xs ts p t,
+  pat_match p t (xs ~* ts) -> forall L n,
   fresh L n xs ->
   n = (length ts) ->
   terms (length xs) ts.
 Proof.
-  introv Pat Fr. 
+  introv Pat Fr.
  lets B: (proj33 (pat_match_regular Pat)).
- intros.  subst. split. 
- rewrite~ (fresh_length Fr). 
+ intros.  subst. split.
+ rewrite~ (fresh_length Fr).
  apply~ (@terms_of_singles_terms xs).
 Qed.
 
@@ -111,13 +111,13 @@ Proof.
    apply_empty* (@typing_subst (xs~*Us)).
    lets: (fresh_length Fr).
    do 2 (rewrite dom_singles; try congruence).
-   apply* typing_pattern_match. 
+   apply* typing_pattern_match.
   autos*.
   inversions Typ1. pick_fresh x.
    rewrite* (@subst_intro (x::nil)).
    apply_empty* (@typing_subst (x~S)).
    rewrite singles_one.
-   apply* typing_pattern_match.   
+   apply* typing_pattern_match.
   autos*.
   autos*.
   autos*.
@@ -138,26 +138,26 @@ Proof.
   inverts Typv; inverts Valv.
    forwards* [i1 [Mat1 Dom1]]: IHTypp1.
    forwards* [i2 [Mat2 Dom2]]: IHTypp2.
-   exists (i1 & i2). split. 
+   exists (i1 & i2). split.
      apply* pat_match_pair.
-      rewrite (pat_binds_fct (proj1 (pat_match_regular Mat1)) 
+      rewrite (pat_binds_fct (proj1 (pat_match_regular Mat1))
                              (pat_typing_regular Typp1)).
-      rewrite (pat_binds_fct (proj1 (pat_match_regular Mat2)) 
+      rewrite (pat_binds_fct (proj1 (pat_match_regular Mat2))
                              (pat_typing_regular Typp2)). auto.
      do 2 rewrite dom_concat. congruence.
 Qed.
 
-(** Progress (a well-typed term is either a value or it can 
+(** Progress (a well-typed term is either a value or it can
   take a step of reduction). *)
 
 Lemma progress_result : progress.
 Proof.
   introv Typ. lets Typ': Typ. inductions Typ.
-  false. 
-  left*. 
+  false.
+  left*.
   right. destruct~ IHTyp as [Val1 | [t1' Red1]].
     pick_freshes (pat_arity p1) xs.
-    forwards~ K: (H0 xs). clear H0. clear H1 H2. 
+    forwards~ K: (H0 xs). clear H0. clear H1 H2.
     destruct~ (matching_successful (v:=t1) K) as [m [Mat Dom]].
      rewrite (@singles_keys_values _ m) in *.
      exists (t2 ^^ (values m)). apply_fresh* red_let as ys.
@@ -169,8 +169,8 @@ Proof.
   right. destruct~ IHTyp1 as [Val1 | [t1' Red1]].
     destruct~ IHTyp2 as [Val2 | [t2' Red2]].
       inversions Typ1; inversions Val1.
-       exists* (t0 ^^ (t2::nil)). 
-      exists* (trm_app t1 t2'). 
+       exists* (t0 ^^ (t2::nil)).
+      exists* (trm_app t1 t2').
     exists* (trm_app t1' t2).
   destruct~ IHTyp1 as [Val1 | [t1' Red1]].
     destruct~ IHTyp2 as [Val2 | [t2' Red2]].

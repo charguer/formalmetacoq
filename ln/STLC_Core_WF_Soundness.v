@@ -4,9 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN 
-  STLC_Core_WF_Definitions 
-  STLC_Core_WF_Infrastructure.
+From TLC Require Import LibLN.
+Require Import STLC_Core_WF_Definitions STLC_Core_WF_Infrastructure.
 
 
 (* ********************************************************************** *)
@@ -15,7 +14,7 @@ Require Import LibLN
 (** Typing is preserved by weakening. *)
 
 Lemma typing_weaken : forall G E F t T,
-   (E & G) |= t ~: T -> 
+   (E & G) |= t ~: T ->
    ok (E & F & G) ->
    (E & F & G) |= t ~: T.
 Proof.
@@ -60,17 +59,17 @@ Proof.
   inversions Typ. apply* typing_app.
 Qed.
 
-(** Progress (a well-typed term is either a value or it can 
+(** Progress (a well-typed term is either a value or it can
   take a step of reduction). *)
 
 Lemma progress_result : progress.
 Proof.
   introv Typ.
-  cuts K (value t \/ exists c, exists t0, exists t0', 
+  cuts K (value t \/ exists c, exists t0, exists t0',
                      red t0 t0' /\ t = ctx_of c t0).
   destruct K as [Val | [C [t1a [t1'a [Red Ctx]]]]]; subst*.
   gen_eq (empty : env) as E. poses Typ' Typ.
-  induction Typ; intros; subst. 
+  induction Typ; intros; subst.
   contradictions.
   left*.
   right. destruct~ IHTyp1 as [Val1 | [C [t1a [t1'a [Red1 Ctx1]]]]].

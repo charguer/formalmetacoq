@@ -1,0 +1,3 @@
+-arg -w -arg -deprecated
+
+#-implicit-core-hint-db,-deprecated-ident-entry,-omega-is-deprecated,-deprecated-hint-without-locality,-deprecated-instance-without-locality,-deprecated-hint-rewrite-without-locality,deprecated-hint-rewrite-without-locality,deprecated-hint-without-locality,deprecated-instance-without-locality

@@ -4,14 +4,15 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN CoC_Definitions CoC_Infrastructure CoC_Conversion.
+From TLC Require Import LibLN.
+Require Import CoC_Definitions CoC_Infrastructure CoC_Conversion.
 Implicit Types x : var.
 
 (* ********************************************************************** *)
 (** ** Inversion Lemmas for Subtyping *)
 
 Lemma less_type_any_inv : forall T1 T2,
-  less T1 T2 -> forall i1, conv T1 (trm_type i1) -> 
+  less T1 T2 -> forall i1, conv T1 (trm_type i1) ->
   exists i2, i1 <= i2 /\ conv T2 (trm_type i2).
 Proof.
   induction 1; intros i1 C1.
@@ -34,20 +35,20 @@ Qed.
 
 Lemma less_prod_any_inv : forall P1 P2,
   less P1 P2 -> forall U1 T1, conv P1 (trm_prod U1 T1) ->
-  exists U2, exists T2, conv P2 (trm_prod U2 T2) 
-  /\ conv U1 U2 
+  exists U2, exists T2, conv P2 (trm_prod U2 T2)
+  /\ conv U1 U2
   /\ exists L, forall x, x \notin L -> less (T1 ^ x) (T2 ^ x).
 Proof.
   induction 1; intros U1 T1 C1.
-  exists U1 T1. 
+  exists U1 T1.
    asserts* K: (term (trm_prod U1 T1)). inversions K.
    splits.
      apply* (@equiv_trans beta t1).
      auto.
      exists_fresh. auto.
   false. apply (conv_type_prod_inv C1).
-  exists U' T'. 
-   asserts* K: (less (trm_prod U T) (trm_prod U' T')).  
+  exists U' T'.
+   asserts* K: (less (trm_prod U T) (trm_prod U' T')).
    destruct (conv_prod_prod_inv C1) as [C11 [L1 C12]].
    splits.
     auto.
@@ -64,16 +65,16 @@ Proof.
 Qed.
 
 Lemma less_prod_prod_inv : forall U1 T1 U2 T2,
-  less (trm_prod U1 T1) (trm_prod U2 T2) -> 
+  less (trm_prod U1 T1) (trm_prod U2 T2) ->
      conv U1 U2
   /\ exists L, forall x, x \notin L -> less (T1 ^ x) (T2 ^ x).
 Proof.
   introv Le.
-  destruct (@less_prod_any_inv _ _ Le U1 T1) 
+  destruct (@less_prod_any_inv _ _ Le U1 T1)
     as [U2' [T2' [C [C1' [L' C2']]]]]; auto.
   destruct (conv_prod_prod_inv C) as [C1 [L C2]].
   splits.
-    apply* (@equiv_trans beta U2'). 
+    apply* (@equiv_trans beta U2').
     exists_fresh. intros. apply (@less_trans (T2' ^ x)).
       auto.
       forwards*: (C2 x).
@@ -90,7 +91,7 @@ Lemma typing_prod_inv : forall E U T P,
   /\ (i = k \/ i = 0)
   /\ exists L, forall x, x \notin L -> typing (E & x ~ U) (T ^ x) (trm_type i).
 Proof.
-  introv Typ. gen_eq P1: (trm_prod U T). 
+  introv Typ. gen_eq P1: (trm_prod U T).
   induction Typ; intros; subst; tryfalse.
   inversions EQP1. exists* i k.
   destruct~ IHTyp1 as [i' [k' [EQi [TypU [Univ [L TypT]]]]]].
@@ -112,13 +113,13 @@ Qed.
 
 Lemma typing_prod_type_inv : forall E U T i,
   typing E (trm_prod U T) (trm_type i) ->
-  exists L, forall x, x \notin L -> 
+  exists L, forall x, x \notin L ->
       typing (E & x ~ U) (T ^ x) (trm_type i).
 Proof.
-  introv Typ. 
+  introv Typ.
   destruct (typing_prod_inv Typ) as [i' [k' [Le [TypU [Uni [L TypT]]]]]].
   exists (L \u dom E). intros.
-  inversion Le; apply* (@typing_sub (trm_type i') (i+1)). 
+  inversion Le; apply* (@typing_sub (trm_type i') (i+1)).
 Qed.
 
 
@@ -127,7 +128,7 @@ Qed.
 
 Lemma typing_weaken : forall G E F t T,
   typing (E & G) t T ->
-  wf (E & F & G) -> 
+  wf (E & F & G) ->
   typing (E & F & G) t T.
 Proof.
   introv Typ. gen_eq Env: (E & G). gen G.
@@ -164,15 +165,15 @@ Lemma typing_substitution : forall V (F:env) v (E:env) x t T,
   typing (E & (map (subst x v) F)) (subst x v t) (subst x v T).
 Proof.
   introv Typv Typt.
-  gen_eq G: (E & x ~ V & F). gen F. 
+  gen_eq G: (E & x ~ V & F). gen F.
   apply typing_induct with
-   (P := fun (G:env) t T (Typt : typing G t T) => 
-      forall (F:env), G = E & x ~ V & F -> 
+   (P := fun (G:env) t T (Typt : typing G t T) =>
+      forall (F:env), G = E & x ~ V & F ->
       typing (E & map (subst x v) F) ([x ~> v]t) ([x ~> v]T))
-   (P0 := fun (G:env) (W:wf G) => 
-      forall F, G = E & x ~ V & F -> 
-      wf (E & (map (subst x v) F))); 
-   intros; subst; simpls subst. 
+   (P0 := fun (G:env) (W:wf G) =>
+      forall F, G = E & x ~ V & F ->
+      wf (E & (map (subst x v) F)));
+   intros; subst; simpls subst.
   (* case: trm_type *)
   autos*.
   (* case: var *)
@@ -182,7 +183,7 @@ Proof.
       rewrite* subst_fresh.
   (* case: trm_prod *)
   apply_fresh* (@typing_prod k) as y.
-   cross; auto. apply_ih_map_bind* H0. 
+   cross; auto. apply_ih_map_bind* H0.
   (* case: trm_abs *)
   apply_fresh* (@typing_abs i) as y.
    cross; auto. apply_ih_map_bind* H0.
@@ -200,7 +201,7 @@ Proof.
      rewrite map_empty. rewrite~ concat_empty_r.
     clear IHF. rewrite concat_assoc in H0.
      destruct (eq_push_inv H0) as [? [? ?]]. subst.
-     rewrite map_push. rewrite concat_assoc. apply* (@wf_cons i). 
+     rewrite map_push. rewrite concat_assoc. apply* (@wf_cons i).
   (* case: conclusion *)
   auto.
 Qed.
@@ -210,13 +211,13 @@ Qed.
 (** Types are Themselves Well-typed *)
 
 Lemma typing_wf_from_context : forall x U (E:env),
-  binds x U E -> 
-  wf E -> 
+  binds x U E ->
+  wf E ->
   exists i, typing E U (trm_type i).
 Proof.
-  introv B W. induction E using env_ind. 
-  false* binds_empty_inv. 
-  destruct (binds_push_inv B) as [[? ?]|[? ?]]. 
+  introv B W. induction E using env_ind.
+  false* binds_empty_inv.
+  destruct (binds_push_inv B) as [[? ?]|[? ?]].
     subst. inversions W. false (empty_push_inv H0).
      destruct (eq_push_inv H) as [? [? ?]]. subst.
      exists i. apply_empty* typing_weaken.
@@ -233,7 +234,7 @@ Proof.
   destruct* (typing_wf_from_context H0).
   exists* (i+1).
   exists* i.
-  destruct IHtyping1 as [i Typ]. 
+  destruct IHtyping1 as [i Typ].
    destruct (typing_prod_inv Typ) as [i' [k' [Le [TypU [Uni [L TypT]]]]]].
    exists i'.
    pick_fresh x. rewrite~ (@subst_intro x).
@@ -247,8 +248,8 @@ Qed.
 (** Typing preserved by Subtyping in Environment *)
 
 Inductive env_less : env -> env -> Prop :=
-  | env_less_head : forall E U U' x, 
-      less U U' -> 
+  | env_less_head : forall E U U' x,
+      less U U' ->
       env_less (E & x ~ U) (E & x ~ U')
   | env_less_tail : forall E E' x U,
       term U -> env_less E E' -> env_less (E & x ~ U) (E' & x ~ U).
@@ -256,16 +257,16 @@ Inductive env_less : env -> env -> Prop :=
 Hint Constructors env_less.
 
 Lemma env_less_binds : forall x U E E',
-  env_less E' E -> wf E -> wf E' -> binds x U E -> 
-     binds x U E' 
-  \/ exists U', exists i, 
+  env_less E' E -> wf E -> wf E' -> binds x U E ->
+     binds x U E'
+  \/ exists U', exists i,
       binds x U' E' /\ less U' U /\ typing E' U (trm_type i).
 Proof.
   introv Le. induction Le; intros WfE WfE' Has.
-  destruct (binds_push_inv Has) as [[? ?]|[? ?]]. 
+  destruct (binds_push_inv Has) as [[? ?]|[? ?]].
     subst. right. inversions WfE. false (empty_push_inv H1).
      destruct (eq_push_inv H0) as [? [? ?]]. subst.
-     exists U0 i. splits~. apply_empty* typing_weaken.  
+     exists U0 i. splits~. apply_empty* typing_weaken.
     left. apply~ binds_push_neq.
   destruct (binds_push_inv Has) as [[? ?]|[? ?]].
     subst. left. apply~ binds_push_eq.
@@ -273,14 +274,14 @@ Proof.
      inversions WfE'. false (empty_push_inv H6).
      destruct (eq_push_inv H5) as [? [? ?]]. subst.
      destruct (wf_push_inv WfE).
-     destruct IHLe as [|[U' [i' [P1 [P2 P3]]]]]; auto. 
+     destruct IHLe as [|[U' [i' [P1 [P2 P3]]]]]; auto.
       right. exists U' i'. splits~. apply_empty* typing_weaken.
-Qed. 
+Qed.
 
 Lemma typing_sub_env : forall E E' t T,
-  typing E t T -> 
-  env_less E' E -> 
-  wf E' -> 
+  typing E t T ->
+  env_less E' E ->
+  wf E' ->
   typing E' t T.
 Proof.
  introv Typ. gen E'. induction Typ; intros E' C W; eauto.
@@ -289,7 +290,7 @@ Proof.
    apply* (@typing_sub U' i).
   apply_fresh (@typing_prod k) as y; auto. apply* (H0 y).
   forwards~ TypP: (IHTyp E').
-  destruct (typing_prod_inv TypP) as [i' [k [_ [Typt1 _]]]]. 
+  destruct (typing_prod_inv TypP) as [i' [k [_ [Typt1 _]]]].
   apply_fresh (@typing_abs i) as y; auto. apply* (H0 y).
 Qed.
 
@@ -306,7 +307,7 @@ Proof.
 
   (* case: trm_prod 1 *)
   apply_fresh* (@typing_prod k) as y.
-   apply (@typing_sub_env (E & y ~ U)); eauto 7. 
+   apply (@typing_sub_env (E & y ~ U)); eauto 7.
 
   (* case: trm_prod 2 *)
   apply_fresh* (@typing_prod k) as y.
@@ -364,7 +365,7 @@ Qed.
 (* ********************************************************************** *)
 (** Subject Reduction - Beta Star preserves typing  *)
 
-Lemma subject_reduction_star_result : 
+Lemma subject_reduction_star_result :
   subject_reduction (beta star).
 Proof.
   introv H. induction* H. apply* subject_reduction_result.

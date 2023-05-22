@@ -4,7 +4,7 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Export LibLN LibLogic LibFix.
+From TLC Require Export LibLN LibLogic LibFix.
 Implicit Types x y z : var.
 
 (* ********************************************************************** *)
@@ -34,7 +34,7 @@ Fixpoint open_rec (k : nat) (u : trm) (t : trm) {struct t} : trm :=
   | trm_fvar x    => t
   | trm_cst k     => t
   | trm_app t1 t2 => trm_app (open_rec k u t1) (open_rec k u t2)
-  | trm_abs t1    => trm_abs (open_rec (S k) u t1) 
+  | trm_abs t1    => trm_abs (open_rec (S k) u t1)
   end.
 
 Definition open t u := open_rec 0 u t.
@@ -49,11 +49,11 @@ Notation "t ^ x" := (open t (trm_fvar x)).
 
 Fixpoint close_var_rec (k : nat) (z : var) (t : trm) {struct t} : trm :=
   match t with
-  | trm_bvar i    => trm_bvar i 
+  | trm_bvar i    => trm_bvar i
   | trm_fvar x    => If x = z then (trm_bvar k) else t
   | trm_cst k     => t
   | trm_app t1 t2 => trm_app (close_var_rec k z t1) (close_var_rec k z t2)
-  | trm_abs t1    => trm_abs (close_var_rec (S k) z t1) 
+  | trm_abs t1    => trm_abs (close_var_rec (S k) z t1)
   end.
 
 Definition close_var z t := close_var_rec 0 z t.
@@ -63,15 +63,15 @@ Definition close_var z t := close_var_rec 0 z t.
 (** Local closure of terms *)
 
 Inductive term : trm -> Prop :=
-  | term_var : forall x, 
+  | term_var : forall x,
       term (trm_fvar x)
-  | term_cst : forall k, 
+  | term_cst : forall k,
       term (trm_cst k)
   | term_app : forall t1 t2,
       term t1 -> term t2 -> term (trm_app t1 t2)
   | term_abs : forall L t1,
-      (forall x, x \notin L -> term (t1 ^ x)) -> 
-      term (trm_abs t1). 
+      (forall x, x \notin L -> term (t1 ^ x)) ->
+      term (trm_abs t1).
 
 
 (* ********************************************************************** *)
@@ -101,9 +101,9 @@ Fixpoint subst (z : var) (u : trm) (t : trm) {struct t} : trm :=
   match t with
   | trm_bvar i    => t
   | trm_fvar x    => If x = z then u else (trm_fvar x)
-  | trm_cst k     => t 
+  | trm_cst k     => t
   | trm_app t1 t2 => trm_app (subst z u t1) (subst z u t2)
-  | trm_abs t1    => trm_abs (subst z u t1) 
+  | trm_abs t1    => trm_abs (subst z u t1)
   end.
 
 Notation "[ z ~> u ] t" := (subst z u t) (at level 68).
@@ -119,21 +119,21 @@ Notation "[ z ~> u ] t" := (subst z u t) (at level 68).
 Inductive value : trm -> Prop :=
   | value_cst : forall k,
       value (trm_cst k)
-  | value_abs : forall t1, 
-      term (trm_abs t1) -> 
+  | value_abs : forall t1,
+      term (trm_abs t1) ->
       value (trm_abs t1).
 
 
 (* ********************************************************************** *)
 (** Big-step reduction relation *)
 
-Inductive eval : trm -> trm -> Prop := 
-  | eval_val : forall t1, 
+Inductive eval : trm -> trm -> Prop :=
+  | eval_val : forall t1,
       value t1 ->
       eval t1 t1
   | eval_red : forall v2 t3 v3 t1 t2,
       eval t1 (trm_abs t3) ->
-      eval t2 v2 -> 
+      eval t2 v2 ->
       eval (t3 ^^ v2) v3 ->
       eval (trm_app t1 t2) v3.
 
@@ -146,18 +146,18 @@ Inductive eval : trm -> trm -> Prop :=
 (** CPS transformation of terms *)
 
 Definition Cps (cps : trm -> trm) (t : trm) : trm :=
-  match t with 
-  | trm_bvar i => 
+  match t with
+  | trm_bvar i =>
       arbitrary
-  | trm_fvar x => 
+  | trm_fvar x =>
       trm_abs (trm_app (trm_bvar 0) t)
-  | trm_cst k  => 
+  | trm_cst k  =>
       trm_abs (trm_app (trm_bvar 0) t)
-  | trm_abs t1 => 
+  | trm_abs t1 =>
       let x := var_gen (fv t1) in
       let t1' := close_var x (cps (t1 ^ x)) in
       trm_abs (trm_app (trm_bvar 0) (trm_abs t1'))
-  | trm_app t1 t2 => 
+  | trm_app t1 t2 =>
       let k := trm_abs (trm_app (trm_app (trm_bvar 1) (trm_bvar 0)) (trm_bvar 2)) in
       trm_abs (trm_app (cps t1) (trm_abs (trm_app (cps t2) k)))
   end.

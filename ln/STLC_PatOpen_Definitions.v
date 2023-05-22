@@ -4,7 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import List LibLN Max.
+From Coq Require Import List Max.
+Fromt TLC Require Import LibLN.
 
 (***************************************************************************)
 
@@ -38,7 +39,7 @@ Inductive trm : Set :=
 Fixpoint pat_arity (p : pat) : nat :=
   match p with
   | pat_bvar n     => n+1
-  | pat_fvar x     => 0 
+  | pat_fvar x     => 0
   | pat_wild       => 0
   | pat_pair p1 p2 => max (pat_arity p1) (pat_arity p2)
 (*  | pat_alias n p1 => max (n+1) (pat_arity p1) *)
@@ -54,7 +55,7 @@ Fixpoint open_pat (xs : list var) (p : pat) {struct p} : pat :=
   | pat_bvar n     => pat_fvar (pat_nth n xs)
   | pat_wild       => pat_wild
   | pat_pair p1 p2 => pat_pair (open_pat xs p1) (open_pat xs p2)
-  end. 
+  end.
 
 (** Default term and nth function on term lists *)
 
@@ -69,7 +70,7 @@ Fixpoint opens_rec (k : nat) (us : list trm) (t : trm) {struct t} : trm :=
   | trm_bvar i j  => If k = i then (trm_nth j us) else (trm_bvar i j)
   | trm_fvar x    => trm_fvar x
   | trm_abs t1    => trm_abs (opens_rec (S k) us t1)
-  | trm_let p1 t1 t2 => trm_let p1 (opens_rec k us t1) 
+  | trm_let p1 t1 t2 => trm_let p1 (opens_rec k us t1)
                                    (opens_rec (S k) us t2)
   | trm_app t1 t2 => trm_app (opens_rec k us t1) (opens_rec k us t2)
   | trm_pair t1 t2 => trm_pair (opens_rec k us t1) (opens_rec k us t2)
@@ -103,7 +104,7 @@ Inductive pat_binds : pat -> vars -> Prop :=
 *)
 
 Definition pattern p :=
-  exists L, forall xs, fresh L (pat_arity p) xs -> 
+  exists L, forall xs, fresh L (pat_arity p) xs ->
   pat_binds (open_pat xs p) (from_list xs).
 
 (** Terms are locally-closed pre-terms *)
@@ -112,7 +113,7 @@ Inductive term : trm -> Prop :=
   | term_var : forall x,
       term (trm_fvar x)
   | term_abs : forall L t1,
-      (forall x, fresh L 1 (x::nil) -> 
+      (forall x, fresh L 1 (x::nil) ->
         term (t1 ^ (x::nil))) ->
       term (trm_abs t1)
   | term_let : forall L p1 t1 t2,
@@ -121,16 +122,16 @@ Inductive term : trm -> Prop :=
       (forall xs, fresh L (pat_arity p1) xs -> term (t2 ^ xs)) ->
       term (trm_let p1 t1 t2)
   | term_app : forall t1 t2,
-      term t1 -> 
-      term t2 -> 
+      term t1 ->
+      term t2 ->
       term (trm_app t1 t2)
   | term_pair : forall t1 t2,
-      term t1 -> 
-      term t2 -> 
+      term t1 ->
+      term t2 ->
       term (trm_pair t1 t2).
 
 (** Definition of [bodys n t] as [t ^ xs] is a term when [|xs|=n] *)
-  
+
 Definition bodys n t :=
   exists L, forall xs, fresh L n xs -> term (t ^ xs).
 
@@ -144,7 +145,7 @@ Definition env := environment typ.
 
 Reserved Notation "E \= p ~: T" (at level 69).
 
-Inductive pat_typing : env -> pat -> typ -> Prop := 
+Inductive pat_typing : env -> pat -> typ -> Prop :=
   | pat_typing_var : forall x T,
      (x ~ T) \= pat_fvar x ~: T
   | pat_typing_wild : forall T,
@@ -167,23 +168,23 @@ Inductive typing : env -> trm -> typ -> Prop :=
       binds x T E ->
       E |= (trm_fvar x) ~: T
   | typing_abs : forall L E U T t1,
-       (forall x, fresh L 1 (x::nil) -> 
+       (forall x, fresh L 1 (x::nil) ->
        (E & x ~ U) |= t1 ^ (x::nil) ~: T) ->
       E |= (trm_abs t1) ~: (typ_arrow U T)
   | typing_let : forall L E Us R T p1 t1 t2,
       E |= t1 ~: T ->
       length Us = pat_arity p1 ->
-      (forall xs, fresh L (pat_arity p1) xs -> 
+      (forall xs, fresh L (pat_arity p1) xs ->
         (xs ~* Us) \= (open_pat xs p1) ~: T) ->
-      (forall xs, fresh L (pat_arity p1) xs -> 
+      (forall xs, fresh L (pat_arity p1) xs ->
         (E & xs ~* Us) |= (t2 ^ xs) ~: R) ->
       E |= (trm_let p1 t1 t2) ~: R
   | typing_app : forall S T E t1 t2,
-      E |= t1 ~: (typ_arrow S T) -> 
+      E |= t1 ~: (typ_arrow S T) ->
       E |= t2 ~: S ->
       E |= (trm_app t1 t2) ~: T
   | typing_pair : forall E t1 t2 T1 T2,
-      E |= t1 ~: T1 -> 
+      E |= t1 ~: T1 ->
       E |= t2 ~: T2 ->
       E |= (trm_pair t1 t2) ~: (typ_prod T1 T2)
 
@@ -193,7 +194,7 @@ where "E |= t ~: T" := (typing E t T).
 
 Inductive value : trm -> Prop :=
   | value_abs : forall t1,
-      bodys 1 t1 -> 
+      bodys 1 t1 ->
       value (trm_abs t1)
   | value_pair : forall v1 v2,
      value v1 ->
@@ -221,7 +222,7 @@ Inductive pat_match : pat -> trm -> inst -> Prop :=
 
 Inductive red : trm -> trm -> Prop :=
   | red_beta : forall t1 t2,
-      term (trm_abs t1) -> 
+      term (trm_abs t1) ->
       value t2 ->
       red (trm_app (trm_abs t1) t2) (t1 ^^ (t2::nil))
   | red_let : forall L p1 t1 t2 ts,
@@ -262,8 +263,8 @@ Definition preservation := forall E t t' T,
   t --> t' ->
   E |= t' ~: T.
 
-Definition progress := forall t T, 
+Definition progress := forall t T,
   empty |= t ~: T ->
-     value t 
+     value t
   \/ exists t', t --> t'.
 

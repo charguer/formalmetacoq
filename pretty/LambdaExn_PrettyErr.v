@@ -31,7 +31,7 @@ Inductive beh :=
   | beh_ret : val -> beh
   | beh_exn : val -> beh
   | beh_err : beh.
-  
+
 Coercion beh_ret : val >-> beh.
 
 Implicit Types v : val.
@@ -56,7 +56,7 @@ Implicit Types s : stack.
       Inductive out :=
         | out_ret : val -> out
         | out_exn : val -> out
-        | out_div : out.  
+        | out_div : out.
     *)
 
 
@@ -96,23 +96,23 @@ Inductive one : stack -> ext -> Prop :=
       binds x v s ->
       one s (trm_var x)
   | one_abs : forall s x t,
-      one s (trm_abs x t) 
+      one s (trm_abs x t)
   | one_app : forall s t1 t2,
-      one s (trm_app t1 t2) 
+      one s (trm_app t1 t2)
   | one_app_1_abort : forall s o1 t2,
       abort o1 ->
       one s (ext_app_1 o1 t2)
   | one_app_1 : forall s v1 t2,
-      one s (ext_app_1 v1 t2) 
+      one s (ext_app_1 v1 t2)
   | one_app_2_abort : forall s v1 o2,
       abort o2 ->
-      one s (ext_app_2 v1 o2) 
+      one s (ext_app_2 v1 o2)
   | one_app_2 : forall s' s x t3 v2,
       one s' (ext_app_2 (val_clo s x t3) v2)
   | one_try : forall s t1 x t2,
       one s (trm_try t1 x t2)
   | one_try_1_val : forall s v1 x t2,
-      one s (ext_try_1 v1 x t2) 
+      one s (ext_try_1 v1 x t2)
   | one_try_1_exn : forall s x t2 v,
       one s (ext_try_1 (out_exn v) x t2)
   | one_try_1_div : forall s x t2,
@@ -121,7 +121,7 @@ Inductive one : stack -> ext -> Prop :=
       one s (trm_raise t1)
   | one_raise_1_abort : forall s o1,
       abort o1 ->
-      one s (ext_raise_1 o1) 
+      one s (ext_raise_1 o1)
   | one_raise_1 : forall s v,
       one s (ext_raise_1 v).
 
@@ -176,7 +176,7 @@ Inductive red : stack -> ext -> out -> Prop :=
 
 
 (** Coevaluation judgment:
-    copy-paste of the above definition, 
+    copy-paste of the above definition,
     simply replacing [red] with [cored] *)
 
 
@@ -253,7 +253,7 @@ Inductive trmtyping : env typ -> trm -> typ -> Prop :=
       trmtyping (E & x ~~ U) t1 T ->
       trmtyping E (trm_abs x t1) (typ_arrow U T)
   | trmtyping_app : forall T1 T2 E t1 t2,
-      trmtyping E t1 (typ_arrow T1 T2) -> 
+      trmtyping E t1 (typ_arrow T1 T2) ->
       trmtyping E t2 T1 ->
       trmtyping E (trm_app t1 t2) T2
   | trmtyping_raise : forall E t1 T,
@@ -275,11 +275,11 @@ Inductive valtyping : val -> typ -> Prop :=
 
 with stacktyping : env typ -> stack -> Prop :=
   | stacktyping_intro : forall E s,
-     (forall x T, binds x T E -> 
-        exists v, binds x v s /\ valtyping v T) -> 
+     (forall x T, binds x T E ->
+        exists v, binds x v s /\ valtyping v T) ->
      stacktyping E s.
 (*
-  | stacktyping_empty : 
+  | stacktyping_empty :
      stacktyping empty
   | stacktyping_push : forall s x v T,
      stacktyping s ->
@@ -301,24 +301,24 @@ Inductive outtyping : out -> typ -> Prop :=
 Inductive exttyping : env typ -> ext -> typ -> Prop :=
   | extyping_trm : forall E t T,
       trmtyping E t T ->
-      exttyping E t T 
+      exttyping E t T
   | exttyping_app_1 : forall E T1 T2 o1 t2,
-      outtyping o1 (typ_arrow T1 T2) -> 
+      outtyping o1 (typ_arrow T1 T2) ->
       trmtyping E t2 T1 ->
       exttyping E (ext_app_1 o1 t2) T2
   | exttyping_app_2 : forall E T1 T2 v1 o2,
       valtyping v1 (typ_arrow T1 T2) ->
-      outtyping o2 T1 -> 
+      outtyping o2 T1 ->
       exttyping E (ext_app_2 v1 o2) T2
   | extyping_raise_1 : forall E T o1,
-      outtyping o1 typ_int -> 
+      outtyping o1 typ_int ->
       exttyping E (ext_raise_1 o1) T
   | extyping_try_1 : forall E T o1 x t2,
-      outtyping o1 T -> 
+      outtyping o1 T ->
       trmtyping (E & x ~~ typ_int) t2 T ->
       exttyping E (ext_try_1 o1 x t2) T.
 
-     
+
 
 
 (*==========================================================*)
@@ -326,7 +326,7 @@ Inductive exttyping : env typ -> ext -> typ -> Prop :=
 
 Lemma stacktyping_push : forall E s x v T,
   stacktyping E s ->
-  valtyping v T ->  
+  valtyping v T ->
   stacktyping (E & x ~~ T) (s & x ~~ v).
 Proof.
   introv M H. inverts M as M.
@@ -365,7 +365,7 @@ Proof.
 Qed.
 
 Lemma soundness_ind : forall E s e o T,
-  red s e o -> stacktyping E s -> exttyping E e T -> 
+  red s e o -> stacktyping E s -> exttyping E e T ->
   outtyping o T.
 Proof.
   introv R. gen E T. induction R; introv S M.
@@ -385,8 +385,8 @@ Proof.
   inverts M as M. inverts* M.
   false (rm H). inverts M as.
     introv M. inverts* M. forwards* (?&?): stacktyping_elim_1.
-    introv M1 M2. inverts* M1. 
+    introv M1 M2. inverts* M1.
     introv M1 M2. inverts M1. inverts* M2.
-    introv M1. inverts* M1. 
-    introv M1 M2. inverts* M1. 
+    introv M1. inverts* M1.
+    introv M1 M2. inverts* M1.
 Qed.

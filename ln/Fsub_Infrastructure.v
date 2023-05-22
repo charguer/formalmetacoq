@@ -4,7 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN Fsub_Definitions.
+From TLC Require Import LibLN.
+Require Import Fsub_Definitions.
 
 (* ********************************************************************** *)
 (** * Additional Definitions Used in the Proofs *)
@@ -94,7 +95,7 @@ Definition subst_tb (Z : var) (P : typ) (b : bind) : bind :=
 
 Hint Constructors type term wft ok okt value red.
 
-Hint Resolve 
+Hint Resolve
   sub_top sub_refl_tvar sub_arrow
   typing_var typing_app typing_tapp typing_sub.
 
@@ -115,7 +116,7 @@ Ltac pick_fresh x :=
   let L := gather_vars in (pick_fresh_gen L x).
 
 (** "apply_fresh T as x" is used to apply inductive rule which
-   use an universal quantification over a cofinite set *)    
+   use an universal quantification over a cofinite set *)
 
 Tactic Notation "apply_fresh" constr(T) "as" ident(x) :=
   apply_fresh_base T gather_vars x.
@@ -143,7 +144,7 @@ Tactic Notation "apply_empty" constr(F) :=
 Tactic Notation "apply_empty" "*" constr(F) :=
   apply_empty F; autos*.
 
-(** Tactic to undo when Coq does too much simplification *)   
+(** Tactic to undo when Coq does too much simplification *)
 
 Ltac unsimpl_map_bind :=
   match goal with |- context [ ?B (subst_tt ?Z ?P ?U) ] =>
@@ -182,7 +183,7 @@ Lemma subst_tt_fresh : forall Z U T,
   Z \notin fv_tt T -> subst_tt Z U T = T.
 Proof.
   induction T; simpl; intros; f_equal*.
-  case_var*. 
+  case_var*.
 Qed.
 
 (** Substitution distributes on the open operation. *)
@@ -216,7 +217,7 @@ Qed.
 (** Opening up a body t with a type u is the same as opening
   up the abstraction with a fresh name x and then substituting u for x. *)
 
-Lemma subst_tt_intro : forall X T2 U, 
+Lemma subst_tt_intro : forall X T2 U,
   X \notin fv_tt T2 -> type U ->
   open_tt T2 U = subst_tt X U (T2 open_tt_var X).
 Proof.
@@ -246,12 +247,12 @@ Qed.
 
 Lemma open_te_rec_term : forall e U,
   term e -> forall k, e = open_te_rec k U e.
-Proof.  
+Proof.
   intros e U WF. induction WF; intros; simpl;
     f_equal*; try solve [ apply* open_tt_rec_type ].
-  unfolds open_ee. pick_fresh x. 
+  unfolds open_ee. pick_fresh x.
    apply* (@open_te_rec_term_core e1 0 (trm_fvar x)).
-  unfolds open_te. pick_fresh X. 
+  unfolds open_te. pick_fresh X.
    apply* (@open_te_rec_type_core e1 0 (typ_fvar X)).
 Qed.
 
@@ -286,7 +287,7 @@ Qed.
 (** Opening up a body t with a type u is the same as opening
   up the abstraction with a fresh name x and then substituting u for x. *)
 
-Lemma subst_te_intro : forall X U e, 
+Lemma subst_te_intro : forall X U e,
   X \notin fv_te e -> type U ->
   open_te e U = subst_te X U (e open_te_var X).
 Proof.
@@ -317,9 +318,9 @@ Lemma open_ee_rec_term : forall u e,
   term e -> forall k, e = open_ee_rec k u e.
 Proof.
   induction 1; intros; simpl; f_equal*.
-  unfolds open_ee. pick_fresh x. 
+  unfolds open_ee. pick_fresh x.
    apply* (@open_ee_rec_term_core e1 0 (trm_fvar x)).
-  unfolds open_te. pick_fresh X. 
+  unfolds open_te. pick_fresh X.
    apply* (@open_ee_rec_type_core e1 0 (typ_fvar X)).
 Qed.
 
@@ -329,7 +330,7 @@ Lemma subst_ee_fresh : forall x u e,
   x \notin fv_ee e -> subst_ee x u e = e.
 Proof.
   induction e; simpl; intros; f_equal*.
-  case_var*. 
+  case_var*.
 Qed.
 
 (** Substitution distributes on the open operation. *)
@@ -356,7 +357,7 @@ Qed.
 (** Opening up a body t with a type u is the same as opening
   up the abstraction with a fresh name x and then substituting u for x. *)
 
-Lemma subst_ee_intro : forall x u e, 
+Lemma subst_ee_intro : forall x u e,
   x \notin fv_ee e -> term u ->
   open_ee e u = subst_ee x u (e open_ee_var x).
 Proof.
@@ -423,7 +424,7 @@ Hint Resolve subst_tt_type subst_te_term subst_ee_term.
 Lemma wft_type : forall E T,
   wft E T -> type T.
 Proof.
-  induction 1; eauto. 
+  induction 1; eauto.
 Qed.
 
 (** Through weakening *)
@@ -445,7 +446,7 @@ Qed.
 
 Lemma wft_narrow : forall V F U T E X,
   wft (E & X ~<: V & F) T ->
-  ok (E & X ~<: U & F) -> 
+  ok (E & X ~<: U & F) ->
   wft (E & X ~<: U & F) T.
 Proof.
   intros. gen_eq K: (E & X ~<: V & F). gen E F.
@@ -488,13 +489,13 @@ Proof.
   case_var*.
     apply_empty* wft_weaken.
     destruct (binds_concat_inv H) as [?|[? ?]].
-      apply (@wft_var (subst_tt Z P U)). 
-       apply~ binds_concat_right. 
+      apply (@wft_var (subst_tt Z P U)).
+       apply~ binds_concat_right.
        unsimpl_map_bind. apply~ binds_map.
       destruct (binds_push_inv H1) as [[? ?]|[? ?]].
         subst. false~.
         applys wft_var. apply* binds_concat_left.
-  apply_fresh* wft_all as Y. 
+  apply_fresh* wft_all as Y.
    unsimpl ((subst_tb Z P) (bind_sub T1)).
    lets: wft_type.
    rewrite* subst_tt_open_tt_var.
@@ -505,11 +506,11 @@ Qed.
 
 Lemma wft_open : forall E U T1 T2,
   ok E ->
-  wft E (typ_all T1 T2) -> 
+  wft E (typ_all T1 T2) ->
   wft E U ->
   wft E (open_tt T2 U).
 Proof.
-  introv Ok WA WU. inversions WA. pick_fresh X. 
+  introv Ok WA WU. inversions WA. pick_fresh X.
   autos* wft_type. rewrite* (@subst_tt_intro X).
   lets K: (@wft_subst_tb empty).
   specializes_vars K. clean_empty K. apply* K.
@@ -525,7 +526,7 @@ Qed.
 Lemma ok_from_okt : forall E,
   okt E -> ok E.
 Proof.
-  induction 1; auto. 
+  induction 1; auto.
 Qed.
 
 Hint Extern 1 (ok _) => apply ok_from_okt.
@@ -551,7 +552,7 @@ Qed.
 
 (** Extraction from a typing assumption in a well-formed environments *)
 
-Lemma wft_from_env_has_typ : forall x U E, 
+Lemma wft_from_env_has_typ : forall x U E,
   okt E -> binds x (bind_typ U) E -> wft E U.
 Proof.
   induction E using env_ind; intros Ok B.
@@ -566,7 +567,7 @@ Proof.
      destruct (binds_push_inv B) as [[? ?]|[? ?]]. subst.
        inversions H3. apply_empty* wft_weaken.
        apply_empty* wft_weaken.
-Qed. 
+Qed.
 
 (** Extraction from a well-formed environment *)
 
@@ -658,9 +659,9 @@ Proof.
   rewrite concat_assoc in *.
    lets (T&[?|?]): okt_push_inv O; subst.
      lets (?&?&?): (okt_push_sub_inv O).
-      applys~ okt_sub. applys* wft_narrow. 
+      applys~ okt_sub. applys* wft_narrow.
      lets (?&?&?): (okt_push_typ_inv O).
-      applys~ okt_typ. applys* wft_narrow. 
+      applys~ okt_typ. applys* wft_narrow.
 Qed.
 
 (** Through strengthening *)
@@ -671,12 +672,12 @@ Lemma okt_strengthen : forall x T (E F:env),
 Proof.
  introv O. induction F using env_ind.
   rewrite concat_empty_r in *. lets*: (okt_push_typ_inv O).
-  rewrite concat_assoc in *. 
+  rewrite concat_assoc in *.
    lets (U&[?|?]): okt_push_inv O; subst.
      lets (?&?&?): (okt_push_sub_inv O).
-      applys~ okt_sub. applys* wft_strengthen. 
+      applys~ okt_sub. applys* wft_strengthen.
      lets (?&?&?): (okt_push_typ_inv O).
-      applys~ okt_typ. applys* wft_strengthen. 
+      applys~ okt_typ. applys* wft_strengthen.
 Qed.
 
 (** Through type substitution *)
@@ -692,9 +693,9 @@ Proof.
   rewrite map_push. rewrite concat_assoc in *.
    lets (U&[?|?]): okt_push_inv O; subst.
      lets (?&?&?): (okt_push_sub_inv O).
-      applys~ okt_sub. applys* wft_subst_tb. 
+      applys~ okt_sub. applys* wft_subst_tb.
      lets (?&?&?): (okt_push_typ_inv O).
-      applys~ okt_typ. applys* wft_subst_tb. 
+      applys~ okt_typ. applys* wft_subst_tb.
 Qed.
 
 (** Automation *)
@@ -747,45 +748,45 @@ Proof.
   induction 1. autos*. autos*. autos*. jauto_set; auto. (* autos* too slow *)
   split. autos*. split;
    apply_fresh* wft_all as Y;
-    forwards~: (H1 Y); apply_empty* (@wft_narrow T1). 
+    forwards~: (H1 Y); apply_empty* (@wft_narrow T1).
 Qed.
 
 (** The typing relation is restricted to well-formed objects. *)
 
 Lemma typing_regular : forall E e T,
   typing E e T -> okt E /\ term e /\ wft E T.
-Proof. 
+Proof.
   induction 1.
   splits*.
   splits.
-   pick_fresh y. specializes H0 y. destructs~ H0. 
+   pick_fresh y. specializes H0 y. destructs~ H0.
     forwards*: okt_push_typ_inv.
-   apply_fresh* term_abs as y. 
+   apply_fresh* term_abs as y.
      pick_fresh y. specializes H0 y. destructs~ H0.
       forwards*: okt_push_typ_inv.
      specializes H0 y. destructs~ H0.
-   pick_fresh y. specializes H0 y. destructs~ H0. 
+   pick_fresh y. specializes H0 y. destructs~ H0.
     apply* wft_arrow.
       forwards*: okt_push_typ_inv.
       apply_empty* wft_strengthen.
   splits*. destructs IHtyping1. inversion* H3.
   splits.
-   pick_fresh y. specializes H0 y. destructs~ H0. 
+   pick_fresh y. specializes H0 y. destructs~ H0.
     forwards*: okt_push_sub_inv.
    apply_fresh* term_tabs as y.
-     pick_fresh y. forwards~ K: (H0 y). destructs K. 
-       forwards*: okt_push_sub_inv. 
+     pick_fresh y. forwards~ K: (H0 y). destructs K.
+       forwards*: okt_push_sub_inv.
      forwards~ K: (H0 y). destructs K. auto.
-   apply_fresh* wft_all as Y.  
-     pick_fresh y. forwards~ K: (H0 y). destructs K. 
+   apply_fresh* wft_all as Y.
+     pick_fresh y. forwards~ K: (H0 y). destructs K.
       forwards*: okt_push_sub_inv.
      forwards~ K: (H0 Y). destructs K.
-      forwards*: okt_push_sub_inv. 
+      forwards*: okt_push_sub_inv.
   splits*; destructs (sub_regular H0).
    apply* term_tapp. applys* wft_type.
-   applys* wft_open T1. 
-  splits*. destructs~ (sub_regular H0). 
-Qed. 
+   applys* wft_open T1.
+  splits*. destructs~ (sub_regular H0).
+Qed.
 
 (** The value relation is restricted to well-formed objects. *)
 

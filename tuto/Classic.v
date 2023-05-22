@@ -452,6 +452,7 @@ Proof. intros. apply prop_ext; tauto. Qed.
     equalities that we have proved. The tactic is implemented
     using the [autorewrite] mechanism. *)
 
+#[global]
 Hint Rewrite not_True not_False not_not not_and not_or
   and_True_l and_True_r and_False_l and_False_r
   or_True_l or_True_r or_False_l or_False_r
@@ -847,6 +848,7 @@ Proof. intros A x. constructor. exists x. auto. Qed.
     for Coq to automatically refer to this result when it is looking
     for some evidence that [nat] is inhabited. *)
 
+#[global]
 Instance bool_Inhab : Inhab nat.
 Proof. apply (prove_Inhab 0). Qed.
 
@@ -1123,7 +1125,8 @@ Module Quotient.
 Import Equivalence.
 
 Parameter A : Type.
-Parameter IA : Inhab A. Existing Instance IA.
+Parameter IA : Inhab A.
+#[global] Existing Instance IA.
 Parameter R : A -> A -> Prop.
 Parameter E : Equivalence R.
 
@@ -1526,6 +1529,7 @@ Parameter FixFun2 :
     to be proved inhabited, we need a lemma to establish that pairs
     are inhabited when both their components are inhabited. *)
 
+#[global]
 Instance prod_Inhab : forall `{Inhab A} `{Inhab B}, Inhab (A*B).
 Proof. intros. apply (prove_Inhab (arbitrary,arbitrary)). Qed.
 

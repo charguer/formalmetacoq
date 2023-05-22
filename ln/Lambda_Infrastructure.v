@@ -4,7 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN Lambda_Definitions.
+From TLC Require Import LibLN.
+Require Import Lambda_Definitions.
 
 (* ********************************************************************** *)
 (** ** Additional Definitions Used in the Proofs *)
@@ -25,10 +26,10 @@ Fixpoint fv (t : trm) {struct t} : vars :=
 
 Fixpoint close_var_rec (k : nat) (z : var) (t : trm) {struct t} : trm :=
   match t with
-  | trm_bvar i    => trm_bvar i 
+  | trm_bvar i    => trm_bvar i
   | trm_fvar x    => If x = z then (trm_bvar k) else (trm_fvar x)
   | trm_app t1 t2 => trm_app (close_var_rec k z t1) (close_var_rec k z t2)
-  | trm_abs t1    => trm_abs (close_var_rec (S k) z t1) 
+  | trm_abs t1    => trm_abs (close_var_rec (S k) z t1)
   end.
 
 Definition close_var z t := close_var_rec 0 z t.
@@ -38,10 +39,10 @@ Definition close_var z t := close_var_rec 0 z t.
 
 Fixpoint subst (z : var) (u : trm) (t : trm) {struct t} : trm :=
   match t with
-  | trm_bvar i    => trm_bvar i 
+  | trm_bvar i    => trm_bvar i
   | trm_fvar x    => If x = z then u else (trm_fvar x)
   | trm_app t1 t2 => trm_app (subst z u t1) (subst z u t2)
-  | trm_abs t1    => trm_abs (subst z u t1) 
+  | trm_abs t1    => trm_abs (subst z u t1)
   end.
 
 Notation "[ z ~> u ] t" := (subst z u t) (at level 68).
@@ -53,8 +54,8 @@ Inductive para : relation :=
   | para_red : forall L t1 t1' t2 t2',
       (forall x, x \notin L -> para (t1 ^ x) (t1' ^ x) ) ->
       para t2 t2' ->
-      para (trm_app (trm_abs t1) t2) (t1' ^^ t2') 
-  | para_var : forall x, 
+      para (trm_app (trm_abs t1) t2) (t1' ^^ t2')
+  | para_var : forall x,
       para (trm_fvar x) (trm_fvar x)
   | para_app : forall t1 t1' t2 t2',
       para t1 t1' -> para t2 t2' ->
@@ -77,9 +78,9 @@ Notation "R 'iter'" := (iter_ R) (at level 69).
 (* ********************************************************************** *)
 (** Inclusion between relations (simulation or a relation by another) *)
 
-Definition simulated (R1 R2 : relation) := 
+Definition simulated (R1 R2 : relation) :=
   forall (t t' : trm), R1 t t' -> R2 t t'.
- 
+
 Infix "simulated_by" := simulated (at level 69).
 
 (* ********************************************************************** *)
@@ -94,24 +95,24 @@ Definition red_refl (R : relation) :=
 Definition red_in (R : relation) :=
   forall t x u u', term t -> R u u' ->
   R ([x ~> u]t) ([x ~> u']t).
-  
+
 Definition red_all (R : relation) :=
-  forall x t t', R t t' -> 
-  forall u u', R u u' -> 
+  forall x t t', R t t' ->
+  forall u u', R u u' ->
   R ([x~>u]t) ([x~>u']t').
 
 Definition red_out (R : relation) :=
-  forall x u t t', term u -> R t t' -> 
+  forall x u t t', term u -> R t t' ->
   R ([x~>u]t) ([x~>u]t').
 
 Definition red_rename (R : relation) :=
   forall x t t' y,
   x \notin (fv t) -> x \notin (fv t') ->
-  R (t ^ x) (t' ^ x) -> 
+  R (t ^ x) (t' ^ x) ->
   R (t ^ y) (t' ^ y).
 
 Definition red_through (R : relation) :=
-  forall x t1 t2 u1 u2, 
+  forall x t1 t2 u1 u2,
   x \notin (fv t1) -> x \notin (fv u1) ->
   R (t1 ^ x) (u1 ^ x) -> R t2 u2 ->
   R (t1 ^^ t2) (u1 ^^ u2).
@@ -149,7 +150,7 @@ Lemma open_rec_term_core :forall e j v i u, i <> j ->
   {j ~> v}e = {i ~> u}({j ~> v}e) -> e = {i ~> u}e.
 Proof.
   induction e; introv Neq Equ;
-  simpl in *; inversion* Equ; f_equal*.  
+  simpl in *; inversion* Equ; f_equal*.
   case_nat*. case_nat*.
 Qed.
 
@@ -162,15 +163,15 @@ Qed.
 
 (** Substitution for a fresh name is identity. *)
 
-Lemma subst_fresh : forall x t u, 
+Lemma subst_fresh : forall x t u,
   x \notin fv t ->  [x ~> u] t = t.
 Proof.
-  intros. induction t; simpls; f_equal*. case_var*. 
+  intros. induction t; simpls; f_equal*. case_var*.
 Qed.
 
 (** Substitution distributes on the open operation. *)
 
-Lemma subst_open : forall x u t1 t2, term u -> 
+Lemma subst_open : forall x u t1 t2, term u ->
   [x ~> u] (t1 ^^ t2) = ([x ~> u]t1) ^^ ([x ~> u]t2).
 Proof.
   intros. unfold open. generalize 0.
@@ -190,7 +191,7 @@ Qed.
 (** Opening up an abstraction of body t with a term u is the same as opening
   up the abstraction with a fresh name x and then substituting u for x. *)
 
-Lemma subst_intro : forall x t u, 
+Lemma subst_intro : forall x t u,
   x \notin (fv t) -> term u ->
   t ^^ u = [x ~> u](t ^ x).
 Proof.
@@ -200,10 +201,10 @@ Qed.
 
 (** Tactic to permute subst and open var *)
 
-Ltac cross := 
+Ltac cross :=
   rewrite subst_open_var; try cross.
 
-Tactic Notation "cross" "*" := 
+Tactic Notation "cross" "*" :=
   cross; autos*.
 
 
@@ -234,13 +235,13 @@ Hint Resolve subst_term subst_body.
 
 (** Conversion from locally closed abstractions and bodies *)
 
-Lemma term_abs_to_body : forall t1, 
+Lemma term_abs_to_body : forall t1,
   term (trm_abs t1) -> body t1.
 Proof.
   intros. unfold body. inversion* H.
 Qed.
 
-Lemma body_to_term_abs : forall t1, 
+Lemma body_to_term_abs : forall t1,
   body t1 -> term (trm_abs t1).
 Proof.
   intros. inversion* H.
@@ -264,13 +265,13 @@ Hint Resolve open_term.
 
 (** Open_var with fresh names is an injective operation *)
 
-Lemma open_var_inj : forall x t1 t2, 
-  x \notin (fv t1) -> x \notin (fv t2) -> 
+Lemma open_var_inj : forall x t1 t2,
+  x \notin (fv t1) -> x \notin (fv t2) ->
   (t1 ^ x = t2 ^ x) -> (t1 = t2).
 Proof.
   intros x t1. unfold open. generalize 0.
   induction t1; intro k; destruct t2; simpl; intros; inversion H1;
-  try solve [ f_equal* 
+  try solve [ f_equal*
   | do 2 try case_nat; inversions* H1; try notin_false ].
 Qed.
 
@@ -283,8 +284,8 @@ Lemma close_var_rec_open : forall x y z t1 i j,
   = {j ~> trm_fvar z} (close_var_rec j x ({i ~> trm_fvar y}t1) ).
 Proof.
   induction t1; simpl; intros; try solve [ f_equal* ].
-  do 2 (case_nat; simpl); try solve [ case_var* | case_nat* ]. 
-  case_var*. simpl. case_nat*. 
+  do 2 (case_nat; simpl); try solve [ case_var* | case_nat* ].
+  case_var*. simpl. case_nat*.
 Qed.
 
 (** Close var is an operation returning a body of an abstraction *)
@@ -319,23 +320,23 @@ Proof.
   introv W. unfold close_var, open. generalize 0.
   induction W; intros k; simpls; f_equal*.
   case_var*. simpl. case_nat*.
-  let L := gather_vars in match goal with |- _ = ?t => 
+  let L := gather_vars in match goal with |- _ = ?t =>
     destruct (var_fresh (L \u fv t)) as [y Fr] end.
   apply* (@open_var_inj y).
   unfolds open. rewrite* close_var_rec_open.
 Qed.
- 
+
 (** An abstract specification of close_var, which packages the
   result of the operation and all the properties about it. *)
 
-Lemma close_var_spec : forall t x, term t -> 
+Lemma close_var_spec : forall t x, term t ->
   exists u, t = u ^ x /\ body u /\ x \notin (fv u).
 Proof.
   intros. exists (close_var x t). splits 3.
   apply* close_var_open.
   apply* close_var_body.
   apply* close_var_fresh.
-Qed. 
+Qed.
 
 (* ********************************************************************** *)
 (** Tactics *)
@@ -368,9 +369,9 @@ Tactic Notation "inst_notin" "*" constr(lemma) constr(var)
 
 Section TermRelations.
 
-Hint Extern 1 (term (trm_abs ?t)) => 
+Hint Extern 1 (term (trm_abs ?t)) =>
   match goal with H: context [term (t ^ _) ] |- _ =>
-   let y := fresh in let K := fresh in 
+   let y := fresh in let K := fresh in
    apply_fresh term_abs as y;
    inst_notin H y as K; destruct K; auto end.
 
@@ -413,9 +414,9 @@ Hint Extern 1 (term ?t) => match goal with
    [body t] and that we only know that [t ^ x] is a term
    because it appears as an argument to some reduction R. *)
 
-Hint Extern 1 (body ?t) => 
-   match goal with H: context [?R (t ^ _) _ ] |- _ => 
+Hint Extern 1 (body ?t) =>
+   match goal with H: context [?R (t ^ _) _ ] |- _ =>
      let y := fresh in apply term_abs_to_body;
-     apply_fresh term_abs as y; 
+     apply_fresh term_abs as y;
      inst_notin H y as K; clear H end.
 

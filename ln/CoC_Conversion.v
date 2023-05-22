@@ -4,7 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN CoC_Definitions CoC_Infrastructure 
+From TLC Require Import LibLN.
+Require Import CoC_Definitions CoC_Infrastructure
  CoC_BetaStar CoC_ChurchRosser.
 
 
@@ -16,7 +17,7 @@ Proof.
   intros_all. lets: beta_red_out. induction* H0.
 Qed.
 
-Lemma conv_from_beta_star : 
+Lemma conv_from_beta_star :
   (beta star) simulated_by (conv).
 Proof.
   intros_all. induction* H.
@@ -49,7 +50,7 @@ Qed.
 Section ProdInv.
 
 Tactic Notation "helper" :=
- match goal with |- ex (fun _ => ex (fun _ => 
+ match goal with |- ex (fun _ => ex (fun _ =>
   trm_prod ?A ?B = trm_prod _ _ /\ _)) =>
   exists A B; splits 3; [auto | | exists_fresh ] end.
 
@@ -77,7 +78,7 @@ Lemma beta_star_type_any_inv : forall P i,
   (beta star) (trm_type i) P -> P = trm_type i.
 Proof.
   introv R.
-  gen_eq T: (trm_type i). 
+  gen_eq T: (trm_type i).
   induction R; intros EQ; subst.
   auto.
   forwards*: IHR1. subst. auto.
@@ -85,20 +86,20 @@ Proof.
 Qed.
 
 Lemma conv_prod_prod_inv : forall U1 T1 U2 T2,
-  conv (trm_prod U1 T1) (trm_prod U2 T2) -> 
+  conv (trm_prod U1 T1) (trm_prod U2 T2) ->
      conv U1 U2
   /\ exists L, forall x, x \notin L -> conv (T1 ^ x) (T2 ^ x).
 Proof.
   unfold conv. introv C.
   destruct (church_rosser_beta C) as [P3 [Red1 Red2]].
-  destruct (beta_star_prod_any_inv Red1) 
+  destruct (beta_star_prod_any_inv Red1)
    as [P3_11 [P3_12 [EQ1 [R1 [L1 S1]]]]].
-  destruct (beta_star_prod_any_inv Red2) 
+  destruct (beta_star_prod_any_inv Red2)
    as [P3_21 [P3_22 [EQ2 [R2 [L2 S2]]]]].
   rewrite EQ2 in EQ1. inversions EQ1.
   split. applys conv_from_beta_star_trans R1 R2.
   exists_fresh. intros x Fr.
-   forwards~ K1: (S1 x). forwards~ K2: (S2 x). 
+   forwards~ K1: (S1 x). forwards~ K2: (S2 x).
    apply* conv_from_beta_star_trans.
 Qed.
 
@@ -116,7 +117,7 @@ Lemma conv_type_prod_inv : forall U1 U2 i,
 Proof.
   unfold conv. introv C.
   destruct (church_rosser_beta C) as [P3 [Red1 Red2]].
-  destruct (beta_star_prod_any_inv Red2) 
+  destruct (beta_star_prod_any_inv Red2)
      as [P3_11 [P3_12 [EQ1 [R1 [L1 S1]]]]].
   rewrite (beta_star_type_any_inv Red1) in *.
   false.

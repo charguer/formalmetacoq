@@ -130,7 +130,7 @@ Lemma cored_not_red_diverge : forall e o,
   cored e o -> ~ red e o -> diverge e.
 Proof.
   unfold diverge. cofix IH. introv C R.
-  inverts C; try solve [ false* R ]. 
+  inverts C; try solve [ false* R ].
   testi H.
     constructors*.
     constructors~. applys* IH.
@@ -153,7 +153,7 @@ Qed.
 
 (** Definition of deterministic *)
 
-Definition deterministic := 
+Definition deterministic :=
   forall e o1 o2, red e o1 -> cored e o2 -> o1 = o2.
 
 (** Proof that the language is deterministic *)
@@ -166,19 +166,19 @@ Proof.
   rewrite~ <- IHR2. erewrite* IHR1.
 Qed.
 
-(** Corollary: [red] is deterministic *) 
+(** Corollary: [red] is deterministic *)
 
-Corollary red_deterministic : 
+Corollary red_deterministic :
   forall e o1 o2, red e o1 -> red e o2 -> o1 = o2.
 Proof.
   introv R1 R2. hint red_cored.
   applys* red_cored_deterministic.
 Qed.
 
-(** Corollary: termination and divergence are exclusive 
-    for terms *) 
+(** Corollary: termination and divergence are exclusive
+    for terms *)
 
-Corollary red_not_diverge_trm : 
+Corollary red_not_diverge_trm :
   forall t o, red t o -> diverge t -> False.
 Proof.
   introv R1 R2. forwards M: red_cored_deterministic R1 R2.
@@ -222,11 +222,11 @@ Hint Extern 1 (_ < _) => math.
 Lemma redh_lt : forall n n' e o,
   redh n e o -> n < n' -> redh n' e o.
 Proof.
-  introv H. gen n'. induction H; introv L; 
+  introv H. gen n'. induction H; introv L;
    (destruct n' as [|n']; [ false; math | autos* ]).
 Qed.
 
-Lemma red_redh : forall e o, 
+Lemma red_redh : forall e o,
   red e o -> exists n, redh n e o.
 Proof.
   hint redh_lt. introv H. induction H; try induct_height.
@@ -235,7 +235,7 @@ Qed.
 Lemma redh_red : forall n e o,
   redh n e o -> red e o.
 Proof. introv H. induction* H. Qed.
- 
+
 End RedInd.
 
 
@@ -261,17 +261,17 @@ Proof.
   gen v t. induction n using peano_induction.
   asserts IH: (forall m t v, redh m t v -> m < n -> bigred t v).
     intros. apply* H. clear H.
-  introv R. inverts R as; autos*. 
+  introv R. inverts R as; autos*.
   introv R1 R2. inverts R2 as R2 R3. inverts* R3.
 Qed.
- 
+
 (** [bigdiv] to [diverge] *)
 
 Lemma bigdiv_diverge : forall t,
   bigdiv t -> diverge t.
-Proof. 
+Proof.
   asserts K: (forall t b, bigred t b -> cored t b).
-   intros. apply red_cored. apply~ bigred_red. 
+   intros. apply red_cored. apply~ bigred_red.
   unfold diverge. cofix IH.
   introv H. inverts H; try solve [constructors*].
 Qed.
@@ -287,7 +287,7 @@ Proof.
     inverts R2 as.
       intros. apply~ bigdiv_app_1.
       introv R2 R3. destruct~ (cored_to_diverge_or_red R2).
-        apply* bigdiv_app_2. 
+        apply* bigdiv_app_2.
         inverts R3 as.
           intros. apply* bigdiv_app_2.
           introv R3. apply* bigdiv_app_3.

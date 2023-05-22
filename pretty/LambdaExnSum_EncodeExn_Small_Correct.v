@@ -18,7 +18,7 @@ Implicit Types t : trm.
 (* ** Theorem statement *)
 
 Definition correctness_step :=
-  forall t t', step t t' -> 
+  forall t t', step t t' ->
   fresh (trm_vars not_used t) 3 L ->
   stepplus (tr_trm t) (tr_trm t').
 
@@ -34,7 +34,7 @@ Lemma stepplus_beta' : forall x t3 v2,
 Proof. intros. applys* tclosure_intro. Qed.
 
 Tactic Notation "applys_simpl" constr(E) :=
-  let M := fresh "TEMP" in 
+  let M := fresh "TEMP" in
   lets M: E; simpl in M; applys M; clear M.
 
 Lemma stepplus_abs_beta : forall x t3 v2,
@@ -61,8 +61,8 @@ Proof.
   introv R. induction R; introv F; simpls; auto.
   skip. (* todo : ctxvars *)
   skip. (* todo : ctxvars *)
-  applys~ subst_notin. 
-Qed. 
+  applys~ subst_notin.
+Qed.
 
 Lemma fresh_cred : forall t t' m xs,
   step t t' ->
@@ -89,15 +89,15 @@ Fixpoint build_ctx_for t :=
   | trm_val v1 => ctx_hole
   | trm_var x => ctx_hole
   | trm_abs x t1 => ctx_hole
-  | trm_app t1 t2 => 
+  | trm_app t1 t2 =>
     match t1 with
-    | trm_val v1 => 
-        match t2 with 
+    | trm_val v1 =>
+        match t2 with
         | trm_val v2 => ctx_hole
         | _ => ctx_app_2 v1 (r t2)
         end
     | _ => ctx_app_1 (r t1) t2
-    end 
+    end
   | trm_case t1 t2 t3 => s t1 (fun c => ctx_case c t2 t3)
   | trm_inj b t1 => s t1 (fun c => ctx_inj b c)
   | trm_try t1 t2 => s t1 (fun c => ctx_try c t2)
@@ -105,9 +105,9 @@ Fixpoint build_ctx_for t :=
   end.
 
 Ltac build_ctx tt :=
-  match goal with |- _ ?t _ => 
+  match goal with |- _ ?t _ =>
     let c := constr:(build_ctx_for t) in
-    let c := (eval simpl in c) in 
+    let c := (eval simpl in c) in
     c
   end.
 *)
@@ -123,15 +123,15 @@ Ltac build_ctx_for t :=
   | trm_val ?v1 => constr:(ctx_hole)
   | trm_var ?x => constr:(ctx_hole)
   | trm_abs ?x ?t1 => constr:(ctx_hole)
-  | trm_app ?t1 ?t2 => 
+  | trm_app ?t1 ?t2 =>
     match t1 with
-    | trm_val ?v1 => 
-        match t2 with 
+    | trm_val ?v1 =>
+        match t2 with
         | trm_val ?v2 => constr:(ctx_hole)
         | _ => let c := r t2 in constr:(ctx_app_2 v1 c)
         end
     | _ => let c := r t1 in constr:(ctx_app_1 c t2)
-    end 
+    end
   | trm_case ?t1 ?t2 ?t3 => s t1 ltac:(fun c => constr:(ctx_case c t2 t3))
   | trm_inj ?b ?t1 => s t1 ltac:(fun c => constr:(ctx_inj b c))
   | trm_try ?t1 ?t2 => s t1 ltac:(fun c => constr:(ctx_try c t2))
@@ -150,11 +150,11 @@ Ltac do_step_ctx_core :=
   let c := build_ctx tt in
   let f := constr:(@step_ctx c) in
   let f := (eval simpl in f) in
-  first [ applys_simpl f 
+  first [ applys_simpl f
        | let M := fresh in lets M: f; simpl in M ].
 
 Ltac do_step_ctx_high :=
-  match goal with 
+  match goal with
   | |- step _ _ => do_step_ctx_core
   | |- _ => applys rtclosure_step; [do_step_ctx_core|]
   end.
@@ -174,7 +174,7 @@ Ltac simpl_substs := simpl; simpl_subst.
 
 (** Verification of [tr_bind] *)
 
-Lemma isctx_tr_bind : forall x k, 
+Lemma isctx_tr_bind : forall x k,
   isctx (fun t => tr_bind t x k).
 Proof.
   introv R. simpl. unfold tr_bind.
@@ -205,7 +205,7 @@ Proof.
   simpl_substs. auto. rewrite~ (@subst_id not_used).
 Qed.
 
-(** Preservation of reduction context by [tr_trm] 
+(** Preservation of reduction context by [tr_trm]
 
 Lemma isctx_tr_trm : isctx tr_trm.
 Proof.
@@ -241,10 +241,10 @@ Proof.
   (* case ctx *)
 Focus 1.
   induction c; simpls.
-  auto. 
+  auto.
   applys~ stepplus_ctx (fun u => (tr_bind u x1 (tr_bind (tr_trm t) x2 (trm_app x1 x2)))).
-  Print tr_ret. 
-  Print tr_val. 
+  Print tr_ret.
+  Print tr_val.
   applys~ stepplus_ctx (fun u => (tr_bind u x1 (tr_bind (tr_trm t) x2 (trm_app x1 x2)))).
 
 
@@ -265,12 +265,12 @@ Focus 1.
   forwards M2: fresh_bigred R2 Fr2. simpl in M2.
   rewrite~ <- tr_val_subst. applys~ IH. applys~ fresh_subst.
   (* case_app_exn_1 *)
-  applys* bigred_tr_bind_exn. 
+  applys* bigred_tr_bind_exn.
   (* case_app_exn_2 *)
   applys* bigred_tr_bind_ret. rewrite~ subst_tr_bind.
   simpl. simpl_subst.
   rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ].
-  applys* bigred_tr_bind_exn. 
+  applys* bigred_tr_bind_exn.
   (* case_try *)
   applys bigred_case_true. applys IH (beh_ret v1). auto. auto.
   applys bigred_abs_beta. simpl. simpl_subst. auto.
@@ -283,31 +283,31 @@ Focus 1.
   (* case_raise *)
   applys* bigred_tr_bind_ret. simpl_substs. auto.
   (* case_raise_exn_1 *)
-  applys* bigred_tr_bind_exn. 
+  applys* bigred_tr_bind_exn.
   (* case_inj *)
   applys* bigred_tr_bind_ret. simpl_substs. auto.
   (* case_inj_1 *)
-  applys* bigred_tr_bind_exn. 
+  applys* bigred_tr_bind_exn.
   (* case_true *)
   asserts~ Fr1: (fresh (trm_vars not_used t1) 3 L).
   forwards M: fresh_bigred R1 Fr1. simpl in M.
   applys* bigred_tr_bind_ret. sets_eq T: tr_cont.
-  simpl. simpl_subst. subst. 
+  simpl. simpl_subst. subst.
   do 2 rewrite~ subst_tr_cont.
   do 2 (rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ]).
-  applys* bigred_case_true. 
+  applys* bigred_case_true.
   applys bigred_tr_cont R2. skip. (* applys IH. makes Guarded loop ! *)
   auto. auto.
   (* case_false *)
   asserts~ Fr1: (fresh (trm_vars not_used t1) 3 L).
   forwards M: fresh_bigred R1 Fr1. simpl in M.
   applys* bigred_tr_bind_ret. sets_eq T: tr_cont.
-  simpl. simpl_subst. subst. 
+  simpl. simpl_subst. subst.
   do 2 rewrite~ subst_tr_cont.
   do 2 (rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ]).
-  applys* bigred_case_false. 
+  applys* bigred_case_false.
   applys bigred_tr_cont R2. skip. (* applys IH. makes Guarded loop ! *)
   auto. auto.
   (* case_1 *)
-  applys* bigred_tr_bind_exn. 
+  applys* bigred_tr_bind_exn.
 Qed.

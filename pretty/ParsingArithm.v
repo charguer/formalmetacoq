@@ -1,6 +1,6 @@
 Set Implicit Arguments.
 Require Import Shared.
-Require Import String.
+From Coq Require Import String.
 Open Scope string_scope.
 
 
@@ -23,7 +23,7 @@ Proof.
   introv C. intros. applys decidable_make (mem_decide x l).
   induction l; simpl; extens; rew_refl in *.
   iff M.
-    false. 
+    false.
     inverts M.
   rewrite IHl. case_if; fold_bool; rew_refl in *.
     subst. iff M. constructors*. auto.
@@ -45,7 +45,7 @@ Instance lt_decidable : forall (n m : int),
 Proof.
   intros.
   sets b: (match Zcompare n m with Datatypes.Lt => true | _ => false end).
-  applys decidable_make b. 
+  applys decidable_make b.
   skip. (* TODO *)
 Qed.
 
@@ -119,7 +119,7 @@ Fixpoint value e :=
      | binop_add => v1 + v2
      | binop_sub => v1 - v2
      | binop_mul => v1 * v2
-     end 
+     end
   end.
 
 
@@ -135,7 +135,7 @@ Fixpoint value e :=
 - : int = -6
  *)
 
-Definition prio := int. 
+Definition prio := int.
 Definition prio_max := 8.
 Definition prio_neg := 6.
 Definition prio_add := 4.
@@ -157,9 +157,9 @@ Definition symb_par_close := ")".
 
 (** Spacing characters *)
 
-Definition spacing_tokens := 
+Definition spacing_tokens :=
   [ symb_space ; symb_tab ].
- 
+
 Definition spacing s :=
   Mem s spacing_tokens.
 
@@ -167,16 +167,16 @@ Definition spacing s :=
      of spacing tokens *)
 
 Inductive spacings : string -> Prop :=
-  | spacings_empty : 
+  | spacings_empty :
      spacings EmptyString
   | spacings_string : forall s ss,
      spacing s ->
      spacings ss ->
      spacings (s ~~ ss).
 
-(** [separ ss r] asserts that the list [r] is equal 
+(** [separ ss r] asserts that the list [r] is equal
     obtained as the concatenation of the strings in [ss],
-    possibly separated by strings satisfying [spacings], 
+    possibly separated by strings satisfying [spacings],
     including separations at the front and at the tail. *)
 
 Inductive separ : list string -> string -> Prop :=
@@ -201,13 +201,13 @@ Inductive repr : int -> exp -> string -> Prop :=
       repr prio_neg e1 r1 ->
       prio_neg < p ->
       separ [symb_neg ; r1] r ->
-      repr p (exp_unop unop_neg e1) r 
+      repr p (exp_unop unop_neg e1) r
   | repr_add : forall p e1 e2 r1 r2 r,
       repr (prio_add+1) e1 r1 ->
       repr (prio_add+1) e2 r2 ->
       prio_add < p ->
       separ [r1 ; symb_add ; r2] r ->
-      repr p (exp_binop binop_add e1 e2) r 
+      repr p (exp_binop binop_add e1 e2) r
   | repr_sub : forall p e1 e2 r1 r2 r,
       repr (prio_sub+1) e1 r1 ->
       repr prio_sub e2 r2 ->
@@ -219,7 +219,7 @@ Inductive repr : int -> exp -> string -> Prop :=
       repr (prio_mul+1) e2 r2 ->
       prio_mul < p ->
       separ [r1 ; symb_mul ; r2] r ->
-      repr p (exp_binop binop_mul e1 e2) r 
+      repr p (exp_binop binop_mul e1 e2) r
   | repr_par : forall p e r1 r,
       repr prio_max e r1 ->
       separ [symb_par_open ; r1 ; symb_par_close ] r ->
@@ -239,12 +239,12 @@ Lemma repr_prio_le : forall p1 p2 e r,
   repr p1 e r ->
   p1 <= p2 ->
   repr p2 e r.
-Proof. introv H. induction H; introv L; try constructors*. Qed. 
+Proof. introv H. induction H; introv L; try constructors*. Qed.
 
 (** [spacings] stable by concatenation *)
 
 Lemma spacings_concat : forall s1 s2,
-  spacings s1 -> 
+  spacings s1 ->
   spacings s2 ->
   spacings (s1 ~~ s2).
 Proof.
@@ -290,13 +290,13 @@ Hint Resolve spacings_char.
 
 (** Results about [separ] *)
 
-Lemma separ_empty_not : 
+Lemma separ_empty_not :
   separ nil EmptyString.
 Proof.
   applys~ separ_nil.
 Qed.
 
-Lemma separ_cons_not : forall s ss r, 
+Lemma separ_cons_not : forall s ss r,
   separ ss r ->
   separ (s::ss) (s ~~ r).
 Proof.
@@ -363,16 +363,16 @@ Fixpoint exp_of_pexp f :=
 (************************************************************)
 (* * Auxiliarly functions for the validator *)
 
-(** [eat_leading t s] returns [None] is [t] is not 
+(** [eat_leading t s] returns [None] is [t] is not
     a prefix of [s] and returns [Some s'] if [s = append t s']. *)
 
 Fixpoint eat_leading t s :=
   match t with
   | EmptyString => Some s
-  | String c t' => 
+  | String c t' =>
       match s with
-      | EmptyString => None 
-      | String c' s' => 
+      | EmptyString => None
+      | String c' s' =>
          if decide (c = c')
            then eat_leading t' s'
            else None
@@ -396,9 +396,9 @@ Qed.
 Fixpoint eat_spaces s :=
   match s with
   | EmptyString => EmptyString
-  | String c s' => 
-     if decide (spacing (c:char)) 
-       then eat_spaces s' 
+  | String c s' =>
+     if decide (spacing (c:char))
+       then eat_spaces s'
        else s
   end.
 
@@ -411,7 +411,7 @@ Proof.
   simpls. case_if.
     forwards (g'&G'&E'): IHs E.
      subst s. exists~ (String a g').
-    exists~ EmptyString.  
+    exists~ EmptyString.
 Qed.
 
 Lemma eat_spaces_empty : forall s,
@@ -428,7 +428,7 @@ Qed.
 
 Definition eat t s :=
   eat_leading t (eat_spaces s).
- 
+
 Lemma eat_spec : forall s s' t,
   eat t s = Some s' ->
   exists g, spacings g /\ s = append (append g t) s'.
@@ -456,7 +456,7 @@ Definition if_str (o:option string) (k:string->option string) :=
   | Some s => k s
   end.
 
-(** [pexp_validate p f s] returns [Some s'] if [f] is a valid 
+(** [pexp_validate p f s] returns [Some s'] if [f] is a valid
     parse tree for a string [s''] such that [s = s'' ++ s'],
     in a context of priority [p]. Otherwise it returns [None] *)
 
@@ -464,14 +464,14 @@ Fixpoint pexp_validate p f s :=
   let r := pexp_validate in
   match f with
   | pexp_int n => eat (string_of_int n) s
-  | pexp_unop op f1 => 
+  | pexp_unop op f1 =>
      match op with
      | unop_neg =>
         if_lt prio_neg p (fun _ =>
         if_str (eat symb_neg s) (fun s1 =>
         if_str (r prio_neg f1 s1) Some))
      end
-  | pexp_binop op f1 f2 => 
+  | pexp_binop op f1 f2 =>
      match op with
      | binop_add =>
         if_lt prio_add p (fun _ =>
@@ -489,7 +489,7 @@ Fixpoint pexp_validate p f s :=
         if_str (eat symb_mul s1) (fun s2 =>
         if_str (r (prio_mul+1) f2 s2) Some)))
      end
-  | pexp_par f1 => 
+  | pexp_par f1 =>
      if_str (eat symb_par_open s) (fun s1 =>
      if_str (r prio_max f1 s1) (fun s2 =>
      if_str (eat symb_par_close s2) Some))
@@ -497,8 +497,8 @@ Fixpoint pexp_validate p f s :=
 
 Definition pexp_validate_full f s :=
   match pexp_validate prio_max f s with
-  | Some s => 
-     match eat_spaces s with 
+  | Some s =>
+     match eat_spaces s with
      | EmptyString => true
      | _ => false
      end
@@ -540,10 +540,10 @@ Proof.
   (* int *)
   forwards (g&G&E): eat_spec H.
   esplit. split*.
-  (* --unary *)  
-  destruct u. 
+  (* --unary *)
+  destruct u.
   (* neg *)
-  steps H. subst. esplit. split. 
+  steps H. subst. esplit. split.
     rewrite append_assoc. eauto.
     rewrite <- append_assoc. constructors*.
   (* -- binary *)
@@ -594,99 +594,99 @@ Definition _par := pexp_par.
 
 Definition test_string_of_int := string_of_int 12.
 
-Definition test1_valid := pexp_validate_full 
+Definition test1_valid := pexp_validate_full
   (1)
   "1".
 
-Definition test2_valid := pexp_validate_full 
+Definition test2_valid := pexp_validate_full
   (1)
   "  1  ".
 
-Definition test3_valid := pexp_validate_full 
+Definition test3_valid := pexp_validate_full
   (_add 1 2)
   "  1+ 2 ".
 
-Definition test4_valid := pexp_validate_full 
+Definition test4_valid := pexp_validate_full
   (_par (_add (_par 1) 2))
   " ( (1)+ 2 )".
 
-Definition test5_valid := pexp_validate_full 
+Definition test5_valid := pexp_validate_full
   (_add 1 (_par (_neg 2)))
   "  1+ (- 2) ".
 
-Definition test6_valid := pexp_validate_full 
+Definition test6_valid := pexp_validate_full
   (_add 1 (_neg 2))
   "1+ - 2". (* not correct *)
 
 
 (*
-Definition test6_valid := pexp_validate_full 
+Definition test6_valid := pexp_validate_full
   (_par (_add (_mul (_par (_neg 5)) 6) 7))
-  "((-5)*6+7))". 
+  "((-5)*6+7))".
 *)
 
 (*
-Definition test6_valid := pexp_validate_full 
+Definition test6_valid := pexp_validate_full
   (_par (_add (_mul (_par (_neg 5)) 6) 7))
-  "((-5)*6+7)". 
+  "((-5)*6+7)".
 *)
 
-Definition test_pexp := 
-  _sub (_mul 1 (_par (_add 2 (_sub 3 4)))) 
-       (_par (_add (_mul (_par (_neg 5)) 6) 7)). 
+Definition test_pexp :=
+  _sub (_mul 1 (_par (_add 2 (_sub 3 4))))
+       (_par (_add (_mul (_par (_neg 5)) 6) 7)).
 
 Definition test_exp := exp_of_pexp test_pexp.
 
-Definition test_exp' := 
-  Eval cbv beta iota zeta delta 
-    [test_exp exp_of_pexp test_pexp _neg _add _sub _mul _par pexp_of_int] 
+Definition test_exp' :=
+  Eval cbv beta iota zeta delta
+    [test_exp exp_of_pexp test_pexp _neg _add _sub _mul _par pexp_of_int]
     in test_exp.
   (* Print test_exp'. *)
 
-Definition test7_valid := pexp_validate_full 
-  test_pexp 
+Definition test7_valid := pexp_validate_full
+  test_pexp
   " 1 *(2 +  3  - 4  ) - ((-5)*6+7)".
 
 Definition test8_valid := pexp_validate_full
-  test_pexp 
+  test_pexp
   " 1 *(2 +  3  - 4  ) - (-5*6+7)".  (* not the same *)
 
 Definition test9_valid := pexp_validate_full
-  (_sub (_mul 1 (_par (_add 2 (_sub 3 4)))) 
+  (_sub (_mul 1 (_par (_add 2 (_sub 3 4))))
         (_par (_neg (_add (_mul 5 6) 7))))
-  " 1 *(2 +  3  - 4  ) - (-5*6+7)".  
+  " 1 *(2 +  3  - 4  ) - (-5*6+7)".
 
 
 (************************************************************)
 (** * Extraction *)
 
 Extract Constant string_of_int =>
-  "(fun n -> 
-     let int_of_pos p = 
+  "(fun n ->
+     let int_of_pos p =
        let rec aux factor = function
          | XI p1 -> aux (2*factor) p1 + factor
-         | XO p1 -> aux (2*factor) p1 
+         | XO p1 -> aux (2*factor) p1
          | XH -> factor
          in
-       aux 1 p 
+       aux 1 p
        in
      let int_of_z = function
        | Z0 -> 0
        | Zpos p -> int_of_pos p
        | Zneg p -> - (int_of_pos p)
        in
-     let ascii_of_char c = 
+     let ascii_of_char c =
        let i = Char.code c in
        let bit k = (if i land (1 lsl k) > 0 then True else False) in
        Ascii (bit 0, bit 1, bit 2, bit 3, bit 4, bit 5, bit 6, bit 7)
        in
-     let s = string_of_int (int_of_z n) in 
+     let s = string_of_int (int_of_z n) in
      let r = ref [] in
      String.iter (fun c -> r := ascii_of_char c :: !r) s;
      List.fold_left (fun acc c -> String (c,acc)) EmptyString !r)".
 
 Extraction "eval/demo.ml" test_string_of_int test1_valid test2_valid
-  test3_valid test4_valid test5_valid test6_valid test7_valid 
+  test3_valid test4_valid test5_valid test6_valid test7_valid
   test8_valid test9_valid.
 
 (* From top-level folder, run the command:
@@ -722,4 +722,3 @@ true
 
 
 
- 

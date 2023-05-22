@@ -4,7 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import CPS_Definitions LibNat.
+Require Import CPS_Definitions.
+From TLC Require Import LibNat.
 Implicit Types x y z : var.
 
 Tactic Notation "math" := nat_math.
@@ -57,11 +58,11 @@ Notation "'[[' x '~>' y ']]' t" := (subst x (trm_fvar y) t) (at level 69).
 
 (** Conversion from locally closed abstractions and bodies *)
 
-Lemma term_abs_to_body : forall t1, 
+Lemma term_abs_to_body : forall t1,
   term (trm_abs t1) -> body t1.
 Proof. intros. unfold body. inversion* H. Qed.
 
-Lemma body_to_term_abs : forall t1, 
+Lemma body_to_term_abs : forall t1,
   body t1 -> term (trm_abs t1).
 Proof. intros. inversion* H. Qed.
 
@@ -73,7 +74,7 @@ Hint Resolve term_abs_to_body body_to_term_abs.
 
 (** Substitution for a fresh name is the identity *)
 
-Lemma subst_fresh : forall x t u, 
+Lemma subst_fresh : forall x t u,
   x \notin fv t -> [x ~> u]t = t.
 Proof.
   intros. induction t; simpls; fequals~. case_var~.
@@ -91,8 +92,8 @@ Qed.
 Lemma open_rec_term : forall t u k,
   term t -> {k ~> u}t = t.
 Proof.
-  introv H. gen k. induction H; intros; simpl; fequals~. 
-  unfolds open. pick_fresh x. 
+  introv H. gen k. induction H; intros; simpl; fequals~.
+  unfolds open. pick_fresh x.
    apply~ (@open_rec_term_ind t1 0 (trm_fvar x)).
 Qed.
 
@@ -103,7 +104,7 @@ Qed.
 Lemma open_fresh : forall x y t,
   x \notin fv t -> x <> y -> x \notin fv (t^y).
 Proof.
-  introv. unfold open. generalize 0. 
+  introv. unfold open. generalize 0.
   induction t; simpl; intros i Fr Neq; auto.
   case_nat; simple~.
 Qed.
@@ -112,8 +113,8 @@ Hint Resolve open_fresh.
 
 (** Open_var with fresh names is injective *)
 
-Lemma open_var_inj : forall x t1 t2, 
-  x \notin (fv t1) -> x \notin (fv t2) -> 
+Lemma open_var_inj : forall x t1 t2,
+  x \notin (fv t1) -> x \notin (fv t2) ->
   (t1 ^ x = t2 ^ x) -> (t1 = t2).
 Proof.
   intros x t1. unfold open. generalize 0.
@@ -124,7 +125,7 @@ Qed.
 
 (** Substitution distributes on open *)
 
-Lemma subst_open : forall x u t1 t2, term u -> 
+Lemma subst_open : forall x u t1 t2, term u ->
   [x ~> u] (t1 ^^ t2) = ([x ~> u]t1) ^^ ([x ~> u]t2).
 Proof.
   intros. unfold open. generalize 0.
@@ -142,7 +143,7 @@ Qed.
 
 (** Open can be decomposed as open_var followed with substitution *)
 
-Lemma subst_intro : forall x t u, 
+Lemma subst_intro : forall x t u,
   x \notin (fv t) -> term u ->
   t ^^ u = [x ~> u](t ^ x).
 Proof.
@@ -190,12 +191,12 @@ Qed.
 Lemma close_var_fresh : forall x t i,
   x \notin fv t -> close_var_rec i x t = t.
 Proof.
-  induction t; simpl; intros i Fr; fequals~. case_var~. 
+  induction t; simpl; intros i Fr; fequals~. case_var~.
 Qed.
 
 (** Close_var on x returns a term with no occurence of x *)
 
-(* todo: prove and use in the next two lemmas 
+(* todo: prove and use in the next two lemmas
 Lemma close_var_fresh_ind : forall t,
   fv (close_var x t) = (fv t) \rem x.
 *)
@@ -226,8 +227,8 @@ Lemma close_var_open_ind : forall x y z t1 i j,
   = {j ~> trm_fvar z} (close_var_rec j x ({i ~> trm_fvar y}t1) ).
 Proof.
   induction t1; simpl; intros; try solve [ fequals~ ].
-  do 2 (case_nat; simpl); try solve [ case_var~ | case_nat~ ]. 
-  case_var~. simpl. case_nat~. 
+  do 2 (case_nat; simpl); try solve [ case_var~ | case_nat~ ].
+  case_var~. simpl. case_nat~.
 Qed.
 
 Lemma close_var_open : forall x t,
@@ -255,19 +256,19 @@ Proof.
   apply_fresh term_abs as z.
    unfolds open. rewrite~ close_var_open_ind.
 Qed.
- 
+
 Hint Resolve close_var_body.
 
 (** Abstract specification of close_var *)
 
-Lemma close_var_spec : forall t x, 
+Lemma close_var_spec : forall t x,
   term t -> exists u, t = u ^ x /\ body u /\ x \notin (fv u).
 Proof.
   intros. exists (close_var x t). splits 3.
   apply* close_var_open.
   apply* close_var_body.
   apply* close_var_notin.
-Qed. 
+Qed.
 
 (* ---------------------------------------------------------------------- *)
 (** ** Equal functions return equal results *)
@@ -277,8 +278,8 @@ Qed.
 
 (* Close_var commutes with substitution for fresh names *)
 
-Lemma close_var_subst : forall x t z u, 
-  x \notin fv u -> x <> z -> 
+Lemma close_var_subst : forall x t z u,
+  x \notin fv u -> x <> z ->
   close_var x ([z~>u]t) = [z~>u](close_var x t).
 Proof.
   introv Fr Neq. unfold close_var. generalize 0.
@@ -328,7 +329,7 @@ Proof.
   case_nat~.
 Qed.
 
-Lemma term_size : 
+Lemma term_size :
   forall P : trm -> Prop,
   (forall x, P (trm_fvar x)) ->
   (forall k, P (trm_cst k)) ->
@@ -337,7 +338,7 @@ Lemma term_size :
   (forall t1,
      body t1 ->
      (forall t2 x, x \notin fv t2 -> trm_size t2 = trm_size t1 ->
-       term (t2 ^ x) -> P (t2 ^ x)) -> 
+       term (t2 ^ x) -> P (t2 ^ x)) ->
      P (trm_abs t1)) ->
   (forall t, term t -> P t).
 Proof.
@@ -358,18 +359,18 @@ Qed.
 (* ********************************************************************** *)
 (** Computation of beta-reductions *)
 
-Tactic Notation "calc_open" := 
+Tactic Notation "calc_open" :=
   unfold open; simpl; repeat (case_nat); rewrite_all open_rec_term.
-Tactic Notation "calc_open" "~" := 
+Tactic Notation "calc_open" "~" :=
   calc_open; auto_tilde.
-Tactic Notation "calc_open" "*" := 
+Tactic Notation "calc_open" "*" :=
   calc_open; auto_star.
 
 
 (* ********************************************************************** *)
 (** Proving local closure *)
 
-Hint Extern 1 (body _) => 
+Hint Extern 1 (body _) =>
   exists_fresh; calc_open.
 Hint Extern 1 (term (trm_abs _)) =>
   apply_fresh term_abs; calc_open; auto.
@@ -393,7 +394,7 @@ Tactic Notation "name_var_gen" ident(x) :=
 Hint Extern 5 (?x \notin _) =>
   progress (unfold x); apply notin_var_gen; intros.
 
-Hint Resolve open_fresh. 
+Hint Resolve open_fresh.
 
 
 (* ********************************************************************** *)
@@ -406,9 +407,9 @@ Hint Resolve open_fresh.
 (* ********************************************************************** *)
 (** Fixpoint equation for the CPS transformation *)
 
-Require Import LibWf. 
+From TLC Require Import LibWf.
 
-Lemma cps_fix : forall t, 
+Lemma cps_fix : forall t,
   cps t = Cps cps t.
 Proof.
   applys~ (FixFun_fix (measure trm_size)). applys wf_measure.
@@ -437,8 +438,8 @@ Qed.
 
 (* details for the third auto in the proof above:
      apply_fresh term_abs. unfold open. simpl. case_if. case_if. case_if. rewrite_all~ open_rec_term.
-     constructors~. apply_fresh term_abs. unfold open. simpl. case_if. case_if. 
-     rewrite_all~ open_rec_term. constructors~. 
+     constructors~. apply_fresh term_abs. unfold open. simpl. case_if. case_if.
+     rewrite_all~ open_rec_term. constructors~.
      apply_fresh term_abs. unfold open. simpl. case_if.
      constructors~. *)
 
@@ -479,7 +480,7 @@ Qed.
 
 (* todo: move les hint resolve vers les hints extern si besoin *)
 
-Hint Extern 1 (term ?t) => 
+Hint Extern 1 (term ?t) =>
   match goal with
   | H: value t |- _ => apply (value_regular H)
   | H: eval t _ |- _ => apply (proj1 (eval_regular H))

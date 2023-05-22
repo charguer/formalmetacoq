@@ -27,7 +27,7 @@ This tutorial also reuses material prepared for the POPL'08 tutorial:
 
 
 Set Implicit Arguments.
-Require Import LibLN.
+From TLC Require Import LibLN.
 
 (* ********************************************************************** *)
 (* ********************************************************************** *)

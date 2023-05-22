@@ -4,7 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN BigStep_Definitions.
+From TLC Require Import LibLN.
+Require Import BigStep_Definitions.
 
 
 (* ********************************************************************** *)
@@ -58,7 +59,7 @@ Ltac gather_vars :=
 Ltac pick_fresh Y :=
   let L := gather_vars in (pick_fresh_gen L Y).
 
-(** Tactic [apply_fresh T as y] takes a lemma T of the form 
+(** Tactic [apply_fresh T as y] takes a lemma T of the form
     [forall L ..., (forall x, x \notin L, P x) -> ... -> Q.]
     instantiate L to be the set of variables occuring in the
     context (by [gather_vars]), then introduces for the premise
@@ -88,7 +89,7 @@ Hint Constructors term value beta reds.
 Lemma open_rec_term_core :forall t j v i u, i <> j ->
   {j ~> v}t = {i ~> u}({j ~> v}t) -> t = {i ~> u}t.
 Proof.
-  induction t; introv Neq Equ; simpls; inversion* Equ; fequals*.  
+  induction t; introv Neq Equ; simpls; inversion* Equ; fequals*.
   case_nat*. case_nat*.
 Qed.
 
@@ -101,16 +102,16 @@ Qed.
 
 (** Substitution for a fresh name is identity. *)
 
-Lemma subst_fresh : forall x t u, 
+Lemma subst_fresh : forall x t u,
   x \notin fv t ->  [x ~> u] t = t.
 Proof.
   intros. induction t; simpls; fequals*.
-  case_var*. 
+  case_var*.
 Qed.
 
 (** Substitution distributes on the open operation. *)
 
-Lemma subst_open : forall x u t1 t2, term u -> 
+Lemma subst_open : forall x u t1 t2, term u ->
   [x ~> u] (t1 ^^ t2) = ([x ~> u]t1) ^^ ([x ~> u]t2).
 Proof.
   intros. unfold open. generalize 0.
@@ -129,7 +130,7 @@ Qed.
 (** Opening up an abstraction of body t with a term u is the same as opening
   up the abstraction with a fresh name x and then substituting u for x. *)
 
-Lemma subst_intro : forall x t u, 
+Lemma subst_intro : forall x t u,
   x \notin (fv t) -> term u ->
   t ^^ u = [x ~> u](t ^ x).
 Proof.
@@ -137,8 +138,8 @@ Proof.
   rewrite* subst_fresh. simpl. case_var*.
 Qed.
 
-Lemma subst_intro' : forall x t u, 
-  x \notin (fv t) -> 
+Lemma subst_intro' : forall x t u,
+  x \notin (fv t) ->
   t ^^ u = [x ~> u](t ^ x).
 Proof.
   introv H. unfold open. generalize 0. gen H.
@@ -170,11 +171,11 @@ Hint Resolve subst_term.
 
 (** Conversion from locally closed abstractions and bodies *)
 
-Lemma term_abs_to_body : forall t1, 
+Lemma term_abs_to_body : forall t1,
   term (trm_abs t1) -> body t1.
 Proof. intros. unfold body. inversion* H. Qed.
 
-Lemma body_to_term_abs : forall t1, 
+Lemma body_to_term_abs : forall t1,
   body t1 -> term (trm_abs t1).
 Proof. intros. inversion* H. Qed.
 
@@ -213,7 +214,7 @@ Qed.
 Lemma beta_star_regular : forall e e',
   beta_star e e' -> term e /\ term e'.
 Proof.
-  induction 1. 
+  induction 1.
   autos*.
   destruct* (beta_regular H).
 Qed.

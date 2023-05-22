@@ -4,7 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN CoC_Definitions CoC_Infrastructure CoC_BetaStar.
+From TLC Require Import LibLN.
+Require Import CoC_Definitions CoC_Infrastructure CoC_BetaStar.
 Implicit Types x : var.
 
 (* ********************************************************************** *)
@@ -18,21 +19,21 @@ Inductive para : relation :=
       term t1 ->
       (forall x, x \notin L -> para (t2 ^ x) (t2' ^ x) ) ->
       para u u' ->
-      para (trm_app (trm_abs t1 t2) u) (t2' ^^ u') 
-  | para_var : forall x, 
+      para (trm_app (trm_abs t1 t2) u) (t2' ^^ u')
+  | para_var : forall x,
       para (trm_fvar x) (trm_fvar x)
-  | para_srt : forall n, 
+  | para_srt : forall n,
       para (trm_type n) (trm_type n)
   | para_app : forall t1 t1' t2 t2',
-      para t1 t1' -> 
+      para t1 t1' ->
       para t2 t2' ->
       para (trm_app t1 t2) (trm_app t1' t2')
   | para_abs : forall L t1 t1' t2 t2',
-     para t1 t1' -> 
+     para t1 t1' ->
      (forall x, x \notin L -> para (t2 ^ x) (t2' ^ x) ) ->
      para (trm_abs t1 t2) (trm_abs t1' t2')
   | para_prod : forall L t1 t1' t2 t2',
-     para t1 t1' -> 
+     para t1 t1' ->
      (forall x, x \notin L -> para (t2 ^ x) (t2' ^ x) ) ->
      para (trm_prod t1 t2) (trm_prod t1' t2').
 
@@ -104,12 +105,12 @@ Qed.
 
 Lemma para_red_refl : red_refl para.
 Proof.
-  intros_all. induction* H. 
+  intros_all. induction* H.
 Qed.
 
 Lemma para_red_out : red_out para.
 Proof.
-  apply* (red_all_to_out para_red_all para_red_refl). 
+  apply* (red_all_to_out para_red_all para_red_refl).
 Qed.
 
 Lemma para_red_rename : red_rename para.
@@ -132,15 +133,15 @@ End ParaProperties.
 (* ********************************************************************** *)
 (** Equality of beta star and iterated parallel reductions *)
 
-Lemma beta_star_to_para_iter : 
+Lemma beta_star_to_para_iter :
   (beta star) simulated_by (para iter).
 Proof.
-  intros_all. induction* H. 
+  intros_all. induction* H.
   apply* para_iter_red_refl.
   apply iter_step. induction H; autos* para_red_refl.
 Qed.
 
-Lemma para_iter_to_beta_star : 
+Lemma para_iter_to_beta_star :
   (para iter) simulated_by (beta star).
 Proof.
   intros_all. induction H; eauto.
@@ -165,14 +166,14 @@ Qed.
 (** Confluence of parallel reduction *)
 
 Lemma para_abs_inv : forall t1 t2 u,
-  para (trm_abs t1 t2) u -> exists L t1' t2', 
+  para (trm_abs t1 t2) u -> exists L t1' t2',
   u = (trm_abs t1' t2') /\ para t1 t1' /\
   forall x : var, x \notin L -> para (t2 ^ x) (t2' ^ x).
 intros. inversion H. exists* L.
 Qed.
 
 Lemma para_prod_inv : forall t1 t2 u,
-  para (trm_prod t1 t2) u -> exists L t1' t2', 
+  para (trm_prod t1 t2) u -> exists L t1' t2',
   u = (trm_prod t1' t2') /\ para t1 t1' /\
   forall x : var, x \notin L -> para (t2 ^ x) (t2' ^ x).
 Proof.
@@ -184,9 +185,9 @@ Proof.
   introv HS. gen T. induction HS; intros T HT; inversions HT.
     (* case: red / red *)
   lets~ [u2 [U2a U2b]]: IHHS u'0 __. clear IHHS.
-  pick_fresh x. lets~ [u1x [U1a U1b]]: H1 (t2'0 ^ x) __. auto. clear H1. 
+  pick_fresh x. lets~ [u1x [U1a U1b]]: H1 (t2'0 ^ x) __. auto. clear H1.
   destruct~ (@close_var_spec u1x x) as [u1 [EQu1 termu1]].
-  rewrite EQu1 in U1a, U1b. 
+  rewrite EQu1 in U1a, U1b.
   exists (u1 ^^ u2). split; apply* (@para_red_through x).
     (* case: red / trm_app *)
   lets~ [u2 [U2a U2b]]: IHHS t2'0 __. clear IHHS.
@@ -195,9 +196,9 @@ Proof.
   pick_fresh x. lets~ [u1x [U1a U1b]]: H1 (t2'0x ^ x) __. auto.
   lets~ [u1 [EQu1 termu1]]: (@close_var_spec u1x x) __.
   rewrite EQu1 in U1a, U1b.
-  exists (u1 ^^ u2). split. 
-    apply* (@para_red_through x). 
-    apply_fresh para_red as y; auto. 
+  exists (u1 ^^ u2). split.
+    apply* (@para_red_through x).
+    apply_fresh para_red as y; auto.
     apply* (@para_red_rename x).
     (* case: var / var *)
   autos*.
@@ -208,41 +209,41 @@ Proof.
   lets [L2 [t1'x [t2'x [EQ [Ht1'x Ht2'x]]]]]: (para_abs_inv HS1).
   lets~ [u1x [U1a U1b]]: (IHHS1 (trm_abs t1'x t2'0)) __. clear IHHS1.
   rewrite EQ in HS1, U1a |- *.
-  lets~ [L1 [v1 [v2 [EQ' [Hv1 Hv2]]]]]: (para_abs_inv U1b). 
+  lets~ [L1 [v1 [v2 [EQ' [Hv1 Hv2]]]]]: (para_abs_inv U1b).
   rewrite EQ' in U1a, U1b.
   exists (v2 ^^ u2). split.
-    inversions U1a. 
+    inversions U1a.
     apply* (@para_red L0).
     pick_fresh x. apply* (@para_red_through x).
     (* case: trm_app / trm_app *)
-  lets~ [P1 [HP11 HP12]]: (IHHS1 t1'0) __. 
-  lets~ [P2 [HP21 HP22]]: (IHHS2 t2'0) __. 
-  exists* (trm_app P1 P2). 
+  lets~ [P1 [HP11 HP12]]: (IHHS1 t1'0) __.
+  lets~ [P2 [HP21 HP22]]: (IHHS2 t2'0) __.
+  exists* (trm_app P1 P2).
     (* case: trm_abs / trm_abs *)
   pick_fresh x. lets~ [px [P0 P1]]: H0 (t2'0 ^ x) __. auto.
   lets~ [u1 [HP1 HP2]]: (IHHS t1'0) __. clear H0 IHHS.
   lets~ [p [EQP termp]]: (@close_var_spec px x) __.
   rewrite EQP in P0, P1.
-  exists (trm_abs u1 p). split; 
-   apply_fresh* para_abs as y; apply* (@para_red_rename x). 
+  exists (trm_abs u1 p). split;
+   apply_fresh* para_abs as y; apply* (@para_red_rename x).
     (* case: trm_prod / trm_prod *)
-  pick_fresh x. lets~ [px [P0 P1]]: H0 (t2'0 ^ x) __. auto. 
+  pick_fresh x. lets~ [px [P0 P1]]: H0 (t2'0 ^ x) __. auto.
   lets~ [u1 [HP1 HP2]]: IHHS t1'0 __. clear H0 IHHS.
   lets~ [p [EQP termp]]: (@close_var_spec px x) __.
   rewrite EQP in P0, P1.
-  exists (trm_prod u1 p). split; 
-   apply_fresh* para_prod as y; apply* (@para_red_rename x). 
+  exists (trm_prod u1 p). split;
+   apply_fresh* para_prod as y; apply* (@para_red_rename x).
 Qed.
 
 (* ********************************************************************** *)
 (** Confluence of iterated parallel reduction *)
 
-Lemma para_iter_parallelogram : 
+Lemma para_iter_parallelogram :
   forall M S, (para iter) M S -> forall T, para M T ->
-  exists P, para S P /\ (para iter) T P. 
+  exists P, para S P /\ (para iter) T P.
 Proof.
   introv H. induction H; intros T MtoT.
-  destruct~ (IHiter_1 T) as [P [HP1 HP2]]. 
+  destruct~ (IHiter_1 T) as [P [HP1 HP2]].
    destruct~ (IHiter_2 P) as [Q [HQ1 HQ2]].
    exists Q. autos* (@iter_trans para P).
   destruct* (para_confluence H MtoT).
@@ -252,8 +253,8 @@ Lemma para_iter_confluence : confluence (para iter).
 Proof.
   introv MtoS MtoT. gen T.
   induction MtoS; intros T MtoT.
-  destruct~ (IHMtoS1 T) as [P [HP1 HP2]]. 
-   destruct~ (IHMtoS2 P) as [Q [HQ1 HQ2]]. exists* Q. 
+  destruct~ (IHMtoS1 T) as [P [HP1 HP2]].
+   destruct~ (IHMtoS2 P) as [Q [HQ1 HQ2]]. exists* Q.
   destruct* (para_iter_parallelogram MtoT H).
 Qed.
 

@@ -4,7 +4,7 @@
 
 
 Set Implicit Arguments.
-Require Export LibTactics LibCore LibVar LibEnv.
+From TLC Require Export LibTactics LibCore LibVar LibEnv.
 Generalizable Variables A B.
 
 (** Formalization of [max] on natural numbers *)
@@ -12,11 +12,11 @@ Generalizable Variables A B.
 Definition max (n m:nat) :=
   If n < m then m else n.
 
-Lemma max_cases : forall n m, 
+Lemma max_cases : forall n m,
   (n <= m /\ max n m = m) \/
   (m <= n /\ max n m = n).
 Proof.
-  intros. unfold max. case_if. 
+  intros. unfold max. case_if.
   left. math.
   right. math.
 Qed.
@@ -38,9 +38,9 @@ Qed.
 
 (* todo: liblist *)
 Fixpoint assoc_option A B k (l:list (A*B)) : option B :=
-  match l with 
+  match l with
   | nil => None
-  | (x,v)::l' => If x = k then Some v else assoc_option k l' 
+  | (x,v)::l' => If x = k then Some v else assoc_option k l'
   end.
 
 (* todo move *)
@@ -69,7 +69,7 @@ CoFixpoint colist_append A (s1 s2 : colist A) :=
 Notation "s1 +++ s2" := (colist_append s1 s2) (at level 31).
 
 Definition step_eq A (s1 s2 : colist A) :=
-  match s1,s2 with 
+  match s1,s2 with
   | colist_nil, colist_nil => True
   | colist_cons x1 s1', colist_cons x2 s2' => x1 = x2 /\ s1' = s2'
   | _ , _ => False
@@ -82,7 +82,7 @@ Proof.
 Qed.
 
 Definition step_eq_left A (s1 s2 : colist A) :=
-  match s1 with 
+  match s1 with
   | colist_nil => s2 = colist_nil
   | colist_cons x1 s1' => s2 = colist_cons x1 s1'
   end.
@@ -96,10 +96,10 @@ Qed.
 Definition colist_step A (s : colist A) : colist A :=
   match s with
   | colist_nil => colist_nil
-  | colist_cons x s' => colist_cons x s' 
+  | colist_cons x s' => colist_cons x s'
   end.
 
-Theorem colist_step_eq : forall A (s : colist A), 
+Theorem colist_step_eq : forall A (s : colist A),
   s = colist_step s.
 Proof. intros. destruct s; reflexivity. Qed.
 
@@ -119,7 +119,7 @@ Proof.
 Qed.
 
 Inductive colist_finite (A:Type) : colist A -> Prop :=
-  | colist_finite_nil : 
+  | colist_finite_nil :
       colist_finite colist_nil
   | colist_finite_cons : forall x s,
       colist_finite s ->
@@ -158,7 +158,7 @@ Lemma colist_append_nil_r : forall A (s:colist A),
   s +++ cnil = s.
 *)
 
-Hint Rewrite colist_append_nil colist_append_cons 
+Hint Rewrite colist_append_nil colist_append_cons
   colist_append_nil_l : rew_colist.
 
 Tactic Notation "rew_colist" := autorewrite with rew_colist.
@@ -215,15 +215,15 @@ Defined.
 
 (*
 *)
-Require Import LibStream.
+From TLC Require Import LibStream.
 
 CoFixpoint colist_of_stream (A:Type) (s:stream A) : colist A :=
   match s with stream_intro x s' => colist_cons x (colist_of_stream s') end.
 
 Fixpoint colist_of_list (A:Type) (l:list A) : colist A :=
-  match l with 
+  match l with
   | nil => colist_nil
-  | x :: l' => colist_cons x (colist_of_list l') 
+  | x :: l' => colist_cons x (colist_of_list l')
    end.
 
 Fixpoint colist_prepend (A:Type) (l:list A) (s:colist A) : colist A :=
@@ -244,7 +244,7 @@ Fixpoint stream_prepend (A:Type) (l:list A) (s:stream A) : stream A :=
 
 CoInductive bisimilar (A:Type) : binary (stream A) :=
   | bisimilar_intro : forall x s1 s2,
-      bisimilar s1 s2 ->   
+      bisimilar s1 s2 ->
       bisimilar (x:::s1) (x:::s2).
 
 (** Bisimilarity modulo Leibnitz *)

@@ -4,10 +4,10 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN.
+From TLC Require Import LibLN.
 
-Require Import 
-  STLC_Core_Definitions 
+Require Import
+  STLC_Core_Definitions
   STLC_Core_Infrastructure
   STLC_Core_Soundness.
 
@@ -18,18 +18,18 @@ Require Import
 
 Inductive fullred : trm -> trm -> Prop :=
   | fullred_red : forall t1 t2,
-      body t1 -> 
+      body t1 ->
       term t2 ->
-      fullred (trm_app (trm_abs t1) t2) (t1 ^^ t2) 
-  | fullred_app1 : forall t1 t1' t2, 
+      fullred (trm_app (trm_abs t1) t2) (t1 ^^ t2)
+  | fullred_app1 : forall t1 t1' t2,
       term t2 ->
-      fullred t1 t1' -> 
-      fullred (trm_app t1 t2) (trm_app t1' t2) 
+      fullred t1 t1' ->
+      fullred (trm_app t1 t2) (trm_app t1' t2)
   | fullred_app2 : forall t1 t2 t2',
       term t1 ->
       fullred t2 t2' ->
-      fullred (trm_app t1 t2) (trm_app t1 t2') 
-  | fullred_abs : forall L t1 t1', 
+      fullred (trm_app t1 t2) (trm_app t1 t2')
+  | fullred_abs : forall L t1 t1',
      (forall x, x \notin L -> fullred (t1 ^ x) (t1' ^ x)) ->
      fullred (trm_abs t1) (trm_abs t1').
 

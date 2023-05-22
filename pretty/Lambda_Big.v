@@ -30,11 +30,11 @@ Inductive bigred : trm -> val -> Prop :=
 CoInductive bigdiv : trm -> Prop :=
   | bigdiv_app_1 : forall t1 t2,
       bigdiv t1 ->
-      bigdiv (trm_app t1 t2) 
+      bigdiv (trm_app t1 t2)
   | bigdiv_app_2 : forall t1 v1 t2,
       bigred t1 v1 ->
       bigdiv t2 ->
-      bigdiv (trm_app t1 t2) 
+      bigdiv (trm_app t1 t2)
   | bigdiv_app_3 : forall t1 t2 x t3 v2,
       bigred t1 (val_clo x t3) ->
       bigred t2 v2 ->
@@ -69,7 +69,7 @@ Hint Extern 1 (_ < _) => math.
 Lemma bigredh_lt : forall n n' t v,
   bigredh n t v -> n < n' -> bigredh n' t v.
 Proof.
-  introv H. gen n'. induction H; introv L; 
+  introv H. gen n'. induction H; introv L;
    (destruct n' as [|n']; [ false; math | autos* ]).
 Qed.
 

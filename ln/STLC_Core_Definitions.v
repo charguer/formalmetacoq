@@ -4,7 +4,7 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN.
+From TLC Require Import LibLN.
 Implicit Types x : var.
 
 (** Grammar of types. *)

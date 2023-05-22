@@ -4,7 +4,9 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import List LibLN STLC_Pat_Definitions.
+From Coq Require Import List.
+From TLC Require Import LibLN.
+Require Import STLC_Pat_Definitions.
 
 (* ********************************************************************** *)
 (** ** Additional Definitions used in the Proofs *)
@@ -54,12 +56,12 @@ Fixpoint substs (zs : list var) (us : list trm) (t : trm)
   match zs, us with
   | z::zs', u::us' => substs zs' us' ([z ~> u]t)
   | _, _ => t
-  end.    
+  end.
 
 (** Iterated typing *)
 
 Inductive typings (E : env) : list trm -> list typ -> Prop :=
-  | typings_nil : typings E nil nil 
+  | typings_nil : typings E nil nil
   | typings_cons : forall ts Us t U,
       typings E ts Us ->
       typing E t U ->
@@ -112,7 +114,7 @@ Hint Extern 1 (fresh (dom (_ & _)) _ _) => simpl_env.
 Lemma fv_list_map : forall ts1 ts2,
   fv_list (ts1 ++ ts2) = fv_list ts1 \u fv_list ts2.
 Proof.
-  induction ts1; simpl; intros. 
+  induction ts1; simpl; intros.
   rewrite* union_empty_l.
   rewrite IHts1. rewrite* union_assoc.
 Qed.
@@ -135,7 +137,7 @@ Lemma open_rec_term_core :forall t j v i u, i <> j ->
   {j ~> v}t = {i ~> u}({j ~> v}t) -> t = {i ~> u}t.
 Proof.
   induction t; introv Neq Equ;
-  simpl in *; inversion* Equ; f_equal*.  
+  simpl in *; inversion* Equ; f_equal*.
   case_nat*. case_nat*.
 Qed.
 
@@ -152,8 +154,8 @@ Qed.
 
 (** Substitution for a fresh name is identity. *)
 
-Lemma subst_fresh : forall x t u, 
-  x \notin fv t -> 
+Lemma subst_fresh : forall x t u,
+  x \notin fv t ->
   [x ~> u] t = t.
 Proof.
   intros. induction t; simpls; f_equal*.
@@ -174,11 +176,11 @@ Lemma subst_fresh_trm_fvars : forall z u xs,
 Proof.
   intros. apply subst_fresh_list.
   induction xs; simpls. auto.
-    destruct H. notin_solve. auto. 
+    destruct H. notin_solve. auto.
 Qed.
 
-Lemma substs_fresh : forall xs us t, 
-  fresh (fv t) (length xs) xs -> 
+Lemma substs_fresh : forall xs us t,
+  fresh (fv t) (length xs) xs ->
   substs xs us t = t.
 Proof.
   induction xs; simpl; intros us t Fr.
@@ -188,59 +190,59 @@ Qed.
 
 (** Substitution distributes on the open operation. *)
 
-Lemma subst_open : forall x u t1 t2, term u -> 
+Lemma subst_open : forall x u t1 t2, term u ->
   [x ~> u] (t1 ^^ t2) = ([x ~> u]t1) ^^ (List.map (subst x u) t2).
 Proof.
   intros. unfold open, opens. simpl. generalize 0.
   induction t1; intros; simpl; f_equal*.
   case_nat*. unfold trm_nth.
-   apply list_map_nth. apply* subst_fresh. 
+   apply list_map_nth. apply* subst_fresh.
   case_var*. apply* open_rec_term.
 Qed.
 
 (** Substitution and open_var for distinct names commute. *)
 
-Lemma subst_open_vars : forall x ys u t, 
-  fresh {{x} (length ys) ys -> 
+Lemma subst_open_vars : forall x ys u t,
+  fresh {{x} (length ys) ys ->
   term u ->
   ([x ~> u]t) ^ ys = [x ~> u] (t ^ ys).
 Proof.
-  introv Fr Tu. rewrite* subst_open. 
+  introv Fr Tu. rewrite* subst_open.
   unfold trm_fvars. fequals.
   induction ys; simpls. auto.
-  destruct Fr. case_var. 
+  destruct Fr. case_var.
     notin_false. fequals~.
 Qed.
 
 (** Opening up an abstraction of body t with a term u is the same as opening
   up the abstraction with a fresh name x and then substituting u for x. *)
 
-Lemma substs_intro_ind : forall t xs us vs, 
-  fresh (fv t \u fv_list vs \u fv_list us) (length xs) xs -> 
+Lemma substs_intro_ind : forall t xs us vs,
+  fresh (fv t \u fv_list vs \u fv_list us) (length xs) xs ->
   terms (length xs) us ->
   terms (length vs) vs ->
   t ^^ (vs ++ us) = substs xs us (t ^^ (vs ++ (trm_fvars xs))).
 Proof.
-  induction xs; simpl; introv Fr Tu Tv; 
+  induction xs; simpl; introv Fr Tu Tv;
    destruct Tu; destruct us; tryfalse.
   auto.
   inversions H0. destruct Fr as [Fra Frb]. simpls.
   rewrite app_last.
   forwards K: (IHxs us (vs++t0::nil)); clear IHxs.
     rewrite* fv_list_map.
-    auto. 
+    auto.
     split~. inversions Tv. apply* Forall_app.
-  rewrite K. clear K. 
-  f_equal. rewrite~ subst_open. rewrite~ subst_fresh. 
+  rewrite K. clear K.
+  f_equal. rewrite~ subst_open. rewrite~ subst_fresh.
   f_equal. rewrite map_app.
   simpl. case_var; tryfalse*.
-  rewrite <- app_last. 
+  rewrite <- app_last.
   fequals. apply~ subst_fresh_list.
   fequals. apply* subst_fresh_trm_fvars.
 Qed.
 
-Lemma substs_intro : forall xs t us, 
-  fresh (fv t \u fv_list us) (length xs) xs -> 
+Lemma substs_intro : forall xs t us,
+  fresh (fv t \u fv_list us) (length xs) xs ->
   terms (length xs) us ->
   t ^^ us = substs xs us (t ^ xs).
 Proof.
@@ -280,7 +282,7 @@ Qed.
 
 (** Conversion from locally closed abstractions and bodies *)
 
-Lemma term_abs_to_body : forall t1, 
+Lemma term_abs_to_body : forall t1,
   term (trm_abs t1) -> bodys 1 t1.
 Proof.
   intros. unfold bodys. inversions* H.
@@ -291,22 +293,22 @@ Qed.
 
 Lemma body_to_term_abs : forall t1,
   bodys 1 t1 -> term (trm_abs t1).
-Proof. 
+Proof.
   destruct 1. apply_fresh* term_abs.
 Qed.
-Lemma term_let_to_body : forall p1 t1 t2, 
+Lemma term_let_to_body : forall p1 t1 t2,
   term (trm_let p1 t1 t2) -> bodys (pat_arity p1) t2.
 Proof.
-  intros. unfold bodys. inversions* H. 
+  intros. unfold bodys. inversions* H.
 Qed.
 
 Lemma body_to_term_let : forall p1 t1 t2,
-  pattern p1 -> term t1 -> bodys (pat_arity p1) t2 -> 
+  pattern p1 -> term t1 -> bodys (pat_arity p1) t2 ->
   term (trm_let p1 t1 t2).
-Proof. 
+Proof.
   destruct 3. apply_fresh* term_let.
 Qed.
- 
+
 Hint Resolve body_to_term_abs term_abs_to_body
              body_to_term_let.
 
@@ -318,9 +320,9 @@ Hint Extern 1 (bodys (pat_arity ?p1) ?t2) =>
 
 Lemma open_terms : forall t us,
   bodys (length us) t ->
-  terms (length us) us -> 
+  terms (length us) us ->
   term (t ^^ us).
-Proof. 
+Proof.
   introv [L K] WT. pick_freshes (length us) xs. lets Fr': Fr.
   rewrite (fresh_length _ _ _  Fr) in WT, Fr'.
   rewrite* (@substs_intro xs). apply* substs_terms.
@@ -354,13 +356,13 @@ Qed.
 Lemma value_regular : forall e,
   value e -> term e.
 Proof.
-  induction 1; autos*. 
+  induction 1; autos*.
 Qed.
 
 (** Pattern-matching regular. *)
 
 Lemma Pat_match_regular : forall vs p v,
-  Pat_match vs p v -> 
+  Pat_match vs p v ->
   pattern p /\ terms (pat_arity p) vs /\ term v.
 Proof. unfolds* Pat_match. Qed.
 

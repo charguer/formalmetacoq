@@ -4,9 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN 
-  STLC_Exn_Definitions 
-  STLC_Exn_Infrastructure.
+From TLC Require Import LibLN.
+Require Import STLC_Exn_Definitions STLC_Exn_Infrastructure.
 
 (* ********************************************************************** *)
 (** * Proofs *)
@@ -14,7 +13,7 @@ Require Import LibLN
 (** Typing is preserved by weakening. *)
 
 Lemma typing_weaken : forall G E F t T,
-   (E & G) |= t ~: T -> 
+   (E & G) |= t ~: T ->
    ok (E & F & G) ->
    (E & F & G) |= t ~: T.
 Proof.
@@ -24,7 +23,7 @@ Proof.
   apply_fresh* typing_abs as y. apply_ih_bind* H0.
   apply* typing_app.
   apply* typing_raise.
-  apply* typing_catch.  
+  apply* typing_catch.
 Qed.
 
 (** Typing is preserved by substitution. *)
@@ -43,14 +42,14 @@ Proof.
    rewrite* subst_open_var. apply_ih_bind* H0.
   apply* typing_app.
   apply* typing_raise.
-  apply* typing_catch. 
+  apply* typing_catch.
 Qed.
 
 (** Fails always returns a term of type exception. *)
 
 Lemma fails_to_exception : forall E t T e,
-  fails t e -> 
-  E |= t ~: T -> 
+  fails t e ->
+  E |= t ~: T ->
   E |= e ~: typ_exn.
 Proof.
   introv Fail Typ. induction Typ; inversions* Fail.
@@ -72,7 +71,7 @@ Proof.
   apply* typing_app. apply* fails_to_exception.
 Qed.
 
-(** Progress (a well-typed term is either a value or it can 
+(** Progress (a well-typed term is either a value or it can
   take a step of reduction). *)
 
 Lemma progress_result : progress.

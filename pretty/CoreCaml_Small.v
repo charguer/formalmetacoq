@@ -4,7 +4,8 @@
 *************************************************************)
 
 Set Implicit Arguments.
-Require Export LibEnv CoreCaml_Syntax.
+From TLC Require Export LibEnv.
+Require Export CoreCaml_Syntax.
 
 
 (*==========================================================*)

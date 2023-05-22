@@ -57,7 +57,7 @@ Inductive before : binary out :=
   | before_ter : forall n n' r,
       n < n' ->
       before (out_ter n r) (out_ter n' r)
-  | before_div : 
+  | before_div :
       before out_div out_div.
 
 Definition faster_before o1 o2 o :=
@@ -71,8 +71,8 @@ CoInductive cred : ext -> out -> Prop :=
   | cred_abs : forall n x t,
       cred (trm_abs x t) (out_ter n (val_clo x t))
   | cred_app : forall o1 o2 o t1 t2,
-      cred t1 o1 -> 
-      cred (ext_app_1 o1 t2) o2 -> 
+      cred t1 o1 ->
+      cred (ext_app_1 o1 t2) o2 ->
       faster_before o1 o2 o ->
       cred (trm_app t1 t2) o
   | cred_app_1_abort : forall o1 o t2,
@@ -80,8 +80,8 @@ CoInductive cred : ext -> out -> Prop :=
       before o1 o ->
       cred (ext_app_1 o1 t2) o
   | cred_app_1 : forall o2 o3 o n v1 t2,
-      cred t2 o2 -> 
-      cred (ext_app_2 v1 o2) o3 -> 
+      cred t2 o2 ->
+      cred (ext_app_2 v1 o2) o3 ->
       faster_before o2 o3 o ->
       cred (ext_app_1 (out_ter n v1) t2) o
   | cred_app_2_abort : forall o2 v1 o,
@@ -89,18 +89,18 @@ CoInductive cred : ext -> out -> Prop :=
       before o2 o ->
       cred (ext_app_2 v1 o2) o
   | cred_app_2 : forall o3 o n x t3 v2,
-      cred (subst x v2 t3) o3 -> 
+      cred (subst x v2 t3) o3 ->
       before o3 o ->
       cred (ext_app_2 (val_clo x t3) (out_ter n v2)) o
   | cred_try : forall o1 o2 t1 t2 o,
-      cred t1 o1 -> 
-      cred (ext_try_1 o1 t2) o2 -> 
+      cred t1 o1 ->
+      cred (ext_try_1 o1 t2) o2 ->
       faster_before o1 o2 o ->
       cred (trm_try t1 t2) o
   | cred_try_1_val : forall n n' v1 t2,
       cred (ext_try_1 (out_ter n v1) t2) (out_ter n' v1)
   | cred_try_1_exn : forall o1 n v1 t2 o,
-      cred (trm_app t2 v1) o1 -> 
+      cred (trm_app t2 v1) o1 ->
       before o1 o ->
       cred (ext_try_1 (out_ter n (beh_exn v1)) t2) o
   | cred_try_1_div : forall t2,
@@ -146,11 +146,11 @@ Lemma before_le_l : forall o n n' b,
 Proof. introv O L. inverts* O. Qed.
 
 Lemma faster_before_le_l : forall o1 o2 n n' b,
-  faster_before o1 o2 (out_ter n b) -> n <= n' -> 
+  faster_before o1 o2 (out_ter n b) -> n <= n' ->
   faster_before o1 o2 (out_ter n' b).
-Proof.  
+Proof.
   hint faster_le_l, before_le_l.
-  unfold faster_before. introv [O1 O2] L. split*. 
+  unfold faster_before. introv [O1 O2] L. split*.
 Qed.
 
 Hint Resolve faster_before_le_l.
@@ -174,10 +174,10 @@ Hint Extern 3 (faster_before _ _ _) => split.
 Section OtherAutomation.
 
 Lemma faster_before_max : forall n1 n2 b1 b2,
-  faster_before (out_ter n1 b1) (out_ter n2 b2) 
+  faster_before (out_ter n1 b1) (out_ter n2 b2)
                 (out_ter (S (max n1 n2)) b2).
-Proof. 
-  intros. forwards [[? ?]|[? ?]]: max_cases n1 n2; split~. 
+Proof.
+  intros. forwards [[? ?]|[? ?]]: max_cases n1 n2; split~.
 Qed.
 
 Ltac max_resolve :=
@@ -206,7 +206,7 @@ Variables Det : ParamDeterministic.
 Inductive equiv : binary out :=
   | equiv_ter : forall n n' b,
       equiv (out_ter n b) (out_ter n' b)
-  | equiv_div : 
+  | equiv_div :
       equiv out_div out_div.
 
 Definition deterministic := forall e o1 o2,
@@ -242,7 +242,7 @@ Proof. intros e. destruct~ e. Qed.
 
 Hint Resolve ext_equiv_refl.
 
-Ltac inverts2 E := 
+Ltac inverts2 E :=
   let H := fresh "X" in inverts E as H; inverts H.
 
 Lemma det_ter_any : forall n e e' b o,
@@ -294,7 +294,7 @@ Proof.
   forwards~ (?&M): det_ter_any R1 R2. inverts~ M.
   forwards~ (?&M): det_ter_any R2 R1. inverts~ M.
   constructor.
-Qed.  
+Qed.
 
 (** Bonus *)
 
@@ -302,13 +302,13 @@ Remark det_ter_ter : forall e n1 n2 b1 b2,
   cred e (out_ter n1 b1) -> cred e (out_ter n2 b2) -> b1 = b2.
 Proof.
   introv R1 R2. forwards~ (?&M): det_ter_any R1 R2. inverts~ M.
-Qed.  
+Qed.
 
 Remark det_ter_div : forall e n b,
   cred e (out_ter n b) -> cred e out_div -> False.
 Proof.
   introv R1 R2. forwards~ M: det_ter_any R1 R2. inverts M. false.
-Qed.  
+Qed.
 
 End Det.
 
@@ -324,7 +324,7 @@ Hint Resolve cred_raise_1'.
 
 Lemma bigred_credbeh : forall t b,
   bigred t b -> credbeh t b.
-Proof. 
+Proof.
   unfold credbeh. introv H.
   forwards (n&M): bigred_bigredh (rm H).
   exists ((n+n+n+n)%nat).
@@ -354,22 +354,22 @@ Qed.
 Lemma bigdiv_cdiverge : forall t,
   bigdiv t -> cdiverge t.
 Proof.
-  introv R. unfold cdiverge. gen t. cofix IH. 
+  introv R. unfold cdiverge. gen t. cofix IH.
   introv H. inverts H as.
-  introv R1. constructors*. 
+  introv R1. constructors*.
   introv R1 R2. forwards (n1&M1): bigred_credbeh R1. constructors*.
   introv R1 R2 R3. forwards (n1&M1): bigred_credbeh R1.
     forwards (n2&M2): bigred_credbeh R2. constructors*.
-  introv R1. constructors*.   
+  introv R1. constructors*.
   introv R1 R2. forwards (n1&M1): bigred_credbeh R1. constructors*.
-  introv R1. constructors*.   
+  introv R1. constructors*.
 Qed.
 
 Lemma cdiverge_bigdiv : forall t,
   cdiverge t -> bigdiv t.
 Proof.
   asserts M: (forall n t b, cred t (out_ter n b) -> bigred t b).
-    introv R. apply* credbeh_bigred. exists* n. 
+    introv R. apply* credbeh_bigred. exists* n.
   unfolds cdiverge. cofix IH.
   introv R. inverts R as R1 R2 [L2 L1].
   inverts L2. inverts R2 as.

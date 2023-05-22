@@ -4,7 +4,7 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN.
+From TLC Require Import LibLN.
 Implicit Types x : var.
 Implicit Types X : var.
 
@@ -85,8 +85,8 @@ Inductive type : typ -> Prop :=
   | type_var : forall X,
       type (typ_fvar X)
   | type_arrow : forall T1 T2,
-      type T1 -> 
-      type T2 -> 
+      type T1 ->
+      type T2 ->
       type (typ_arrow T1 T2)
   | type_all : forall L T1 T2,
       type T1 ->
@@ -115,7 +115,7 @@ Inductive term : trm -> Prop :=
       type V ->
       term (trm_tapp e1 V).
 
-(** Binding are either mapping type or term variables. 
+(** Binding are either mapping type or term variables.
  [X ~<: T] is a subtyping asumption and [x ~: T] is
  a typing assumption *)
 
@@ -138,18 +138,18 @@ Definition env := LibEnv.env bind.
   that T is a type *)
 
 Inductive wft : env -> typ -> Prop :=
-  | wft_top : forall E, 
+  | wft_top : forall E,
       wft E typ_top
   | wft_var : forall U E X,
       binds X (bind_sub U) E ->
-      wft E (typ_fvar X) 
+      wft E (typ_fvar X)
   | wft_arrow : forall E T1 T2,
-      wft E T1 -> 
-      wft E T2 -> 
+      wft E T1 ->
+      wft E T2 ->
       wft E (typ_arrow T1 T2)
   | wft_all : forall L E T1 T2,
       wft E T1 ->
-      (forall X, X \notin L -> 
+      (forall X, X \notin L ->
         wft (E & X ~<: T1) (T2 open_tt_var X)) ->
       wft E (typ_all T1 T2).
 
@@ -253,12 +253,12 @@ Inductive red : trm -> trm -> Prop :=
 (** Our goal is to prove preservation and progress *)
 
 Definition preservation := forall E e e' T,
-  typing E e T -> 
-  red e e' -> 
+  typing E e T ->
+  red e e' ->
   typing E e' T.
 
 Definition progress := forall e T,
-  typing empty e T -> 
-     value e 
+  typing empty e T ->
+     value e
   \/ exists e', red e e'.
 

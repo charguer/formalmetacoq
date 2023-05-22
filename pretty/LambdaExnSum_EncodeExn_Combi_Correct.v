@@ -38,7 +38,7 @@ Notation "'nine' n" := ((n+n+n+n+n+n+n+n+n)%nat) (at level 20).
 Definition cin n := (nine n + 8)%nat.
 
 Definition correctness :=
-  forall t o, cred t o -> 
+  forall t o, cred t o ->
   fresh (trm_vars not_used t) 3 L ->
   cred (tr_trm t) (map cin (tr_out o)).
 
@@ -46,7 +46,7 @@ Definition correctness :=
 (************************************************************)
 (* ** Freshness *)
 
-Definition res_vars (f:vars_opt) (r:res) := 
+Definition res_vars (f:vars_opt) (r:res) :=
   match r with
   | res_ret v => trm_vars f v
   | res_exn v => trm_vars f v
@@ -62,14 +62,14 @@ Definition ext_vars (f:vars_opt) (e:ext) :=
   let trm_vars := trm_vars f in
   let out_vars := out_vars f in
   match e with
-  | ext_trm t1 => trm_vars t1 
+  | ext_trm t1 => trm_vars t1
   | ext_app_1 o1 t1 => out_vars o1 \u trm_vars t1
   | ext_app_2 v1 o2 => trm_vars v1 \u out_vars o2
   | ext_inj_1 b o1 => out_vars o1
   | ext_case_1 o1 t2 t3 => out_vars o1 \u trm_vars t2 \u trm_vars t3
   | ext_try_1 o1 t2 => out_vars o1 \u trm_vars t2
   | ext_raise_1 o1 => out_vars o1
-  end. 
+  end.
 
 
 (*==========================================================*)
@@ -90,7 +90,7 @@ Lemma cred_abs_beta : forall o1 o x t3 v2,
   cred (trm_app (trm_abs x t3) v2) o.
 Proof.
   introv R B. applys cred_app. auto.
-  applys cred_app_1. auto. 
+  applys cred_app_1. auto.
   applys cred_app_2 R. apply before_succ'.
   apply faster_before_zero_succ.
   apply faster_before_zero.
@@ -104,11 +104,11 @@ Lemma cred_abs_beta' : forall o1 o x t3 v2,
   cred (trm_app (val_abs x t3) v2) o.
 Proof.
   introv R B. applys cred_app. auto.
-  applys cred_app_1. auto. 
+  applys cred_app_1. auto.
   applys cred_app_2 R. apply before_succ'.
   apply faster_before_zero_succ.
   apply faster_before_zero.
-  clear R. (* required for guard condition *) 
+  clear R. (* required for guard condition *)
   destruct o1; inverts B; simple~.
 Defined.
 
@@ -125,11 +125,11 @@ Lemma notin_cred : forall n x e r,
   x \notin ext_vars not_used e ->
   x \notin res_vars not_used r.
 Proof.
-  induction n using peano_induction. introv R F. 
-  asserts IH: (forall e m r, cred e (out_ter m r) -> 
+  induction n using peano_induction. introv R F.
+  asserts IH: (forall e m r, cred e (out_ter m r) ->
     m < n -> x \notin ext_vars not_used e ->
     x \notin res_vars not_used r).
-    intros. applys* H. clear H.    
+    intros. applys* H. clear H.
   inverts R as; simpls.
   auto.
   auto.
@@ -140,7 +140,7 @@ Proof.
    forwards~: IH R1. forwards~: IH R2. simpls~.
   introv A B. inverts B. simpls~.
   introv R1 B. inverts B. forwards~: IH R1. simpls.
-   applys~ subst_notin. 
+   applys~ subst_notin.
   introv R1 R2 [L2 L1]. inverts L1. inverts L2.
    forwards~: IH R1. forwards~: IH R2.
   introv A B. inverts B. simpls~.
@@ -158,7 +158,7 @@ Proof.
    forwards~: IH R1. forwards~: IH R2.
   introv A B. inverts B. simpls~.
   auto.
-Qed. 
+Qed.
 
 Lemma fresh_cred : forall n m xs e r,
   cred e (out_ter n r) ->
@@ -199,9 +199,9 @@ Ltac done := simpl; unfolds cin; auto.
 (** Verification of [tr_bind] *)
 
 Lemma cred_tr_bind_abort : forall o3 o2 o o1 t1 x k,
-  correctness -> 
+  correctness ->
   cred t1 o1 ->
-  abort o1 -> 
+  abort o1 ->
   before o1 o2 ->
   before o2 o ->
   faster o1 o ->
@@ -214,7 +214,7 @@ Proof.
    applys cred_case. applys* C.
    simpl. applys cred_case_1_false.
    applys cred_abs_beta. unfold tr_exn. simpl_substs.
-   applys cred_inj_val. auto. auto. done. 
+   applys cred_inj_val. auto. auto. done.
   inverts F1. inverts B3. inverts B1. applys cred_case.
    applys* C. applys* cred_case_1_abort. auto.
 Defined.
@@ -224,14 +224,14 @@ Lemma cred_tr_bind_ret : forall o3 t1 n v1 k x1 o4,
   cred t1 (out_ter n v1) ->
   faster (map cin (tr_out (out_ter n v1))) o4 ->
   cred (subst x1 (tr_val v1) k) o3 ->
-  before (add 4 o3) o4 -> 
+  before (add 4 o3) o4 ->
   fresh (trm_vars not_used t1) 3 L ->
   cred (tr_bind (tr_trm t1) x1 k) o4.
 Proof.
-  introv C R F1 R3 B3 Fr. 
+  introv C R F1 R3 B3 Fr.
   applys cred_case; [ applys* C | | eauto ].
   simpl. applys cred_case_1_true (add 3 o3).
-  applys cred_abs_beta. eauto. 
+  applys cred_abs_beta. eauto.
   applys~ before_add. applys~ before_add.
 Defined.
 
@@ -258,9 +258,9 @@ Proof.
       inverts R3. inverts R4 as.
         introv A B. inverts A.
         introv R5 L5. simpl. case_if; tryfalse.
-         applys cred_abs_beta'. 
-         forwards M: fresh_cred R1 Frt. simpl in M. 
-         rewrite~ <- tr_val_subst. 
+         applys cred_abs_beta'.
+         forwards M: fresh_cred R1 Frt. simpl in M.
+         rewrite~ <- tr_val_subst.
          applys* C. applys~ fresh_subst.
          inverts L5; done.
        inverts L4; inverts L2; done.
@@ -283,7 +283,7 @@ Proof.
   (* case abs *)
   unfolds cin. applys* cred_inj.
   (* case app *)
-  introv R1 R2 [L2 L1]. inverts R2 as. 
+  introv R1 R2 [L2 L1]. inverts R2 as.
     introv A B. applys cred_tr_bind_abort o2; eauto.
      inverts B; inverts L2; done.
     introv R3 R4 [L4 L3].
@@ -291,7 +291,7 @@ Proof.
        [ |inverts L4; inverts L2; done ].
      rewrite~ subst_tr_bind.
      rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ].
-     simpl. simpl_subst. inverts R4 as. 
+     simpl. simpl_subst. inverts R4 as.
       introv A B. applys* cred_tr_bind_abort o3 o2.
          inverts B; inverts L4; done.
        introv R5 L5.
@@ -307,7 +307,7 @@ Proof.
                 applys* IH.
                 applys~ fresh_subst.
                 auto.
-             inverts L5; inverts L4; done.  
+             inverts L5; inverts L4; done.
            inverts L5; inverts L4; done.
   (* case inj *)
   introv R1 R2 [L2 L1]. inverts R2 as.
@@ -327,31 +327,31 @@ Proof.
       (map (fun n => (n-5)%nat) (map cin (tr_out o))); eauto;
       [| clear_coind; destruct o; done ].
      sets_eq T: tr_cont. simpl. subst. case_if;tryfalse.
-     do 2 rewrite~ subst_tr_cont. 
+     do 2 rewrite~ subst_tr_cont.
      do 2 (rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ]).
-     applys cred_case. applys cred_val O. 
+     applys cred_case. applys cred_val O.
      applys cred_case_1_true.
      forwards M: fresh_cred R1 Fr1. simpl in M.
      applys* cred_tr_cont. auto.
      inverts L2. inverts L3. inverts L1. done. inverts L3. done.
-    introv R3 L3. applys cred_tr_bind_ret 
+    introv R3 L3. applys cred_tr_bind_ret
       (map (fun n => (n-5)%nat) (map cin (tr_out o))); eauto;
       [| clear_coind; destruct o; done ].
      sets_eq T: tr_cont. simpl. subst. simpl_subst.
      do 2 rewrite~ subst_tr_cont.
      do 2 (rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ]).
-     applys cred_case. applys cred_val O. 
+     applys cred_case. applys cred_val O.
      applys cred_case_1_false.
      forwards M: fresh_cred R1 Fr1. simpl in M.
      applys* cred_tr_cont. auto.
-     inverts L2. inverts L3. inverts L1. done. inverts L3. done. 
+     inverts L2. inverts L3. inverts L1. done. inverts L3. done.
   (* case try *)
   introv R1 R2 [L2 L1]. inverts R2 as.
   inverts L2. inverts L1. applys* cred_case. simpl.
    applys cred_case_1_true. applys cred_abs_beta.
    simpl. case_if; tryfalse. applys cred_inj_val.
    auto. auto. done.
-  introv R3 L3. applys* cred_case. simpl. 
+  introv R3 L3. applys* cred_case. simpl.
    applys cred_case_1_false.
    asserts~ Fr1: (fresh (trm_vars not_used t1) 3 L).
    forwards M: fresh_cred R1 Fr1. simpl in M.

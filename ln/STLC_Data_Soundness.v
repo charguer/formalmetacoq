@@ -4,9 +4,9 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import List LibLN 
-  STLC_Data_Definitions 
-  STLC_Data_Infrastructure.
+From Coq Require Import List.
+From TLC Require Import LibLN.
+Require Import STLC_Data_Definitions STLC_Data_Infrastructure.
 
 (* ********************************************************************** *)
 (** * Proofs *)
@@ -14,14 +14,14 @@ Require Import List LibLN
 (** Typing is preserved by weakening. *)
 
 Lemma typing_weaken : forall G E F t T,
-   (E & G) |= t ~: T -> 
+   (E & G) |= t ~: T ->
    ok (E & F & G) ->
    (E & F & G) |= t ~: T.
 Proof.
   introv Typ. gen_eq (E & G) as H. gen G.
   induction Typ; introv EQ Ok; subst.
   apply* typing_var. apply* binds_weaken.
-  apply_fresh* typing_abs. intros y Fr. 
+  apply_fresh* typing_abs. intros y Fr.
    do_rew* concat_assoc (apply* H0).
   apply_fresh* typing_fix. intros y f Fr2.
    do_rew_2* concat_assoc (apply* H0).
@@ -70,10 +70,10 @@ Lemma typing_substs : forall Us E xs ts t T,
    E & (iter_push xs Us) |= t ~: T ->
    E |= substs xs ts t ~: T.
 Proof.
-  intros Us E xs. gen Us E. 
+  intros Us E xs. gen Us E.
   induction xs; simpl; introv Le Typts Typt. auto.
-  destruct ts; simpls; inversions Le. inversions Typts. 
-  rewrite iter_push_cons in Typt. 
+  destruct ts; simpls; inversions Le. inversions Typts.
+  rewrite iter_push_cons in Typt.
   rewrite <- concat_assoc in Typt.
   apply* (@IHxs Us0).
   apply* typing_subst.
@@ -87,10 +87,10 @@ Lemma typing_pattern_match : forall p t T E ts Us,
   Us \= p ~: T ->
   typings E ts Us.
 Proof.
-  induction p; introv EQ Typt Typp; destruct t; 
+  induction p; introv EQ Typt Typp; destruct t;
    inversion Typp; inversion EQ; auto; subst; inversions Typt; autos*.
-  remember (pat_match p1 t1) as K1. 
-   remember (pat_match p2 t2) as K2. 
+  remember (pat_match p1 t1) as K1.
+   remember (pat_match p2 t2) as K2.
    destruct K1 as [ts1|]; destruct K2 as [ts2|]; try discriminate.
    inversions H6. apply* typings_concat.
 Qed.
@@ -105,7 +105,7 @@ Proof.
    forward~ (@pat_match_terms p t1 ts) as K.
    rewrite (fresh_length _ _ _ Fr) in K.
    rewrite* (@substs_intro xs).
-   apply~ (@typing_substs Us). unfolds terms. auto. 
+   apply~ (@typing_substs Us). unfolds terms. auto.
    apply~ (@typing_pattern_match p t1 T).
   autos*.
   autos*.
@@ -115,8 +115,8 @@ Proof.
   inversions Typ1. pick_fresh f. pick_fresh x.
     rewrite* (@substs_intro (x::f::nil)). unfolds substs.
     apply_empty* typing_subst.
-    apply_empty* typing_subst. 
-    apply_empty* typing_weaken. 
+    apply_empty* typing_subst.
+    apply_empty* typing_weaken.
   autos*.
   autos*.
   autos*.
@@ -125,27 +125,27 @@ Proof.
   autos*.
 Qed.
 
-(** Progress (a well-typed term is either a value or it can 
+(** Progress (a well-typed term is either a value or it can
   take a step of reduction). *)
 
 Lemma progress_result : progress.
 Proof.
   introv Typ. gen_eq (empty : env) as E. poses Typ' Typ.
   induction Typ; intros; subst.
-  contradictions. 
-  left*. 
+  contradictions.
+  left*.
   left*.
   right. destruct~ IHTyp1 as [Val1 | [t1' Red1]].
-    remember (pat_match p t1) as r. symmetry in Heqr. destruct r as [ts|]. 
-      exists* (e ^^ ts). 
+    remember (pat_match p t1) as r. symmetry in Heqr. destruct r as [ts|].
+      exists* (e ^^ ts).
       exists* t2.
     exists* (trm_match t1' p e t2).
   right. destruct~ IHTyp1 as [Val1 | [t1' Red1]].
     destruct~ IHTyp2 as [Val2 | [t2' Red2]].
       inversions Typ1; inversions Val1.
-        exists* (t0 ^^ (t2::nil)). 
+        exists* (t0 ^^ (t2::nil)).
         exists* (t0 ^^ (t2::(trm_fix t0)::nil)).
-      exists* (trm_app t1 t2'). 
+      exists* (trm_app t1 t2').
     exists* (trm_app t1' t2).
   left*.
   destruct~ IHTyp1 as [Val1 | [t1' Red1]].

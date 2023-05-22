@@ -18,7 +18,7 @@ Implicit Types t : trm.
 
 (** Grammar of actions *)
 
-Inductive act := 
+Inductive act :=
   | act_epsilon : act.
 
 (** Grammar of traces *)
@@ -48,7 +48,7 @@ Notation "f ^^ o" := (out_prepend f o) (at level 60, right associativity).
 
 Definition one_step := act_epsilon::nil.
 
-Definition step o := 
+Definition step o :=
   one_step ^^ o.
 
 (** Grammar of extended terms *)
@@ -134,13 +134,13 @@ Hint Extern 1 (length _ < length _) =>
 
 Theorem cored_ter_red : forall f e v,
   cored e (out_ter f v) -> red e (out_ter f v).
-Proof.  
+Proof.
   intros f. gen_eq n: (length f). gen f.
   induction n using peano_induction.
-  introv E R. subst. 
-  asserts IH: (forall e v f', cored e (out_ter f' v) -> 
+  introv E R. subst.
+  asserts IH: (forall e v f', cored e (out_ter f' v) ->
     length f' < length f -> red e (out_ter f' v)).
-    introv M L. applys* H. clear H. 
+    introv M L. applys* H. clear H.
   inverts R as.
   auto.
   auto.
@@ -206,7 +206,7 @@ Ltac equates_lemma n ::=
   | 4%nat => constr:(equates_4)
   | 5%nat => constr:(equates_5)
   | 6%nat => constr:(equates_6)
-  end.  
+  end.
 
 
 Hint Extern 1 (_ === _) =>

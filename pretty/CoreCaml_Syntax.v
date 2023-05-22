@@ -89,14 +89,14 @@ Inductive trm : Type :=
   | trm_get : trm -> lab -> trm
   | trm_set : trm -> lab -> trm -> trm
   | trm_if : trm -> trm -> option trm -> trm
-  | trm_while : trm -> trm -> trm 
+  | trm_while : trm -> trm -> trm
   | trm_for : var -> dir -> trm -> trm -> trm -> trm
-  | trm_match : trm -> list branch -> trm 
+  | trm_match : trm -> list branch -> trm
   | trm_try : trm -> list branch -> trm
-  | trm_assert : trm -> trm 
+  | trm_assert : trm -> trm
   | trm_rand : trm
 
-with branch : Type := 
+with branch : Type :=
   | branch_intro : pat -> option trm -> trm -> branch.
 
 (** Grammar of values *)

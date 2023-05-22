@@ -50,19 +50,19 @@ Inductive abort : out -> Prop :=
 
 Inductive one : ext -> Prop :=
   | one_val : forall v,
-      one v 
+      one v
   | one_abs : forall x t,
-      one (trm_abs x t) 
+      one (trm_abs x t)
   | one_app : forall t1 t2,
-      one (trm_app t1 t2) 
+      one (trm_app t1 t2)
   | one_app_1_abort : forall o1 t2,
       abort o1 ->
       one (ext_app_1 o1 t2)
   | one_app_1 : forall v1 t2,
-      one (ext_app_1 v1 t2) 
+      one (ext_app_1 v1 t2)
   | one_app_2_abort : forall v1 o2,
       abort o2 ->
-      one (ext_app_2 v1 o2) 
+      one (ext_app_2 v1 o2)
   | one_app_2 : forall x t3 v2,
       one (ext_app_2 (val_clo x t3) v2).
 
@@ -167,11 +167,11 @@ Hint Extern 1 (_ < _) => math.
 Lemma redh_lt : forall n n' e o,
   redh n e o -> n < n' -> redh n' e o.
 Proof.
-  introv H. gen n'. induction H; introv L; 
+  introv H. gen n'. induction H; introv L;
    (destruct n' as [|n']; [ false; math | autos* ]).
 Qed.
 
-Lemma red_redh : forall e o, 
+Lemma red_redh : forall e o,
   red e o -> exists n, redh n e o.
 Proof.
   hint redh_lt. introv H. induction H; try induct_height.
@@ -180,7 +180,7 @@ Qed.
 Lemma redh_red : forall n e o,
   redh n e o -> red e o.
 Proof. introv H. induction* H. Qed.
- 
+
 End RedInd.
 
 
@@ -269,12 +269,12 @@ Lemma abort_val_inv : forall v,
 Proof. introv H; inverts H. Qed.
 
 Hint Immediate abort_val_inv.
-Hint Extern 1 (~ one _) => 
+Hint Extern 1 (~ one _) =>
   let H := fresh in intros H; inverts H.
 
 (** [xred] to [red] *)
 
-Lemma xred_red : forall e o, 
+Lemma xred_red : forall e o,
   xred e o -> red e o.
 Proof.
   introv H. induction* H.
@@ -283,11 +283,12 @@ Qed.
 (** [red] to [xred] *)
 
 Section RedXred.
-Hint Extern 1 (one _) => 
-  match goal with H: ~ xred _ _ |- _ => 
+#[local]
+Hint Extern 1 (one _) =>
+  match goal with H: ~ xred _ _ |- _ =>
     false H end.
 
-Lemma red_xred : forall e o, 
+Lemma red_xred : forall e o,
   red e o -> xred e o.
 Proof.
   introv H. induction* H. rename H into N. destruct e.
@@ -296,13 +297,13 @@ Proof.
   destruct* o; try solve [ false* N]. tests: (isclo v).
     inverts* C.
     constructors*.
-Qed.    
+Qed.
 
 End RedXred.
 
 (** [coxred] to [cored] *)
 
-Lemma coxred_cored : forall e o, 
+Lemma coxred_cored : forall e o,
   coxred e o -> cored e o.
 Proof.
   cofix IH. introv R. inverts R as; constructors*.
@@ -310,7 +311,7 @@ Qed.
 
 (** [cored] to [coxred] *)
 
-Lemma cored_coxred : forall e o, 
+Lemma cored_coxred : forall e o,
   cored e o -> coxred e o.
 Proof.
   cofix IH. introv R. inverts R as; try solve [ constructors* ].

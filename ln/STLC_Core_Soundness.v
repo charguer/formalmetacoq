@@ -4,7 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN
+From TLC Require Import LibLN.
+Require Import
   STLC_Core_Definitions
   STLC_Core_Infrastructure.
 

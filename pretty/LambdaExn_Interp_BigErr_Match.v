@@ -39,35 +39,35 @@ Proof. introv N. destruct v; auto_false. Qed.
 Lemma run_correct_red : forall n t b,
   bigredh n t b -> forall k, k >= n -> run k t = b.
 Proof.
-  induction n using peano_induction. 
+  induction n using peano_induction.
   introv R. destruct n. inverts R.
-  introv K. destruct k. math. 
+  introv K. destruct k. math.
   asserts IH: (forall t b, bigredh n t b -> run k t = b).
     introv M. applys H M; math. clear H K.
   inverts R as; simpl.
   auto.
   auto.
   auto.
-  introv R1 R2 R3. rewrites~ (>> IH R1). simpl. 
+  introv R1 R2 R3. rewrites~ (>> IH R1). simpl.
    rewrites~ (>> IH R2). simple*.
   introv A R1. rewrites~ (>> IH R1). rewrite~ if_success_abort.
-  introv A R1 R2. rewrites~ (>> IH R1). simpl. 
+  introv A R1 R2. rewrites~ (>> IH R1). simpl.
    rewrites~ (>> IH R2). rewrite~ if_success_abort.
-  introv N R1 R2. rewrites~ (>> IH R1). simpl. 
+  introv N R1 R2. rewrites~ (>> IH R1). simpl.
    rewrites~ (>> IH R2). simpl. rewrite~ if_isclo_not_isclo.
-  introv R1. rewrites~ (>> IH R1). 
+  introv R1. rewrites~ (>> IH R1).
   introv R1 R2. rewrites~ (>> IH R1). simple*.
-  introv R1. rewrites~ (>> IH R1). 
-  introv R1. rewrites~ (>> IH R1). 
+  introv R1. rewrites~ (>> IH R1).
+  introv R1. rewrites~ (>> IH R1).
   introv A R1. rewrites~ (>> IH R1). rewrite~ if_success_abort.
-  introv E. rewrite* E. rewrite~ Deterministic. 
+  introv E. rewrite* E. rewrite~ Deterministic.
 Qed.
 
 (** Completeness *)
 
 Ltac runs b :=
-  match goal with HR: context [ run ?n ?t ] |- _ => 
-    let r := fresh "r" in let E := fresh "E" in 
+  match goal with HR: context [ run ?n ?t ] |- _ =>
+    let r := fresh "r" in let E := fresh "E" in
     sets_eq <- r E: (run n t);
     destruct r as [ b | ]; [ | inverts HR ];
     match goal with IH: (forall _ _, run _ _ = _ -> bigred _ _) |- _ =>
@@ -76,11 +76,11 @@ Ltac runs b :=
 Lemma run_complete_red : forall n t b,
   run n t = b -> bigred t b.
 Proof.
-  induction n using peano_induction. 
+  induction n using peano_induction.
   introv R. destruct n; simpl in R. inverts R.
   lets~ IH: (rm H) n __. destruct t.
-  inverts~ R. 
-  inverts~ R. 
+  inverts~ R.
+  inverts~ R.
   inverts~ R.
   runs b1. destruct b1; inverts R as R; auto.
    runs b2. destruct b2; inverts R as R; autos*.
@@ -131,20 +131,20 @@ Qed.
 (* ** Corollaries, formulated as equivalences *)
 
 Corollary specification_ter : forall t b,
-     (exists m, forall n, n > m -> run n t = b) 
+     (exists m, forall n, n > m -> run n t = b)
   <-> bigred t b.
-Proof. 
+Proof.
   iff (n&?) ?.
   applys* correct_ter (S n). applys* H. math.
-  applys* complete_ter. 
+  applys* complete_ter.
 Qed.
 
 Corollary specification_div : forall t,
-      (forall n, run n t = res_bottom) 
+      (forall n, run n t = res_bottom)
   <-> bigdiv t.
-Proof. 
-  iff. 
-  applys* correct_div. 
-  intros. applys* complete_div. 
-Qed. 
+Proof.
+  iff.
+  applys* correct_div.
+  intros. applys* complete_div.
+Qed.
 

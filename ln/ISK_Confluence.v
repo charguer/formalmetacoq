@@ -5,7 +5,7 @@
 
 (** NOT COMPLETE: contains only the diamond property for parallel reductions *)
 
-Require Import LibTactics.
+From TLC Require Import LibTactics.
 Set Implicit Arguments.
 
 
@@ -21,17 +21,17 @@ Inductive term : Set :=
 Definition relation := term -> term -> Prop.
 
 Inductive base : relation :=
-  | base_I : forall M, 
+  | base_I : forall M,
      base (App I M) M
-  | base_K : forall M N, 
+  | base_K : forall M N,
      base (App (App K M) N) M
-  | base_S : forall F G N, 
+  | base_S : forall F G N,
      base (App (App (App S F) G) N) (App (App F N) (App G N)).
 
 Inductive para : relation :=
-  | para_refl : forall M, 
+  | para_refl : forall M,
       para M M
-  | para_base : forall M N, 
+  | para_base : forall M N,
       base M N -> para M N
   | para_app : forall M1 M2 N1 N2,
       para M1 M2 -> para N1 N2 -> para (App M1 N1) (App M2 N2).
@@ -77,7 +77,7 @@ Proof.
   introv H. inverts H as.
     exists* M.
     introv B. inverts B.
-    introv B1 B2. exists N2. split~. fequals. 
+    introv B1 B2. exists N2. split~. fequals.
      inverts B1 as H. auto. inverts H.
 Qed.
 
@@ -104,7 +104,7 @@ Proof.
     exists N2. split~. inverts R1 as H. auto. inverts~ H.
     lets (Q&R3&EQ): (para_app_k R1). subst. exists* Q.
     lets (F2&G2&R3&R4&EQ): (para_app_s R1). subst.
-      exists* (App (App F2 N2) (App G2 N2)). 
+      exists* (App (App F2 N2) (App G2 N2)).
 Qed.
 
 Lemma join_base_para : forall M N1 N2,
@@ -118,13 +118,13 @@ Proof.
 Qed.
 
 Lemma para_diamond :
-  forall M N P, para M N -> para M P -> 
+  forall M N P, para M N -> para M P ->
   exists Q, para N Q /\ para P Q.
 Proof.
   introv R1 R2. gen P. induction R1; intros.
   exists* P.
   applys join_base_para; eauto.
-  inverts R2.  
+  inverts R2.
     exists* (App M2 N2).
     forwards* (Q&R3&R4): base_app_para H R1_1 R1_2.
     forwards~ (Q1&R3&R4): IHR1_1 M3.

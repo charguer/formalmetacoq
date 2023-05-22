@@ -4,7 +4,7 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN.
+From TLC Require Import LibLN.
 
 
 (* ********************************************************************** *)
@@ -89,7 +89,7 @@ Definition phi := LibEnv.env typ.
 Inductive sto_ok : sto -> Prop :=
   | sto_ok_empty : sto_ok empty
   | sto_ok_push : forall mu l t,
-      sto_ok mu -> term t -> 
+      sto_ok mu -> term t ->
       sto_ok (mu & l ~ t).
 
 (** Environment is an associative list mapping variables to types. *)
@@ -137,9 +137,9 @@ where "E ! P |= t ~: T" := (typing E P t T).
 (** Typing store *)
 
 Definition sto_typing P mu :=
-     sto_ok mu 
+     sto_ok mu
   /\ (forall l, l # mu -> l # P)
-  /\ (forall l T, binds l T P -> 
+  /\ (forall l T, binds l T P ->
         exists t, binds l t mu
                /\ empty ! P |= t ~: T).
 
@@ -150,9 +150,9 @@ Notation "P |== mu" := (sto_typing P mu) (at level 68).
 
 Inductive value : trm -> Prop :=
   | value_abs : forall t1,
-      term (trm_abs t1) -> 
+      term (trm_abs t1) ->
       value (trm_abs t1)
-  | value_trm_unit : 
+  | value_trm_unit :
       value trm_unit
   | value_loc : forall l,
       value (trm_loc l).
@@ -165,7 +165,7 @@ Inductive red : conf -> conf -> Prop :=
 
   | red_beta : forall mu t1 t2,
       sto_ok mu ->
-      term (trm_abs t1) -> 
+      term (trm_abs t1) ->
       value t2 ->
       red (trm_app (trm_abs t1) t2, mu) (t1 ^^ t2, mu)
   | red_new : forall mu t1 l,
@@ -180,7 +180,7 @@ Inductive red : conf -> conf -> Prop :=
   | red_set : forall mu l t2,
       sto_ok mu ->
       value t2 ->
-      red (trm_set (trm_loc l) t2, mu) (trm_unit, mu & l ~ t2)  
+      red (trm_set (trm_loc l) t2, mu) (trm_unit, mu & l ~ t2)
 
   | red_app_1 : forall mu mu' t1 t1' t2,
       term t2 ->
@@ -213,14 +213,14 @@ Definition preservation := forall P t t' mu mu' T,
   empty ! P |= t ~: T ->
   (t,mu) --> (t',mu') ->
   P |== mu ->
-  exists P', 
+  exists P',
      extends P P'
   /\ empty ! P' |= t' ~: T
   /\ P' |== mu'.
 
-Definition progress := forall P t mu T, 
+Definition progress := forall P t mu T,
   empty ! P |= t ~: T ->
   P |== mu ->
-     value t 
+     value t
   \/ exists t', exists mu', (t,mu) --> (t',mu').
 

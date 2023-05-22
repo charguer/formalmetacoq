@@ -4,7 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import CPS_Definitions CPS_Infrastructure Omega.
+Require Import CPS_Definitions CPS_Infrastructure.
+From Coq Require Lia.
 Implicit Types x y z : var.
 
 Opaque cps.
@@ -18,19 +19,19 @@ Hint Constructors value.
 Lemma eval_to_value : forall t v,
   eval t v -> value v.
 Proof.
-  introv H. induction~ H. 
+  introv H. induction~ H.
 Qed.
 
-Hint Extern 1 (value ?v) => 
+Hint Extern 1 (value ?v) =>
   match goal with H: eval _ v |- _ =>
     apply (eval_to_value H) end.
 
 (** If a value [v] evaluates to something, then it must be to [v] *)
 
-Lemma eval_value : forall v v', 
+Lemma eval_value : forall v v',
   eval v v' -> value v -> v' = v.
 Proof.
-  introv E V. inverts V; inverts~ E. 
+  introv E V. inverts V; inverts~ E.
 Qed.
 
 Hint Resolve eval_val.
@@ -43,7 +44,7 @@ Lemma eval_red_values : forall t1 v2 r,
   eval (t1 ^^ v2) r ->
   eval (trm_app (trm_abs t1) v2) r.
 Proof.
-  intros. applys~ eval_red. 
+  intros. applys~ eval_red.
 Qed.
 
 (** Specialization of the reduction rule for the application of
@@ -57,7 +58,7 @@ Proof.
   introv T1 V2 V3 E. inverts E. inverts H.
   apply~ eval_red.
   apply* eval_red_values.
-  rewrite~ <- (eval_value H2). 
+  rewrite~ <- (eval_value H2).
 Qed.
 
 Hint Resolve eval_red_values.
@@ -68,8 +69,8 @@ Hint Resolve eval_red_values.
 
 (** Relationship between [cps] and [cpsval] on values *)
 
-Lemma cps_of_value : forall v, 
-  value v -> 
+Lemma cps_of_value : forall v,
+  value v ->
   cps v = trm_abs (trm_app (trm_bvar 0) (cpsval v)).
 Proof.
   introv V. inverts V; rewrite~ cps_fix.
@@ -90,9 +91,9 @@ Hint Resolve cpsval_value.
 
 Lemma cps_fv : forall t x,
   term t ->
-  x \notin fv t -> 
+  x \notin fv t ->
   x \notin fv (cps t).
-Proof. 
+Proof.
   introv T. induction T using term_size; introv Fr;
   rewrite cps_fix; unfold Cps; simpls; notin_simpl; auto.
   name_var_gen y. tests: (x = y).
@@ -102,7 +103,7 @@ Qed.
 
 (** (TODO) useful hack to work around a bug of "rewrite cps_fix at 2"  *)
 
-Ltac protect_left := 
+Ltac protect_left :=
   let x := fresh "left" in
   match goal with |- ?X = _ => sets x: X end.
 
@@ -111,7 +112,7 @@ Ltac simpl_cps :=
 
 (** [cps] commutes with renaming on fresh names *)
 
-Lemma cps_rename : forall x y t, 
+Lemma cps_rename : forall x y t,
   term t -> y \notin fv t ->
   cps ([[x~>y]]t) = [[x~>y]](cps t).
 Proof.
@@ -122,15 +123,15 @@ Proof.
   simpl_cps. auto.
   (* app *)
   protect_left. simpl_cps. subst left. simpl_cps.
-  simpl. fequals. rewrite~ IHT1. rewrite~ IHT2. 
+  simpl. fequals. rewrite~ IHT1. rewrite~ IHT2.
   (* abs *)
   simpl_cps. name_var_gen z.
    protect_left. simpl_cps. subst left. name_var_gen z'.
-   simpl. fequals_rec. 
+   simpl. fequals_rec.
    sets ta: ([[x~>y]]t1).
    pick_fresh a from (fv ta).
    rewrite~ (@subst_intro a).
-   lets IH1: H0 ta a a z ___. 
+   lets IH1: H0 ta a a z ___.
      auto.
      subst ta. rewrite~ trm_size_rename.
      subst ta. rewrite~ subst_open_var.
@@ -153,16 +154,16 @@ Lemma cps_rename_body : forall y x t,
 Proof.
   intros. tests: (x = y). subst~.
   rewrite~ (@subst_intro y).
-  rewrite~ cps_rename. 
+  rewrite~ cps_rename.
   rewrite~ close_var_rename.
   apply~ cps_fv.
-Qed. 
+Qed.
 
 (** [cps] commutes with substitution *)
 
-Lemma cps_subst : forall z v t, 
+Lemma cps_subst : forall z v t,
   term t -> value v ->
-  cps (subst z v t) = subst z (cpsval v) (cps t). 
+  cps (subst z v t) = subst z (cpsval v) (cps t).
 Proof.
   introv T V. induction T; (protect_left; simpl_cps; subst left); simpl.
   case_var.
@@ -170,7 +171,7 @@ Proof.
     simpl_cps. auto.
   simpl_cps. auto.
   simpl_cps. rewrite IHT1. rewrite~ IHT2.
-  simpl_cps. fequals_rec. 
+  simpl_cps. fequals_rec.
   name_var_gen y. name_var_gen y'.
    pick_fresh a from (fv ([z ~> v]t1) \u fv (cpsval v)).
    rewrite~ (@cps_rename_body a); [|apply* body_subst].
@@ -181,13 +182,13 @@ Qed.
 
 (** [cps] commutes with open *)
 
-Lemma cps_open : forall t1 v, 
+Lemma cps_open : forall t1 v,
   value v -> body t1 ->
   cps (t1 ^^ v) = (cps_abs_body t1) ^^ cpsval v.
 Proof.
   introv V B. unfold cps_abs_body. name_var_gen y.
   rewrite~ (@subst_intro y).
-  rewrite~ cps_subst. 
+  rewrite~ cps_subst.
   rewrite~ (@subst_intro y (close_var y (cps (t1^y)))).
   rewrite~ <- close_var_open.
 Qed.
@@ -197,9 +198,9 @@ Qed.
 (** Prove of the semantic preservation of CPS *)
 
 Lemma cps_correct_ind : forall v t k r,
-  eval t v -> 
-  eval (trm_app k (cpsval v)) r -> 
-  value k -> 
+  eval t v ->
+  eval (trm_app k (cpsval v)) r ->
+  value k ->
   eval (trm_app (cps t) k) r.
 Proof.
   introv E. gen k r. induction E; introv EV VK.
@@ -217,7 +218,7 @@ Proof.
   subst t3'. applys~ eval_red_values_bis.
   forwards H: IHE3; clear IHE3. eauto. auto.
   inverts H as F1 F2 F3. inverts F1.
-  rewrite~ (eval_value F2) in F3. 
+  rewrite~ (eval_value F2) in F3.
   rewrite~ <- cps_open.
   apply* eval_red.
 Qed.

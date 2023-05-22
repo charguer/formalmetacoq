@@ -4,7 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN
+From TLC Require Import LibLN.
+Require Import
   STLC_Core_Definitions
   STLC_Core_Infrastructure
   STLC_Core_Soundness.
@@ -182,12 +183,12 @@ Lemma soundness_of_cpssmall_soundness :
   cpssmall_soundness ->
   soundness.
 Proof using.
-  introv Sou. introv HT. rewrite safe_iff. introv HR. gen T. 
+  introv Sou. introv HT. rewrite safe_iff. introv HR. gen T.
   induction HR.
-  { intros. lets [M|M]: Sou HT. 
-    { left*. } 
+  { intros. lets [M|M]: Sou HT.
+    { left*. }
     { right. rewrite* cpssmall_characterization in M. } }
-  { introv HT. lets [HV|M]: Sou HT. 
+  { introv HT. lets [HV|M]: Sou HT.
     { false* red_value_inv HV. }
     { rewrite cpssmall_characterization in M. destruct M as (M1&M2).
       applys IHHR. applys* M2. } }

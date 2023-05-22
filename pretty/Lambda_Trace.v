@@ -6,7 +6,7 @@
 Set Implicit Arguments.
 Require Export Lambda_Syntax LibStream Common.
 
-Inductive act := 
+Inductive act :=
   | act_epsilon : act
   | act_echo : nat -> act.
 
@@ -19,7 +19,7 @@ Inductive instr :=
 
 Definition prog := list instr.
 
-CoInductive cored : prog -> prog -> itrace -> Prop := 
+CoInductive cored : prog -> prog -> itrace -> Prop :=
   | cored_nil : forall P i,
      cored P P i ->
      cored P nil (act_epsilon:::i)
@@ -57,7 +57,7 @@ CoInductive sim : binary itrace :=
      sim i1 i2 ->
      sim (epsilons n1 (w:::i1)) (epsilons n2 (w:::i2)).
 
-CoInductive coredn : nat -> prog -> prog -> itrace -> Prop := 
+CoInductive coredn : nat -> prog -> prog -> itrace -> Prop :=
   | coredn_nil : forall P i p q,
      coredn p P P i ->
      coredn q P nil (act_epsilon:::i)
@@ -71,7 +71,7 @@ CoInductive coredn : nat -> prog -> prog -> itrace -> Prop :=
      coredn p P L (epsilons a i) ->
      coredn (S p) P L (epsilons b i).
 
-CoInductive corednT : nat -> prog -> prog -> itrace -> Type := 
+CoInductive corednT : nat -> prog -> prog -> itrace -> Type :=
   | corednT_nil : forall P i p q,
      corednT p P P i ->
      corednT (S q) P nil (act_epsilon:::i)
@@ -88,9 +88,9 @@ CoInductive corednT : nat -> prog -> prog -> itrace -> Type :=
 CoFixpoint wit : forall p P L i (H:corednT p P L i), itrace.
 Proof.
   cofix IH.
-  introv H. 
+  introv H.
   assert (next : act*itrace).
-    gen p L i. fix 1. 
+    gen p L i. fix 1.
     destruct p; introv M.
     inversion M.
     inversion M.
@@ -109,14 +109,14 @@ Print wit.
 
 CoFixpoint wit : forall p P L i (H:corednT p P L i), itrace.
 Proof.
-  cofix IH. 
+  cofix IH.
   introv H. destruct H.
   exact (act_epsilon:::(IH _ _ _ _ H)).
-  exact (act_epsilon:::(IH _ _ _ _ H)).  
-  exact (act_echo n:::(IH _ _ _ _ H)). 
+  exact (act_epsilon:::(IH _ _ _ _ H)).
+  exact (act_echo n:::(IH _ _ _ _ H)).
   assert (next : act*itrace).
   gen H. generalize (epsilons a i) as j. clear a i.
-  gen p. fix 1. 
+  gen p. fix 1.
     destruct p; introv M.
     inversion M.
     exact (act_epsilon,i).
@@ -141,7 +141,7 @@ intros. apply* (sim_intro 0 0).
 Defined.
 
 Lemma sim_step : forall i1 i2,
-  match i1,i2 with 
+  match i1,i2 with
   | x1:::j1, x2:::j2 => x1 = x2 /\ sim j1 j2
   end ->
   sim i1 i2.
@@ -162,21 +162,21 @@ Proof.
     destruct H.
     exists __ __ __ __ H. split. eauto.
     eapply sim_step. simpl. split. auto. apply IH.
-    
+
 
 
     unfold wit.
-  subst. rewrite H1. apply sim_one. apply IH. 
+  subst. rewrite H1. apply sim_one. apply IH.
 Qed.
 
  /\ cored P L (wit H i')
 
 
-Lemma coredn_cored : forall n P L i, 
+Lemma coredn_cored : forall n P L i,
   coredn n P L i ->
   exists i', sim i i' /\ cored P L i'.
 Proof.
-  
+
 Qed.
 
 
@@ -186,7 +186,7 @@ Lemma coredn_epsilon : forall p P L i,
   coredn (S p) P L (act_epsilon:::i).
 Proof. applys coredn_epsilons O (S O). Defined.
 
-Lemma trans_sim_core : forall P L i, 
+Lemma trans_sim_core : forall P L i,
   cored P L i ->
   coredn (length L) (trans P) (trans L) i.
 Proof.
@@ -195,9 +195,9 @@ Proof.
   constructors*.
   applys* coredn_epsilon.
   constructors*.
-Qed.      
+Qed.
 
-Lemma trans_sim : forall P L i, 
+Lemma trans_sim : forall P L i,
   cored P L i ->
   exists i', sim i i' /\ cored (trans P) (trans L) i'.
 Proof.
@@ -205,7 +205,7 @@ Proof.
   applys coredn_cored.
   applys* trans_sim_core.
 Qed.
-      
+
 
 
 
@@ -235,7 +235,7 @@ Implicit Types t : trm.
 
 (** Grammar of actions *)
 
-Inductive act := 
+Inductive act :=
   | act_epsilon : act.
 
 (** Grammar of traces *)
@@ -271,7 +271,7 @@ Notation "f ^^ o" := (out_prepend f o) (at level 60, right associativity).
 
 Definition one_step := act_epsilon::nil.
 
-Definition step o := 
+Definition step o :=
   one_step ^^ o.
 
 (** Grammar of extended terms *)
@@ -297,19 +297,19 @@ Inductive abort : out -> Prop :=
 
 Inductive one : ext -> Prop :=
   | one_val : forall v,
-      one v 
+      one v
   | one_abs : forall x t,
-      one (trm_abs x t) 
+      one (trm_abs x t)
   | one_app : forall t1 t2,
-      one (trm_app t1 t2) 
+      one (trm_app t1 t2)
   | one_app_1_abort : forall o1 t2,
       abort o1 ->
       one (ext_app_1 o1 t2)
   | one_app_1 : forall v1 t2 f,
-      one (ext_app_1 (out_ter f v1) t2) 
+      one (ext_app_1 (out_ter f v1) t2)
   | one_app_2_abort : forall v1 o2,
       abort o2 ->
-      one (ext_app_2 v1 o2) 
+      one (ext_app_2 v1 o2)
   | one_app_2 : forall x t3 v2 f,
       one (ext_app_2 (val_clo x t3) (out_ter f v2)).
 
@@ -392,13 +392,13 @@ Hint Extern 1 (length _ < length _) =>
 (*
 Theorem cored_ter_red : forall f e v,
   cored e (out_ter f v) -> red e (out_ter f v).
-Proof.  
+Proof.
   intros f. gen_eq n: (length f). gen f.
   induction n using peano_induction.
-  introv E R. subst. 
-  asserts IH: (forall e v f', cored e (out_ter f' v) -> 
+  introv E R. subst.
+  asserts IH: (forall e v f', cored e (out_ter f' v) ->
     length f' < length f -> red e (out_ter f' v)).
-    introv M L. applys* H. clear H. 
+    introv M L. applys* H. clear H.
   inverts R as.
   auto.
   auto.
@@ -455,13 +455,13 @@ Hint Constructors abort.
 
 
 Lemma determinacy_ter : forall f e b o,
-  cored e (out_ter f b) -> cored e o -> 
-  o = out_ter f b. 
+  cored e (out_ter f b) -> cored e o ->
+  o = out_ter f b.
 Proof.
   intros f. gen_eq n: (length f). gen f.
   induction n using peano_induction.
-  asserts IH: (forall e f b o, 
-    cored e (out_ter f b) -> cored e o -> 
+  asserts IH: (forall e f b o,
+    cored e (out_ter f b) -> cored e o ->
     length f < n ->
     o = out_ter f b).
     intros. apply* H. clear H.
@@ -479,32 +479,32 @@ Focus 1.
            exists___. split. eauto.
            false* H3.
      subst. forwards* E: (>> IH H0 H4).
-     
+
       inverts H2. false* H3.
 
 
-  inverts R2; [|false*H]. 
+  inverts R2; [|false*H].
     destruct o0; [|false]. inverts H.
     destruct o2.
       inverts H2. skip.
       forwards* E: (>> IH H0 H6).
       inverts H2. false* H3.
-  inverts R2; [|false*H]. 
+  inverts R2; [|false*H].
     destruct o0; [|false]. inverts H.
     rewrites* (>> IH H1 H6).
   inverts R2; try solve [ false* H1 ]. eauto.
-Qed. 
+Qed.
 
 *)
 
 Lemma determinacy_ter' : forall f e b o,
-  cored e (out_ter f b) -> cored e o -> 
-    exists f', o = out_ter f' b. 
+  cored e (out_ter f b) -> cored e o ->
+    exists f', o = out_ter f' b.
 Proof.
   intros f. gen_eq n: (length f). gen f.
   induction n using peano_induction.
-  asserts IH: (forall e f b o, 
-    cored e (out_ter f b) -> cored e o -> 
+  asserts IH: (forall e f b o,
+    cored e (out_ter f b) -> cored e o ->
     length f < n ->
     exists f', o = out_ter f' b).
     intros. apply* H. clear H.
@@ -512,31 +512,31 @@ Proof.
   inverts R2; [|false*H]. eauto.
   inverts R2; [|false*H]. eauto.
   inverts R2; [|false*H]. skip.
-  inverts R2; [|false*H]. 
+  inverts R2; [|false*H].
     destruct o0; [|false]. inverts H.
     destruct o2.
       skip.
       inverts H2. false* H3.
-  inverts R2; [|false*H]. 
+  inverts R2; [|false*H].
     destruct o0; [|false]. inverts H.
     forwards* [f' E]: IH H1 H6. subst. simple*.
   inverts R2; try solve [ false* H1 ]. eauto.
-Qed. 
+Qed.
 
 Lemma determinacy_div : forall e i1 i2,
-  cored e (out_div i1) -> cored e (out_div i2) -> 
+  cored e (out_div i1) -> cored e (out_div i2) ->
     i1 === i2.
 Proof.
   intros. apply itrace_bisim.
 Qed.
 
 Lemma determinacy : forall e o1 o2,
-  cored e o1 -> cored e o2 -> out_sim o1 o2. 
+  cored e o1 -> cored e o2 -> out_sim o1 o2.
 Proof.
   intros.
   destruct o1 as [f1 b|i1].
     forwards* [f' E]: determinacy_ter H. subst.
-     constructor.  
+     constructor.
     destruct o2 as [f2 b|i2].
       forwards* [f' E]: determinacy_ter H. false.
       constructor.
@@ -551,7 +551,7 @@ Qed.
 (************************************************************)
 (* ** Interpreter *)
 
-CoInductive phi := 
+CoInductive phi :=
   | phi_now : beh -> phi
   | phi_later : act -> phi -> phi.
 
@@ -576,7 +576,7 @@ CoFixpoint run (t:trm) : phi :=
     | trm_val v => phi_now v
     | trm_abs x t1 => phi_now (val_clo x t1)
     | trm_var x => phi_now beh_err
-    | trm_app t1 t2 => 
+    | trm_app t1 t2 =>
        if_success (run t1) (fun v1 =>
          if_success (run t2) (fun v2 =>
             if_isclo v1 (fun x t3 =>
@@ -628,7 +628,7 @@ Ltac equates_lemma n ::=
   | 4%nat => constr:(equates_4)
   | 5%nat => constr:(equates_5)
   | 6%nat => constr:(equates_6)
-  end.  
+  end.
 
 
 Hint Extern 1 (_ === _) =>

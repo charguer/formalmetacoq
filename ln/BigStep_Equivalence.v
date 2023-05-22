@@ -4,8 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN
-  BigStep_Definitions BigStep_Infrastructure.
+From TLC Require Import LibLN.
+Require Import BigStep_Definitions BigStep_Infrastructure.
 
 
 (* ********************************************************************** *)
@@ -23,8 +23,8 @@ Proof. intros. applys~ reds_red. Qed.
 (** Beta-star is a transitive relationship *)
 
 Lemma beta_star_trans : forall t2 t1 t3,
-  beta_star t1 t2 -> 
-  beta_star t2 t3 -> 
+  beta_star t1 t2 ->
+  beta_star t2 t3 ->
   beta_star t1 t3.
 Proof.
   introv R1. gen t3. induction R1; intros.
@@ -33,7 +33,7 @@ Proof.
 Qed.
 
 (** A term that reduces in big-step reaches a value *)
-    
+
 Lemma reds_to_value : forall t v,
   reds t v -> value v.
 Proof. introv Rt. induction~ Rt. Qed.
@@ -45,9 +45,9 @@ Hint Extern 1 (value ?v) =>
 (* ********************************************************************** *)
 (** From big-step to small-step *)
 
-Lemma beta_star_app1 : forall t1 t1' t2, 
+Lemma beta_star_app1 : forall t1 t1' t2,
   term t2 ->
-  beta_star t1 t1' -> 
+  beta_star t1 t1' ->
   beta_star (trm_app t1 t2) (trm_app t1' t2).
 Proof.
   introv T H. induction H.
@@ -55,7 +55,7 @@ Proof.
   apply* beta_star_step.
 Qed.
 
-Lemma beta_star_app2 : forall t1 t2 t2', 
+Lemma beta_star_app2 : forall t1 t2 t2',
   value t1 ->
   beta_star t2 t2' ->
   beta_star (trm_app t1 t2) (trm_app t1 t2').
@@ -89,14 +89,14 @@ Proof.
   induction Rt; intros.
   apply~ reds_red_val.
   inversions Rt'. false_invert. apply* reds_red.
-  inversions Rt'. false_invert. apply* reds_red. 
+  inversions Rt'. false_invert. apply* reds_red.
 Qed.
 
 Lemma beta_star_to_reds : forall t v,
   beta_star t v -> value v -> reds t v.
 Proof.
   introv Rt Vv. induction Rt.
-  auto. 
+  auto.
   apply* beta_reds_to_reds.
 Qed.
 
@@ -105,7 +105,7 @@ Qed.
 (** * Proof of equivalence *)
 
 Lemma equivalence_result : equivalence.
-Proof. 
+Proof.
   split; intros.
   apply* reds_to_beta_star.
   apply* beta_star_to_reds.
@@ -115,7 +115,7 @@ Qed.
 (* ********************************************************************** *)
 (** * Another proof of small-step implies big-step *)
 
-Require Import LibNat LibInt.
+From TLC Require Import LibNat LibInt.
 Import LibTacticsCompatibility.
 Open Scope nat_scope.
 (* TODO: should include LibNat LibOmega *)
@@ -128,8 +128,8 @@ Inductive beta_starn : nat -> trm -> trm -> Prop :=
      term t ->
      beta_starn 0 t t
   | beta_starn_step : forall t2 n t1 t3,
-     beta t1 t2 -> 
-     beta_starn n t2 t3 -> 
+     beta t1 t2 ->
+     beta_starn n t2 t3 ->
      beta_starn (S n) t1 t3.
 
 (** [beta_starn] is regular. *)
@@ -137,7 +137,7 @@ Inductive beta_starn : nat -> trm -> trm -> Prop :=
 Lemma beta_starn_regular : forall n e e',
   beta_starn n e e' -> term e /\ term e'.
 Proof.
-  induction 1. 
+  induction 1.
   autos*.
   destruct* (beta_regular H).
 Qed.
@@ -174,7 +174,7 @@ Lemma beta_starn_inv : forall n t v,
 Proof.
   introv Rn Vv Vt. inversions Rn.
     false~.
-    exists t2. math_rewrite~ (S n0 - 1 = n0). 
+    exists t2. math_rewrite~ (S n0 - 1 = n0).
 Qed.
 
 Lemma beta_starn_inv_val : forall n t v,
@@ -182,7 +182,7 @@ Lemma beta_starn_inv_val : forall n t v,
 Proof.
   introv Rn Vt. inversions Rn.
     auto.
-    inversions Vt. false_invert. 
+    inversions Vt. false_invert.
 Qed.
 
 (** Main induction. *)
@@ -191,19 +191,19 @@ Ltac auto_star ::= intuition eauto with maths.
 
 Lemma beta_starn_inv_app : forall n t1 t2 v,
   beta_starn n (trm_app t1 t2) v -> value v ->
-  exists n1 v1 n2 v2 n3, 
+  exists n1 v1 n2 v2 n3,
      beta_starn n1 t1 v1 /\ value v1
   /\ beta_starn n2 t2 v2 /\ value v2
   /\ beta_starn n3 (trm_app v1 v2) v
-  /\ n1 < n /\ n2 < n /\ n3 <= n. 
+  /\ n1 < n /\ n2 < n /\ n3 <= n.
 Proof.
   introv H. inductions H; introv Vv.
   inversions Vv. inversions H.
   exists* 0 (trm_abs t0) 0 t2 (S n).
-  destruct~ (IHbeta_starn t1' t2) 
+  destruct~ (IHbeta_starn t1' t2)
    as (n1&v1&n2&v2&n3&S1&V1&S2&V2&S3&L1&L2&L3).
-   exists* (S n1) v1 n2 v2 n3. 
-  destruct~ (IHbeta_starn t1 t2') 
+   exists* (S n1) v1 n2 v2 n3.
+  destruct~ (IHbeta_starn t1 t2')
    as (n1&v1&n2&v2&n3&S1&V1&S2&V2&S3&L1&L2&L3).
    exists* n1 v1 (S n2) v2 n3.
 Qed.
@@ -218,12 +218,12 @@ Proof.
   destruct (beta_starn_inv Rn Vv) as [t' [Rt Rp]].
    intros K; inversions K. inversion Rt.
   rewrite~ (beta_starn_inv_val Rn).
-  destruct~ (beta_starn_inv_app Rn) 
+  destruct~ (beta_starn_inv_app Rn)
    as (n1&v1&n2&v2&n3&S1&V1&S2&V2&S3&L1&L2&L3).
    inversions V1. inversions S3; [ inversions Vv | ].
    inversions H1; [ | inversions H7 | inversions V2; inversions H7 ].
    eapply reds_red.
-     apply* (H n1). 
+     apply* (H n1).
      apply* (H n2).
      apply* (H n0).
 Qed.
@@ -231,7 +231,7 @@ Qed.
 Lemma beta_star_to_red : forall t v,
   beta_star t v -> value v -> reds t v.
 Proof.
-  introv Rt Vv. destruct (beta_star_to_beta_starn Rt). 
+  introv Rt Vv. destruct (beta_star_to_beta_starn Rt).
   apply* beta_starn_to_red.
 Qed.
 

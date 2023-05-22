@@ -28,7 +28,7 @@ Definition tr_beh (b:beh) :=
 (************************************************************)
 (* ** Freshness *)
 
-Definition beh_vars (f:vars_opt) (b:beh) := 
+Definition beh_vars (f:vars_opt) (b:beh) :=
   match b with
   | beh_ret v => trm_vars f v
   | beh_exn v => trm_vars f v
@@ -38,12 +38,12 @@ Definition beh_vars (f:vars_opt) (b:beh) :=
 (* ** Theorem *)
 
 Definition correctness_bigred :=
-  forall t b, bigred t b -> 
+  forall t b, bigred t b ->
   fresh (trm_vars not_used t) 3 L ->
   bigred (tr_trm t) (tr_beh b).
 
 Definition correctness_bigdiv :=
-  forall t, bigdiv t -> 
+  forall t, bigdiv t ->
   fresh (trm_vars not_used t) 3 L ->
   bigdiv (tr_trm t).
 
@@ -92,8 +92,8 @@ Lemma notin_bigred : forall x t b,
   x \notin beh_vars not_used b.
 Proof.
   introv R. induction R; introv F; simpls; auto.
-  forwards~: IHR1. applys~ IHR3. applys~ subst_notin. 
-Qed. 
+  forwards~: IHR1. applys~ IHR3. applys~ subst_notin.
+Qed.
 
 Lemma fresh_bigred : forall m xs t b,
   bigred t b ->
@@ -117,31 +117,31 @@ Lemma bigred_tr_bind_ret : forall o t1 v1 k x1,
   fresh (trm_vars not_used t1) 3 L ->
   bigred (tr_bind (tr_trm t1) x1 k) o.
 Proof.
-  introv C R1 R2 Fr. 
-  applys bigred_case_true. 
+  introv C R1 R2 Fr.
+  applys bigred_case_true.
   applys* C (beh_ret v1).
   applys* bigred_abs_beta.
 Defined.
 
 Lemma bigred_tr_bind_exn : forall t1 x k v,
-  correctness_bigred -> 
+  correctness_bigred ->
   bigred t1 (beh_exn v) ->
   fresh (trm_vars not_used t1) 3 L ->
   bigred (tr_bind (tr_trm t1) x k) (tr_beh (beh_exn v)).
 Proof.
-  introv C R Fr. 
-  applys bigred_case_false. 
+  introv C R Fr.
+  applys bigred_case_false.
   applys* C (beh_exn v).
   applys bigred_abs_beta. simpl_substs. auto.
 Defined.
 
 Lemma bigdiv_tr_bind_1 : forall t1 x k,
-  correctness_bigdiv -> 
+  correctness_bigdiv ->
   bigdiv t1 ->
   fresh (trm_vars not_used t1) 3 L ->
   bigdiv (tr_bind (tr_trm t1) x k).
 Proof.
-  introv C R Fr. 
+  introv C R Fr.
   applys bigdiv_case_1. applys* C.
 Defined.
 
@@ -153,7 +153,7 @@ Lemma bigdiv_tr_bind_ret : forall t1 v1 k x1,
   fresh (trm_vars not_used t1) 3 L ->
   bigdiv (tr_bind (tr_trm t1) x1 k).
 Proof.
-  introv C C' R1 R2 Fr. 
+  introv C C' R1 R2 Fr.
   applys bigdiv_case_true. applys* C (beh_ret v1).
   applys* bigdiv_abs_beta.
 Defined.
@@ -176,9 +176,9 @@ Proof.
     applys* C (val_abs x t3).
     applys bigred_abs_beta. simpl. simpl_subst.
      applys bigred_abs_beta'.
-     forwards M: fresh_bigred R1 Frt. simpl in M. 
+     forwards M: fresh_bigred R1 Frt. simpl in M.
      rewrite~ <- tr_val_subst.
-     applys* (C _ _ R3). applys~ fresh_subst. 
+     applys* (C _ _ R3). applys~ fresh_subst.
   introv R1. applys bigred_case_false.
     applys* (C _ _ R1).
     applys bigred_abs_beta. simpl. simpl_subst. auto.
@@ -199,14 +199,14 @@ Proof.
   rewrite~ (@subst_id not_free). clear M.
   unfold tr_bind. inverts R as.
   introv R1. applys bigdiv_case_1. applys* C'.
-  introv R1 R2. inverts R2. 
+  introv R1 R2. inverts R2.
   introv R1 R2 R3. inverts R2. applys bigdiv_case_true.
     applys* (C _ _ R1).
     applys bigdiv_abs_beta. simpl. simpl_subst.
      applys~ bigdiv_abs_beta'.
-     forwards M: fresh_bigred R1 Frt. simpl in M. 
+     forwards M: fresh_bigred R1 Frt. simpl in M.
      rewrite~ <- tr_val_subst.
-     applys* C'. applys~ fresh_subst. 
+     applys* C'. applys~ fresh_subst.
 Defined.
 
 
@@ -236,12 +236,12 @@ Proof.
   forwards M2: fresh_bigred R2 Fr2. simpl in M2.
   rewrite~ <- tr_val_subst. applys~ IH. applys~ fresh_subst.
   (* case_app_exn_1 *)
-  applys* bigred_tr_bind_exn. 
+  applys* bigred_tr_bind_exn.
   (* case_app_exn_2 *)
   applys* bigred_tr_bind_ret. rewrite~ subst_tr_bind.
   simpl. simpl_subst.
   rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ].
-  applys* bigred_tr_bind_exn. 
+  applys* bigred_tr_bind_exn.
   (* case_try *)
   applys bigred_case_true. applys IH (beh_ret v1). auto. auto.
   applys bigred_abs_beta. simpl. simpl_subst. auto.
@@ -254,33 +254,33 @@ Proof.
   (* case_raise *)
   applys* bigred_tr_bind_ret. simpl_substs. auto.
   (* case_raise_exn_1 *)
-  applys* bigred_tr_bind_exn. 
+  applys* bigred_tr_bind_exn.
   (* case_inj *)
   applys* bigred_tr_bind_ret. simpl_substs. auto.
   (* case_inj_1 *)
-  applys* bigred_tr_bind_exn. 
+  applys* bigred_tr_bind_exn.
   (* case_true *)
   asserts~ Fr1: (fresh (trm_vars not_used t1) 3 L).
   forwards M: fresh_bigred R1 Fr1. simpl in M.
   applys* bigred_tr_bind_ret. sets_eq T: tr_cont.
-  simpl. simpl_subst. subst. 
+  simpl. simpl_subst. subst.
   do 2 rewrite~ subst_tr_cont.
   do 2 (rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ]).
-  applys* bigred_case_true. 
+  applys* bigred_case_true.
   applys bigred_tr_cont R2. skip. (* applys IH. makes Guarded loop ! *)
   auto. auto.
   (* case_false *)
   asserts~ Fr1: (fresh (trm_vars not_used t1) 3 L).
   forwards M: fresh_bigred R1 Fr1. simpl in M.
   applys* bigred_tr_bind_ret. sets_eq T: tr_cont.
-  simpl. simpl_subst. subst. 
+  simpl. simpl_subst. subst.
   do 2 rewrite~ subst_tr_cont.
   do 2 (rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ]).
-  applys* bigred_case_false. 
+  applys* bigred_case_false.
   applys bigred_tr_cont R2. skip. (* applys IH. makes Guarded loop ! *)
   auto. auto.
   (* case_1 *)
-  applys* bigred_tr_bind_exn. 
+  applys* bigred_tr_bind_exn.
 Qed.
 
 (** Diverging programs *)
@@ -295,7 +295,7 @@ Proof.
   introv R1 R2. applys* bigdiv_tr_bind_ret.
   rewrite~ subst_tr_bind.
   asserts~ Fr1: (fresh (trm_vars not_used t1) 3 L).
-  forwards M: fresh_bigred R1 Fr1. simpl in M. 
+  forwards M: fresh_bigred R1 Fr1. simpl in M.
   simpl. simpl_subst.
   rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ].
   applys* bigdiv_tr_bind_1.
@@ -312,7 +312,7 @@ Proof.
   forwards M2: fresh_bigred R2 Fr2. simpl in M2.
   rewrite~ <- tr_val_subst. applys~ IH. applys~ fresh_subst.
   (* case try_1 *)
-  introv R1. applys* bigdiv_case_1. 
+  introv R1. applys* bigdiv_case_1.
   (* case try_2 *)
   introv R1 R2. applys bigdiv_case_false.
   applys* K (beh_exn v).
@@ -330,20 +330,20 @@ Proof.
   asserts~ Fr1: (fresh (trm_vars not_used t1) 3 L).
   forwards M: fresh_bigred R1 Fr1. simpl in M.
   applys* bigdiv_tr_bind_ret. sets_eq T: tr_cont.
-  simpl. simpl_subst. subst. 
+  simpl. simpl_subst. subst.
   do 2 rewrite~ subst_tr_cont.
   do 2 (rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ]).
-  applys* bigdiv_case_true. 
+  applys* bigdiv_case_true.
   applys* bigdiv_tr_cont R2.
   (* case case_false *)
   introv R1 R2.
   asserts~ Fr1: (fresh (trm_vars not_used t1) 3 L).
   forwards M: fresh_bigred R1 Fr1. simpl in M.
   applys* bigdiv_tr_bind_ret. sets_eq T: tr_cont.
-  simpl. simpl_subst. subst. 
+  simpl. simpl_subst. subst.
   do 2 rewrite~ subst_tr_cont.
   do 2 (rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ]).
-  applys* bigdiv_case_false. 
+  applys* bigdiv_case_false.
   applys* bigdiv_tr_cont R2.
 Qed.
 

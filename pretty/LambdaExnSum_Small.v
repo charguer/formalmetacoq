@@ -4,7 +4,8 @@
 *************************************************************)
 
 Set Implicit Arguments.
-Require Export LambdaExnSum_Syntax LibRelation.
+Require Export LambdaExnSum_Syntax.
+From TLC Require Import LibRelation.
 
 Implicit Types v : val.
 Implicit Types t : trm.
@@ -47,7 +48,7 @@ Fixpoint ctx_apply c t :=
   | ctx_inj b c' => trm_inj b (r c')
   | ctx_case c' t1 t2 => trm_case (r c') t1 t2
   | ctx_try c' t2 => trm_try (r c') t2
-  | ctx_raise c' => trm_raise (r c') 
+  | ctx_raise c' => trm_raise (r c')
   end.
 
 Coercion ctx_apply : ctx >-> Funclass.
@@ -55,7 +56,7 @@ Coercion ctx_apply : ctx >-> Funclass.
 (** Contexts that do not contain [try] construct *)
 
 Fixpoint ctx_notry c :=
-  let r := ctx_notry in 
+  let r := ctx_notry in
   match c with
   | ctx_hole => True
   | ctx_app_1 c' t2 => r c'
@@ -76,7 +77,7 @@ Inductive step : binary trm :=
   | step_ctx : forall c t1 t2,
       step t1 t2 ->
       step (c t1) (c t2)
-  | step_exn : forall c v, 
+  | step_exn : forall c v,
       ctx_notry c ->
       step (c (trm_raise v)) (trm_raise v)
   | step_abs : forall x t,
@@ -123,7 +124,7 @@ Hint Constructors rtclosure infclosure.
 
 (** Addition reduction contexts *)
 
-Definition isctx (f:trm->trm) := 
+Definition isctx (f:trm->trm) :=
   forall t1 t2, step t1 t2 -> step (f t1) (f t2).
 
 Lemma isctx_ctx : forall c, isctx c.
@@ -195,7 +196,7 @@ Hint Unfold ctx_notry.
 Section Equiv.
 
 Tactic Notation "applys_simpl" constr(E) :=
-  let M := fresh "TEMP" in 
+  let M := fresh "TEMP" in
   lets M: E; simpl in M; applys M; clear M.
 
 Tactic Notation "applys_simpl" "~" constr(E) :=
@@ -217,23 +218,23 @@ Proof.
   introv R. induction R; introv N; simpls.
   auto.
   auto.
-  applys rtclosure_trans; [ | applys* IHR2]. 
-   applys* stepstar_ctx (ctx_app_1 ctx_hole t2). 
+  applys rtclosure_trans; [ | applys* IHR2].
+   applys* stepstar_ctx (ctx_app_1 ctx_hole t2).
   inverts H; tryfalse. simpl. applys rtclosure_once.
    applys~ step_exn (ctx_app_1 ctx_hole t2).
-  applys rtclosure_trans; [ | applys* IHR2]. 
+  applys rtclosure_trans; [ | applys* IHR2].
    applys* stepstar_ctx (ctx_app_2 v1 ctx_hole).
   inverts H; tryfalse. simpl. applys rtclosure_once.
    applys~ step_exn (ctx_app_2 v1 ctx_hole).
-  applys rtclosure_trans; [ | applys* IHR]. 
+  applys rtclosure_trans; [ | applys* IHR].
    applys* rtclosure_once.
   applys rtclosure_trans; [ | applys* IHR2].
    applys* stepstar_ctx (ctx_inj b ctx_hole).
   inverts H; tryfalse. simpl. applys rtclosure_once.
    applys~ step_exn (ctx_inj b ctx_hole).
   auto.
-  applys rtclosure_trans; [ | applys* IHR2]. 
-   applys* stepstar_ctx (ctx_case ctx_hole t2 t3). 
+  applys rtclosure_trans; [ | applys* IHR2].
+   applys* stepstar_ctx (ctx_case ctx_hole t2 t3).
   inverts H; tryfalse. simpl. applys rtclosure_once.
    applys~ step_exn (ctx_case ctx_hole t2 t3).
   applys rtclosure_trans; [ | applys* IHR].
@@ -241,13 +242,13 @@ Proof.
   applys rtclosure_trans; [ | applys* IHR].
    applys rtclosure_once. simple*.
   applys rtclosure_trans; [ | applys* IHR2].
-   applys* stepstar_ctx (ctx_try ctx_hole t2). 
+   applys* stepstar_ctx (ctx_try ctx_hole t2).
   applys* rtclosure_once.
   applys rtclosure_trans; [ | applys* IHR].
    applys* rtclosure_once.
   false.
   applys rtclosure_trans; [ | applys* IHR2].
-   applys* stepstar_ctx (ctx_raise ctx_hole). 
+   applys* stepstar_ctx (ctx_raise ctx_hole).
   inverts H; tryfalse. simpl. applys rtclosure_once.
    applys~ step_exn (ctx_raise ctx_hole).
   auto.
@@ -280,7 +281,7 @@ Proof.
     inverts R2 as.
       intros. apply~ sdiverge_app_1.
       introv R2 R3. destruct~ (cored_to_diverge_or_red R2).
-        apply* sdiverge_app_2. 
+        apply* sdiverge_app_2.
         inverts R3 as.
           intros. apply* sdiverge_app_2.
           introv R3. apply* sdiverge_app_3.

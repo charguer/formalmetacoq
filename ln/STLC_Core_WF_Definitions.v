@@ -4,7 +4,7 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN.
+From TLC Require Import LibLN.
 
 (** Grammar of types. *)
 
@@ -45,8 +45,8 @@ Inductive term : trm -> Prop :=
       (forall x, x \notin L -> term (t1 ^ x)) ->
       term (trm_abs t1)
   | term_app : forall t1 t2,
-      term t1 -> 
-      term t2 -> 
+      term t1 ->
+      term t2 ->
       term (trm_app t1 t2).
 
 (** Environment is an associative list mapping variables to types. *)
@@ -63,11 +63,11 @@ Inductive typing : env -> trm -> typ -> Prop :=
       binds x T E ->
       E |= (trm_fvar x) ~: T
   | typing_abs : forall L E U T t1,
-      (forall x, x \notin L -> 
+      (forall x, x \notin L ->
         (E & x ~ U) |= t1 ^ x ~: T) ->
       E |= (trm_abs t1) ~: (typ_arrow U T)
   | typing_app : forall S T E t1 t2,
-      E |= t1 ~: (typ_arrow S T) -> 
+      E |= t1 ~: (typ_arrow S T) ->
       E |= t2 ~: S ->
       E |= (trm_app t1 t2) ~: T
 
@@ -99,7 +99,7 @@ Fixpoint ctx_of (C : ctx) (t : trm) {struct C} : trm :=
 
 Inductive red : trm -> trm -> Prop :=
   | red_beta : forall t1 t2,
-      term (trm_abs t1) -> 
+      term (trm_abs t1) ->
       value t2 ->
       red (trm_app (trm_abs t1) t2) (t1 ^^ t2)
   | red_ctx : forall C t t',
@@ -115,8 +115,8 @@ Definition preservation := forall E t t' T,
   t --> t' ->
   E |= t' ~: T.
 
-Definition progress := forall t T, 
+Definition progress := forall t T,
   empty |= t ~: T ->
-     value t 
+     value t
   \/ exists t', t --> t'.
 

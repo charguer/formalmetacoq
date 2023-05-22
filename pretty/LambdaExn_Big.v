@@ -49,7 +49,7 @@ Inductive bigred : trm -> beh -> Prop :=
   | bigred_raise_exn_1 : forall t1 v,
       bigred t1 (beh_exn v) ->
       bigred (trm_raise t1) (beh_exn v)
-  | bigred_rand : forall k, 
+  | bigred_rand : forall k,
       (ParamDeterministic -> k = 0) ->
       bigred trm_rand (val_int k).
 
@@ -58,19 +58,19 @@ Inductive bigred : trm -> beh -> Prop :=
 CoInductive bigdiv : trm -> Prop :=
   | bigdiv_app_1 : forall t1 t2,
       bigdiv t1 ->
-      bigdiv (trm_app t1 t2) 
+      bigdiv (trm_app t1 t2)
   | bigdiv_app_2 : forall t1 v1 t2,
       bigred t1 v1 ->
       bigdiv t2 ->
-      bigdiv (trm_app t1 t2) 
+      bigdiv (trm_app t1 t2)
   | bigdiv_app_3 : forall t1 t2 x t3 v2,
       bigred t1 (val_clo x t3) ->
       bigred t2 v2 ->
       bigdiv (subst x v2 t3) ->
-      bigdiv (trm_app t1 t2) 
+      bigdiv (trm_app t1 t2)
   | bigdiv_try_1 : forall t1 t2,
       bigdiv t1 ->
-      bigdiv (trm_try t1 t2) 
+      bigdiv (trm_try t1 t2)
   | bigdiv_try_2 : forall t1 t2 v,
       bigred t1 (beh_exn v) ->
       bigdiv (trm_app t2 v) ->
@@ -120,7 +120,7 @@ Inductive bigredh : nat -> trm -> beh -> Prop :=
   | bigredh_raise_exn_1 : forall n t1 v,
       bigredh n t1 (beh_exn v) ->
       bigredh (S n) (trm_raise t1) (beh_exn v)
-  | bigredh_rand : forall n k, 
+  | bigredh_rand : forall n k,
       (ParamDeterministic -> k = 0) ->
       bigredh (S n) trm_rand (val_int k).
 
@@ -130,7 +130,7 @@ Hint Extern 1 (_ < _) => math.
 Lemma bigredh_lt : forall n n' t b,
   bigredh n t b -> n < n' -> bigredh n' t b.
 Proof.
-  introv H. gen n'. induction H; introv L; 
+  introv H. gen n'. induction H; introv L;
    (destruct n' as [|n']; [ false; math | autos* ]).
 Qed.
 

@@ -20,7 +20,7 @@ Implicit Types b : beh.
 
 (** Abort behaviors *)
 
-Inductive abort : beh -> Prop := 
+Inductive abort : beh -> Prop :=
   | abort_exn : forall v, abort (beh_exn v)
   | abort_err : abort beh_err.
 
@@ -74,7 +74,7 @@ Inductive bigred : trm -> beh -> Prop :=
       abort b ->
       bigred t1 b ->
       bigred (trm_raise t1) b
-  | bigred_rand : forall k, 
+  | bigred_rand : forall k,
       (ParamDeterministic -> k = 0) ->
       bigred trm_rand (val_int k).
 
@@ -83,19 +83,19 @@ Inductive bigred : trm -> beh -> Prop :=
 CoInductive bigdiv : trm -> Prop :=
   | bigdiv_app_1 : forall t1 t2,
       bigdiv t1 ->
-      bigdiv (trm_app t1 t2) 
+      bigdiv (trm_app t1 t2)
   | bigdiv_app_2 : forall t1 v1 t2,
       bigred t1 v1 ->
       bigdiv t2 ->
-      bigdiv (trm_app t1 t2) 
+      bigdiv (trm_app t1 t2)
   | bigdiv_app_3 : forall t1 t2 x t3 v2,
       bigred t1 (val_clo x t3) ->
       bigred t2 v2 ->
       bigdiv (subst x v2 t3) ->
-      bigdiv (trm_app t1 t2) 
+      bigdiv (trm_app t1 t2)
   | bigdiv_try_1 : forall t1 t2,
       bigdiv t1 ->
-      bigdiv (trm_try t1 t2) 
+      bigdiv (trm_try t1 t2)
   | bigdiv_try_2 : forall t1 t2 v,
       bigred t1 (beh_exn v) ->
       bigdiv (trm_app t2 v) ->
@@ -162,7 +162,7 @@ Inductive bigredh : nat -> trm -> beh -> Prop :=
       abort b ->
       bigredh n t1 b ->
       bigredh (S n) (trm_raise t1) b
-  | bigredh_rand : forall n k, 
+  | bigredh_rand : forall n k,
       (ParamDeterministic -> k = 0) ->
       bigredh (S n) trm_rand (val_int k).
 
@@ -172,7 +172,7 @@ Hint Extern 1 (_ < _) => math.
 Lemma bigredh_lt : forall n n' t b,
   bigredh n t b -> n < n' -> bigredh n' t b.
 Proof.
-  introv H. gen n'. induction H; introv L; 
+  introv H. gen n'. induction H; introv L;
    (destruct n' as [|n']; [ false; math | autos* ]).
 Qed.
 
@@ -269,10 +269,10 @@ Lemma not_terminates_bigdiv : forall t,
   ~ terminates t -> bigdiv t.
 Proof.
   cofix IH. introv N. destruct t; try solve [ false* N ].
-  tests (b1&R1) C1: (terminates t1). 
+  tests (b1&R1) C1: (terminates t1).
     lets [A1|(v1&E1)]: (abort_or_val b1).
       false* N.
-      subst. tests (b2&R2) C2: (terminates t2). 
+      subst. tests (b2&R2) C2: (terminates t2).
         lets [A2|(v2&E2)]: (abort_or_val b2).
           false* N.
           subst. tests C3: (~ isclo v1).
@@ -282,15 +282,15 @@ Proof.
               applys* bigdiv_app_3.
         applys* bigdiv_app_2.
     applys* bigdiv_app_1.
-  tests (b1&R1) C1: (terminates t1). 
+  tests (b1&R1) C1: (terminates t1).
     destruct b1 as [v1|v| ].
       false* N.
-      tests (b2&R2) C2: (terminates (trm_app t2 v)). 
+      tests (b2&R2) C2: (terminates (trm_app t2 v)).
         false* N.
         applys* bigdiv_try_2.
       false* N.
     applys* bigdiv_try_1.
-  tests (b1&R1) C1: (terminates t). 
+  tests (b1&R1) C1: (terminates t).
     lets [A1|(v1&E1)]: (abort_or_val b1).
       false* N.
       subst. false* N.

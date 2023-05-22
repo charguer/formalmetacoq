@@ -5,7 +5,8 @@
 *************************************************************)
 
 Set Implicit Arguments.
-Require Import Lambda_CombiErr Lambda_Typing LibLN LibInt.
+Require Import Lambda_CombiErr Lambda_Typing.
+From TLC Require Import LibLN LibInt.
 
 Implicit Types v : val.
 Implicit Types t : trm.
@@ -21,7 +22,7 @@ Implicit Types t : trm.
 
 Hint Constructors one typing.
 Hint Extern 1 (_ < _) => math.
-Hint Extern 1 (~ one _ -> exists _, _) => 
+Hint Extern 1 (~ one _ -> exists _, _) =>
   let H := fresh in intros H; false H.
 
 (** Regularity lemma *)
@@ -46,9 +47,9 @@ Proof.
   introv Tv Tt. inductions Tt; simpl.
   constructors*.
   constructors*.
-  cases_if. 
+  cases_if.
     binds_cases H0.
-      false* binds_empty_inv. 
+      false* binds_empty_inv.
       subst. applys* typing_val_weaken.
       lets (?&?): (ok_middle_inv H).
        false~ (binds_fresh_inv B0).
@@ -60,7 +61,7 @@ Proof.
      rewrite <- concat_assoc in H.
      lets (?&M): (ok_middle_inv H).
      simpl_dom. notin_false.
-    forwards*: IHTt. rewrite* concat_assoc. 
+    forwards*: IHTt. rewrite* concat_assoc.
   constructors*.
 Qed.
 
@@ -68,16 +69,16 @@ Qed.
     of a derivation that ends up in an error *)
 
 Lemma soundness_ind : forall n t b T,
-  cred t (out_ter n b) -> typing empty t T -> 
+  cred t (out_ter n b) -> typing empty t T ->
   exists v, b = beh_ret v /\ typing empty v T.
 Proof.
   induction n using peano_induction.
   introv R M. inverts~ R as.
   exists* v.
   inverts* M.
-  introv R1 R2 [L2 L1]. inverts L2. inverts L1.  
+  introv R1 R2 [L2 L1]. inverts L2. inverts L1.
    inverts M as M1 M2.
-   forwards~ (v1&E1&V1): H R1 M1. inverts E1. 
+   forwards~ (v1&E1&V1): H R1 M1. inverts E1.
    inverts V1. inverts R2 as; auto.
    introv R2 R3 [L3 L2]. inverts L3. inverts L2.
    forwards* (v2&E2&V2): H R2.
@@ -88,10 +89,10 @@ Proof.
     inverts M. false* binds_empty_inv.
 Qed.
 
-(** Soundness theorem: 
+(** Soundness theorem:
     Well-typed terms don't end up in an error *)
 
-Lemma soundness : forall t T, 
+Lemma soundness : forall t T,
   typing empty t T -> ~ cstuck t.
 Proof. introv M (n&R). false soundness_ind R M. Qed.
 

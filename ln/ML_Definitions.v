@@ -4,8 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require List.
-Require Export LibLogic LibList LibLN.
+From Coq  Require List.
+From TLC Require Export LibLogic LibList LibLN.
 
 (* ********************************************************************** *)
 (** ** Description of types *)
@@ -37,8 +37,8 @@ Fixpoint typ_fv (T : typ) {struct T} : vars :=
   | typ_bvar i      => \{}
   | typ_fvar x      => \{x}
   | typ_arrow T1 T2 => (typ_fv T1) \u (typ_fv T2)
-  | typ_unit        => \{}  
-  | typ_nat         => \{}  
+  | typ_unit        => \{}
+  | typ_nat         => \{}
   | typ_prod T1 T2  => (typ_fv T1) \u (typ_fv T2)
   | typ_sum T1 T2   => (typ_fv T1) \u (typ_fv T2)
   | typ_ref T1      => (typ_fv T1)
@@ -49,13 +49,13 @@ Fixpoint typ_fv (T : typ) {struct T} : vars :=
     rather consider defining exception as a sum of types.
     The exception type must be ground (no free type variable). *)
 
-Parameter typ_exn : typ. 
+Parameter typ_exn : typ.
 Parameter typ_exn_fresh : typ_fv typ_exn = \{}.
 
 (** Type schemes. *)
 
-Record sch : Set := Sch { 
-  sch_arity : nat ; 
+Record sch : Set := Sch {
+  sch_arity : nat ;
   sch_type  : typ }.
 
 (** Opening body of type schemes. *)
@@ -63,10 +63,10 @@ Record sch : Set := Sch {
 Fixpoint typ_open (T : typ) (Vs : list typ) {struct T} : typ :=
   match T with
   | typ_bvar i      => List.nth i Vs typ_def
-  | typ_fvar x      => typ_fvar x 
+  | typ_fvar x      => typ_fvar x
   | typ_arrow T1 T2 => typ_arrow (typ_open T1 Vs) (typ_open T2 Vs)
-  | typ_unit        => typ_unit  
-  | typ_nat         => typ_nat  
+  | typ_unit        => typ_unit
+  | typ_nat         => typ_nat
   | typ_prod T1 T2  => typ_prod (typ_open T1 Vs) (typ_open T2 Vs)
   | typ_sum T1 T2   => typ_sum (typ_open T1 Vs) (typ_open T2 Vs)
   | typ_ref T1      => typ_ref (typ_open T1 Vs)
@@ -74,23 +74,23 @@ Fixpoint typ_open (T : typ) (Vs : list typ) {struct T} : typ :=
 
 (** Opening body of type schemes with variables *)
 
-Definition typ_fvars := 
+Definition typ_fvars :=
   LibList.map typ_fvar.
 
-Definition typ_open_vars T Xs := 
+Definition typ_open_vars T Xs :=
   typ_open T (typ_fvars Xs).
 
 (** Instanciation of a type scheme *)
 
-Definition sch_open M := 
+Definition sch_open M :=
   typ_open (sch_type M).
 
-Definition sch_open_vars M := 
+Definition sch_open_vars M :=
   typ_open_vars (sch_type M).
-  
-Notation "M ^^ Vs" := (sch_open M Vs) 
+
+Notation "M ^^ Vs" := (sch_open M Vs)
   (at level 67, only parsing) : typ_scope.
-Notation "M ^ Xs" := 
+Notation "M ^ Xs" :=
   (sch_open_vars M Xs) (only parsing) : typ_scope.
 
 Bind Scope typ_scope with typ.
@@ -99,26 +99,26 @@ Open Scope typ_scope.
 (** Locally closed types *)
 
 Inductive type : typ -> Prop :=
-  | type_fvar : forall X, 
+  | type_fvar : forall X,
       type (typ_fvar X)
   | type_arrow : forall T1 T2,
-      type T1 -> 
-      type T2 -> 
+      type T1 ->
+      type T2 ->
       type (typ_arrow T1 T2)
-  | type_unit : 
+  | type_unit :
       type (typ_unit)
-  | type_nat : 
+  | type_nat :
       type (typ_nat)
   | type_prod : forall T1 T2,
-      type T1 -> 
-      type T2 -> 
+      type T1 ->
+      type T2 ->
       type (typ_prod T1 T2)
   | type_sum : forall T1 T2,
-      type T1 -> 
-      type T2 -> 
+      type T1 ->
+      type T2 ->
       type (typ_sum T1 T2)
   | type_ref : forall T1,
-      type T1 -> 
+      type T1 ->
       type (typ_ref T1).
 
 (** List of n locally closed types *)
@@ -128,7 +128,7 @@ Definition types := list_for_n type.
 (** Body of a scheme *)
 
 Definition typ_body n T :=
-  exists L, forall Xs, 
+  exists L, forall Xs,
   fresh L n Xs ->
   type (typ_open_vars T Xs).
 
@@ -194,7 +194,7 @@ Fixpoint pat_arity (p : pat) : nat :=
   | pat_pair p1 p2 => (pat_arity p1) + (pat_arity p2)
   | pat_inj1 p1    => (pat_arity p1)
   | pat_inj2 p1    => (pat_arity p1)
-  end. 
+  end.
 
 (** Pattern matching. *)
 
@@ -206,7 +206,7 @@ Fixpoint pat_match (p : pat) (t : trm) {struct p} : option (list trm) :=
   | pat_pair p1 p2, trm_pair t1 t2 => match (pat_match p1 t1), (pat_match p2 t2) with
                                       | Some r1, Some r2 => Some (r1 ++ r2)
                                       | _      , _       => None end
-  | pat_inj1 p1   , trm_inj1 t1    => (pat_match p1 t1) 
+  | pat_inj1 p1   , trm_inj1 t1    => (pat_match p1 t1)
   | pat_inj2 p1   , trm_inj2 t1    => (pat_match p1 t1)
   | _             , _              => None
   end.
@@ -224,7 +224,7 @@ Fixpoint opens_rec (k : nat) (us : list trm) (t : trm) {struct t} : trm :=
   | trm_abs t1    => trm_abs (opens_rec (S k) us t1)
   | trm_fix t1    => trm_fix (opens_rec (S k) us t1)
   | trm_let t1 t2 => trm_let (opens_rec k us t1) (opens_rec (S k) us t2)
-  | trm_match t1 p1 b t2 => trm_match (opens_rec k us t1) p1 
+  | trm_match t1 p1 b t2 => trm_match (opens_rec k us t1) p1
                                (opens_rec (S k) us b)
                                (opens_rec (S k) us t2)
   | trm_app t1 t2 => trm_app (opens_rec k us t1) (opens_rec k us t2)
@@ -232,8 +232,8 @@ Fixpoint opens_rec (k : nat) (us : list trm) (t : trm) {struct t} : trm :=
   | trm_nat n     => trm_nat n
   | trm_add       => trm_add
   | trm_pair t1 t2 => trm_pair (opens_rec k us t1) (opens_rec k us t2)
-  | trm_inj1 t1   => trm_inj1 (opens_rec k us t1) 
-  | trm_inj2 t1   => trm_inj2 (opens_rec k us t1) 
+  | trm_inj1 t1   => trm_inj1 (opens_rec k us t1)
+  | trm_inj2 t1   => trm_inj2 (opens_rec k us t1)
   | trm_loc l     => trm_loc l
   | trm_ref t1    => trm_ref (opens_rec k us t1)
   | trm_get t1    => trm_get (opens_rec k us t1)
@@ -256,42 +256,42 @@ Inductive term : trm -> Prop :=
   | term_var : forall x,
       term (trm_fvar x)
   | term_abs : forall L t1,
-      (forall x, fresh L 1 (x::nil) -> 
+      (forall x, fresh L 1 (x::nil) ->
         term (t1 ^ (x::nil))) ->
       term (trm_abs t1)
   | term_fix : forall L t1,
-      (forall f x, fresh L 2 (x::f::nil) -> 
+      (forall f x, fresh L 2 (x::f::nil) ->
         term (t1 ^ (x::f::nil))) ->
       term (trm_fix t1)
   | term_let : forall L t1 t2,
       term t1 ->
-      (forall x, fresh L 1 (x::nil) -> 
+      (forall x, fresh L 1 (x::nil) ->
         term (t2 ^ (x::nil))) ->
       term (trm_let t1 t2)
   | term_match : forall L t1 p b t2,
-      term t1 -> 
+      term t1 ->
       (forall xs, fresh L (pat_arity p) xs -> term (b ^ xs)) ->
       term t2 ->
       term (trm_match t1 p b t2)
   | term_app : forall t1 t2,
-      term t1 -> 
-      term t2 -> 
+      term t1 ->
+      term t2 ->
       term (trm_app t1 t2)
-  | term_unit : 
+  | term_unit :
       term (trm_unit)
   | term_nat : forall n,
       term (trm_nat n)
-  | term_add : 
+  | term_add :
       term (trm_add)
   | term_pair : forall t1 t2,
-      term t1 -> 
-      term t2 -> 
+      term t1 ->
+      term t2 ->
       term (trm_pair t1 t2)
   | term_inj1 : forall t1,
-      term t1 -> 
+      term t1 ->
       term (trm_inj1 t1)
   | term_inj2 : forall t1,
-      term t1 -> 
+      term t1 ->
       term (trm_inj2 t1)
   | term_loc : forall l,
       term (trm_loc l)
@@ -314,7 +314,7 @@ Inductive term : trm -> Prop :=
       term (trm_catch t1 t2).
 
 (** Definition of [bodys n t] as [t ^ xs] is a term when [|xs|=n] *)
-  
+
 Definition bodys n t :=
   exists L, forall xs,
   fresh L n xs -> term (t ^ xs).
@@ -331,7 +331,7 @@ Definition sto := LibEnv.env trm.
 Inductive sto_ok : sto -> Prop :=
   | sto_ok_empty : sto_ok empty
   | sto_ok_push : forall mu l t,
-      sto_ok mu -> term t -> 
+      sto_ok mu -> term t ->
       sto_ok (mu & l ~ t).
 
 (** Grammar of values *)
@@ -362,7 +362,7 @@ Inductive fails : trm -> trm -> Prop :=
       value t1 ->
       fails t2 e ->
       fails (trm_app t1 t2) e
-  | fails_let_1 : forall t1 t2 e, 
+  | fails_let_1 : forall t1 t2 e,
       bodys 1 t2 ->
       fails t1 e ->
       fails (trm_let t1 t2) e
@@ -370,8 +370,8 @@ Inductive fails : trm -> trm -> Prop :=
       term t2 ->
       fails t1 e ->
       fails (trm_pair t1 t2) e
-  | fails_pair_2 : forall t1 t2 e, 
-      value t1 -> 
+  | fails_pair_2 : forall t1 t2 e,
+      value t1 ->
       fails t2 e ->
       fails (trm_pair t1 t2) e
   | fails_inj_1 : forall t1 e,
@@ -413,19 +413,19 @@ Inductive red : conf -> conf -> Prop :=
 
   | red_beta : forall mu t1 t2,
       sto_ok mu ->
-      term (trm_abs t1) -> 
+      term (trm_abs t1) ->
       value t2 ->
       red (trm_app (trm_abs t1) t2, mu) (t1 ^^ (t2::nil), mu)
   | red_fix : forall mu t1 t2,
       sto_ok mu ->
-      term (trm_fix t1) -> 
+      term (trm_fix t1) ->
       value t2 ->
-      red (trm_app (trm_fix t1) t2, mu) 
+      red (trm_app (trm_fix t1) t2, mu)
           (t1 ^^ (t2::(trm_fix t1)::nil), mu)
-  | red_let : forall mu t1 t2, 
+  | red_let : forall mu t1 t2,
       sto_ok mu ->
       term (trm_let t1 t2) ->
-      value t1 -> 
+      value t1 ->
       red (trm_let t1 t2, mu) (t2 ^^ (t1::nil), mu)
   | red_match_some : forall ts mu t1 p b t2,
       sto_ok mu ->
@@ -444,7 +444,7 @@ Inductive red : conf -> conf -> Prop :=
 
   (* -- reduction of primitives -- *)
 
-  | red_add : forall mu n1 n2, 
+  | red_add : forall mu n1 n2,
       sto_ok mu ->
       red (trm_app (trm_app trm_add (trm_nat n1)) (trm_nat n2), mu)
           (trm_nat (n1 + n2), mu)
@@ -460,7 +460,7 @@ Inductive red : conf -> conf -> Prop :=
   | red_set : forall mu l t2,
       sto_ok mu ->
       value t2 ->
-      red (trm_set (trm_loc l) t2, mu) (trm_unit, mu & l ~ t2)  
+      red (trm_set (trm_loc l) t2, mu) (trm_unit, mu & l ~ t2)
   | red_catch_val : forall mu t1 t2,
       sto_ok mu ->
       term t1 ->
@@ -482,7 +482,7 @@ Inductive red : conf -> conf -> Prop :=
       value t1 ->
       red (t2, mu) (t2', mu') ->
       red (trm_app t1 t2, mu) (trm_app t1 t2', mu')
-  | red_match_1 : forall mu mu' t1 t1' p b t2, 
+  | red_match_1 : forall mu mu' t1 t1' p b t2,
       term t2 ->
       bodys (pat_arity p) b ->
       red (t1, mu) (t1', mu') ->
@@ -491,8 +491,8 @@ Inductive red : conf -> conf -> Prop :=
       term t2 ->
       red (t1, mu) (t1', mu') ->
       red (trm_pair t1 t2, mu) (trm_pair t1' t2, mu')
-  | red_pair_2 : forall mu mu' t1 t2 t2', 
-      value t1 -> 
+  | red_pair_2 : forall mu mu' t1 t2 t2',
+      value t1 ->
       red (t2, mu) (t2', mu') ->
       red (trm_pair t1 t2, mu) (trm_pair t1 t2', mu')
   | red_inj1_1 : forall mu mu' t1 t1',
@@ -534,7 +534,7 @@ Notation "c --> c'" := (red c c') (at level 68).
 
 Definition env := LibEnv.env sch.
 
-(** Typing environments mapping locations to types 
+(** Typing environments mapping locations to types
     and its well-formedness judgment *)
 
 Definition phi := LibEnv.env typ.
@@ -552,13 +552,13 @@ Inductive phi_ok : phi -> Prop :=
 
 Reserved Notation "Us \= p ~: T" (at level 69).
 
-Inductive pat_typing : list typ -> pat -> typ -> Prop := 
+Inductive pat_typing : list typ -> pat -> typ -> Prop :=
   | pat_typing_bvar : forall T,
      (T::nil) \= pat_bvar ~: T
   | pat_typing_wild : forall T,
      nil \= pat_wild ~: T
   | pat_typing_unit :
-     nil \= pat_unit ~: typ_unit 
+     nil \= pat_unit ~: typ_unit
   | pat_typing_pair : forall p1 p2 T1 T2 Us1 Us2,
      Us1 \= p1 ~: T1 ->
      Us2 \= p2 ~: T2 ->
@@ -578,40 +578,40 @@ where "Ts \= p ~: T" := (pat_typing Ts p T).
 Reserved Notation "E ! P |= t ~: T" (at level 69).
 
 Inductive typing : env -> phi -> trm -> typ -> Prop :=
-  | typing_var : forall E P x M Us, 
+  | typing_var : forall E P x M Us,
       ok E -> phi_ok P ->
-      binds x M E -> 
+      binds x M E ->
       types (sch_arity M) Us ->
       scheme M ->
       E ! P |= (trm_fvar x) ~: (M ^^ Us)
   | typing_abs : forall L E P U T t1,
-      type U -> 
-      (forall x, fresh L 1 (x::nil) -> 
+      type U ->
+      (forall x, fresh L 1 (x::nil) ->
        (E & x ~ Sch 0 U) ! P |= t1 ^ (x::nil) ~: T) ->
       E ! P |= (trm_abs t1) ~: (typ_arrow U T)
   | typing_fix : forall L E P U T t1,
-      type U -> 
-      (forall f x, fresh L 2 (x::f::nil) -> 
+      type U ->
+      (forall f x, fresh L 2 (x::f::nil) ->
         (E & f ~ Sch 0 (typ_arrow U T) & x ~ Sch 0 U) ! P |= t1 ^ (x::f::nil) ~: T) ->
       E ! P |= (trm_fix t1) ~: (typ_arrow U T)
-  | typing_let : forall M L1 L2 E P T2 t1 t2, 
-      value t1 -> 
+  | typing_let : forall M L1 L2 E P T2 t1 t2,
+      value t1 ->
       scheme M ->
       (forall Xs, fresh L1 (sch_arity M) Xs ->
          E ! P |= t1 ~: (M ^ Xs)) ->
-      (forall x, fresh L2 1 (x::nil) -> 
-         (E & x ~ M) ! P |= (t2 ^ (x::nil)) ~: T2) -> 
+      (forall x, fresh L2 1 (x::nil) ->
+         (E & x ~ M) ! P |= (t2 ^ (x::nil)) ~: T2) ->
       E ! P |= (trm_let t1 t2) ~: T2
   | typing_match : forall T Us L R E P t1 p b t2,
       E ! P |= t1 ~: T ->
       Us \= p ~: T ->
-      (forall xs, fresh L (pat_arity p) xs -> 
+      (forall xs, fresh L (pat_arity p) xs ->
         (E & (xs ~* (LibList.map (Sch 0) Us))) ! P |= (b ^ xs) ~: R) ->
-      E ! P |= t2 ~: R -> 
+      E ! P |= t2 ~: R ->
       E ! P |= (trm_match t1 p b t2) ~: R
-  | typing_app : forall E P S T t1 t2, 
+  | typing_app : forall E P S T t1 t2,
       E ! P |= t1 ~: (typ_arrow S T) ->
-      E ! P |= t2 ~: S ->   
+      E ! P |= t2 ~: S ->
       E ! P |= (trm_app t1 t2) ~: T
   | typing_unit : forall E P,
       ok E -> phi_ok P ->
@@ -623,19 +623,19 @@ Inductive typing : env -> phi -> trm -> typ -> Prop :=
       ok E -> phi_ok P ->
       E ! P |= trm_add ~: (typ_arrow typ_nat (typ_arrow typ_nat typ_nat))
   | typing_pair : forall E P t1 t2 T1 T2,
-      E ! P |= t1 ~: T1 -> 
+      E ! P |= t1 ~: T1 ->
       E ! P |= t2 ~: T2 ->
       E ! P |= (trm_pair t1 t2) ~: (typ_prod T1 T2)
   | typing_inj1 : forall T2 E P t1 T1,
       type T2 ->
-      E ! P |= t1 ~: T1 -> 
+      E ! P |= t1 ~: T1 ->
       E ! P |= (trm_inj1 t1) ~: (typ_sum T1 T2)
   | typing_inj2 : forall T1 E P t1 T2,
       type T1 ->
-      E ! P |= t1 ~: T2 -> 
+      E ! P |= t1 ~: T2 ->
       E ! P |= (trm_inj2 t1) ~: (typ_sum T1 T2)
   | typing_loc : forall E P l T,
-      ok E -> phi_ok P -> 
+      ok E -> phi_ok P ->
       binds l T P ->
       E ! P |= (trm_loc l) ~: (typ_ref T)
   | typing_ref : forall E P t1 T,
@@ -663,9 +663,9 @@ where "E ! P |= t ~: T" := (typing E P t T).
 
 Definition sto_typing P mu :=
      phi_ok P
-  /\ sto_ok mu 
+  /\ sto_ok mu
   /\ (forall l, l # mu -> l # P)
-  /\ (forall l T, binds l T P -> 
+  /\ (forall l T, binds l T P ->
         exists t, binds l t mu
                /\ empty ! P |= t ~: T).
 
@@ -685,7 +685,7 @@ Definition preservation := forall P t t' mu mu' T,
   empty ! P |= t ~: T ->
   (t,mu) --> (t',mu') ->
   P |== mu ->
-  exists P', 
+  exists P',
      extends P P'
   /\ empty ! P' |= t' ~: T
   /\ P' |== mu'.
@@ -696,10 +696,10 @@ Definition preservation := forall P t t' mu mu' T,
     exists a term t' and a store mu' such that the configuration
     (t,mu) reduces to the configuration (t',mu'). *)
 
-Definition progress := forall P t mu T, 
+Definition progress := forall P t mu T,
   empty ! P |= t ~: T ->
   P |== mu ->
-     value t 
+     value t
   \/ (exists e, fails t e)
   \/ (exists t', exists mu', (t,mu) --> (t',mu')).
 

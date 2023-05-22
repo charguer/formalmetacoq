@@ -22,17 +22,17 @@ Implicit Types r : res.
 
 (** [result n r o] asserts that it is correct for
     the interpreter to return the result [r] when
-    run with max-recursion depth [n] for a term 
+    run with max-recursion depth [n] for a term
     whose real behavior is [o]. *)
 
 Definition result n r o :=
-  match o with  
+  match o with
   | out_ter m b => r = b \/ (r = res_bottom /\ n <= m)
   | out_div => r = res_bottom
   end.
 
 Definition correct_and_complete :=
-  forall n t r o, 
+  forall n t r o,
     run n t = r -> cred t o -> result n r o.
 
 
@@ -71,14 +71,14 @@ Qed.
     and [if_fault]   when taking [i=false] *)
 
 Lemma if_result : forall (i:bool) n r o1 r1 o k,
-  result n r1 o1 -> 
+  result n r1 o1 ->
   (if i then if_success else if_fault) r1 k = r ->
   faster o1 o ->
   (match o1 with
-   | out_ter _ (beh_ret v1) => 
+   | out_ter _ (beh_ret v1) =>
       if i then result (S n) (k v1) o else before o1 o
-   | out_ter _ (beh_exn v1) => 
-      if i then before o1 o else result (S n) (k v1) o  
+   | out_ter _ (beh_exn v1) =>
+      if i then before o1 o else result (S n) (k v1) o
    | out_ter _ _ => before o1 o
    | out_div => o = out_div
    end) ->
@@ -91,7 +91,7 @@ Proof.
       destruct i. subst~. inverts M. unfolds. left~.
       destruct i. inverts M. unfolds. left~. subst~.
       inverts M. unfolds. left. destruct~ i.
-    subst r1 r. unfolds. destruct i; 
+    subst r1 r. unfolds. destruct i;
      (destruct o; [ inverts~ F | auto ]).
   subst o r1 r. unfolds. destruct~ i.
 Qed.
@@ -115,7 +115,7 @@ Proof.
    applys~ if_success_result M1 U. inverts R2 as.
      introv A B. inverts A; inverts B; inverts L2; inverts~ L1.
      introv R3 R4 [L4 L3]. forwards~ M2: IH R3.
-     applys if_success_result M2. auto. 
+     applys if_success_result M2. auto.
        destruct o0; inverts L3; inverts~ L2.
      inverts R4 as.
        introv A B. inverts A; inverts B;
@@ -137,8 +137,8 @@ Proof.
    applys~ if_success_result M1 U. inverts R2 as.
      introv A B. inverts A; inverts B; inverts L2; inverts~ L1.
      inverts L2. inverts~ L1.
-  inverts* R. 
-Qed. 
+  inverts* R.
+Qed.
 
 
 (************************************************************)
@@ -147,7 +147,7 @@ Qed.
 Corollary correct_ter : forall n t b,
   run n t = b -> credbeh t b.
 Proof.
-  introv U. lets (o&R): (cred_full t). 
+  introv U. lets (o&R): (cred_full t).
   forwards M: specification U R.
   destruct o; tryfalse.
   destruct M as [E|[? ?]]; tryfalse.
@@ -184,20 +184,20 @@ Qed.
 (* ** Corollaries, formulated as equivalences *)
 
 Corollary specification_ter : forall t b,
-     (exists m, forall n, n > m -> run n t = b) 
+     (exists m, forall n, n > m -> run n t = b)
   <-> credbeh t b.
-Proof. 
+Proof.
   iff (n&?).
   applys* correct_ter (S n). applys* H. math.
-  applys* complete_ter. exists* n.  
+  applys* complete_ter. exists* n.
 Qed.
 
 Corollary specification_div : forall t,
-      (forall n, run n t = res_bottom) 
+      (forall n, run n t = res_bottom)
   <-> cdiverge t.
-Proof. 
-  iff. 
-  applys* correct_div. 
-  intros. applys* complete_div. 
+Proof.
+  iff.
+  applys* correct_div.
+  intros. applys* complete_div.
 Qed.
 

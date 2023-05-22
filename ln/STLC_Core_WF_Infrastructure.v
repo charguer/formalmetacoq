@@ -4,7 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN STLC_Core_WF_Definitions.
+From TLC Require Import LibLN.
+Require Import STLC_Core_WF_Definitions.
 
 (* ********************************************************************** *)
 (** ** Additional Definitions used in the Proofs *)
@@ -68,7 +69,7 @@ Lemma open_rec_term_core :forall t j v i u, i <> j ->
   {j ~> v}t = {i ~> u}({j ~> v}t) -> t = {i ~> u}t.
 Proof.
   induction t; introv Neq Equ;
-  simpl in *; inversion* Equ; f_equal*.  
+  simpl in *; inversion* Equ; f_equal*.
   case_nat*. case_nat*.
 Qed.
 
@@ -81,15 +82,15 @@ Qed.
 
 (** Substitution for a fresh name is identity. *)
 
-Lemma subst_fresh : forall x t u, 
+Lemma subst_fresh : forall x t u,
   x \notin fv t ->  [x ~> u] t = t.
 Proof.
-  intros. induction t; simpls; f_equal*. case_var*. 
+  intros. induction t; simpls; f_equal*. case_var*.
 Qed.
 
 (** Substitution distributes on the open operation. *)
 
-Lemma subst_open : forall x u t1 t2, term u -> 
+Lemma subst_open : forall x u t1 t2, term u ->
   [x ~> u] (t1 ^^ t2) = ([x ~> u]t1) ^^ ([x ~> u]t2).
 Proof.
   intros. unfold open. generalize 0.
@@ -109,7 +110,7 @@ Qed.
 (** Opening up an abstraction of body t with a term u is the same as opening
   up the abstraction with a fresh name x and then substituting u for x. *)
 
-Lemma subst_intro : forall x t u, 
+Lemma subst_intro : forall x t u,
   x \notin (fv t) -> term u ->
   t ^^ u = [x ~> u](t ^ x).
 Proof.
@@ -139,7 +140,7 @@ Hint Resolve subst_term.
 
 (** Conversion from locally closed abstractions and bodies *)
 
-Lemma term_abs_to_body : forall t1, 
+Lemma term_abs_to_body : forall t1,
   term (trm_abs t1) -> body t1.
 Proof.
   intros. unfold body. inversion* H.
@@ -174,7 +175,7 @@ Lemma typing_regular : forall E e T,
   typing E e T -> ok E /\ term e.
 Proof.
   split; induction H; autos*.
-  pick_fresh y. forwards~ K: (H0 y). 
+  pick_fresh y. forwards~ K: (H0 y).
 Qed.
 
 (** The value predicate only holds on locally-closed terms. *)

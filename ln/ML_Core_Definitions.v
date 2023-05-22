@@ -4,7 +4,8 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN List.
+From Coq Require Import List.
+From TLC Require Import LibLN.
 
 (* ********************************************************************** *)
 (** ** Description of types *)
@@ -22,8 +23,8 @@ Definition typ_def := typ_bvar 0.
 
 (** Type schemes. *)
 
-Record sch : Set := Sch { 
-  sch_arity : nat ; 
+Record sch : Set := Sch {
+  sch_arity : nat ;
   sch_type  : typ }.
 
 (** Opening body of type schemes. *)
@@ -31,29 +32,29 @@ Record sch : Set := Sch {
 Fixpoint typ_open (T : typ) (Vs : list typ) {struct T} : typ :=
   match T with
   | typ_bvar i      => nth i Vs typ_def
-  | typ_fvar x      => typ_fvar x 
+  | typ_fvar x      => typ_fvar x
   | typ_arrow T1 T2 => typ_arrow (typ_open T1 Vs) (typ_open T2 Vs)
   end.
 
 (** Opening body of type schemes with variables *)
 
-Definition typ_fvars := 
+Definition typ_fvars :=
   List.map typ_fvar.
 
-Definition typ_open_vars T Xs := 
+Definition typ_open_vars T Xs :=
   typ_open T (typ_fvars Xs).
 
 (** Instanciation of a type scheme *)
 
-Definition sch_open M := 
+Definition sch_open M :=
   typ_open (sch_type M).
 
-Definition sch_open_vars M := 
+Definition sch_open_vars M :=
   typ_open_vars (sch_type M).
-  
-Notation "M ^^ Vs" := (sch_open M Vs) 
+
+Notation "M ^^ Vs" := (sch_open M Vs)
   (at level 67, only parsing) : typ_scope.
-Notation "M ^ Xs" := 
+Notation "M ^ Xs" :=
   (sch_open_vars M Xs) (only parsing) : typ_scope.
 
 Bind Scope typ_scope with typ.
@@ -62,11 +63,11 @@ Open Scope typ_scope.
 (** Locally closed types *)
 
 Inductive type : typ -> Prop :=
-  | type_fvar : forall X, 
+  | type_fvar : forall X,
       type (typ_fvar X)
   | type_arrow : forall T1 T2,
-      type T1 -> 
-      type T2 -> 
+      type T1 ->
+      type T2 ->
       type (typ_arrow T1 T2).
 
 (** List of n locally closed types *)
@@ -76,7 +77,7 @@ Definition types := list_for_n type.
 (** Body of a scheme *)
 
 Definition typ_body n T :=
-  exists L, forall Xs, 
+  exists L, forall Xs,
   fresh L n Xs ->
   type (typ_open_vars T Xs).
 
@@ -103,9 +104,9 @@ Inductive trm : Set :=
 Fixpoint trm_open_rec (k : nat) (u : trm) (t : trm) {struct t} : trm :=
   match t with
   | trm_bvar i    => If k = i then u else (trm_bvar i)
-  | trm_fvar x    => trm_fvar x 
-  | trm_abs t1    => trm_abs (trm_open_rec (S k) u t1) 
-  | trm_let t1 t2 => trm_let (trm_open_rec k u t1) (trm_open_rec (S k) u t2) 
+  | trm_fvar x    => trm_fvar x
+  | trm_abs t1    => trm_abs (trm_open_rec (S k) u t1)
+  | trm_let t1 t2 => trm_let (trm_open_rec k u t1) (trm_open_rec (S k) u t2)
   | trm_app t1 t2 => trm_app (trm_open_rec k u t1) (trm_open_rec k u t2)
   end.
 
@@ -118,18 +119,18 @@ Notation "t ^ x" := (trm_open t (trm_fvar x)).
 (** Locally closed termessions *)
 
 Inductive term : trm -> Prop :=
-  | term_var : forall x, 
+  | term_var : forall x,
       term (trm_fvar x)
   | term_abs : forall L t1,
-      (forall x, x \notin L -> term (t1 ^ x)) -> 
+      (forall x, x \notin L -> term (t1 ^ x)) ->
       term (trm_abs t1)
   | term_let : forall L t1 t2,
-      term t1 -> 
-      (forall x, x \notin L -> term (t2 ^ x)) -> 
+      term t1 ->
+      (forall x, x \notin L -> term (t2 ^ x)) ->
       term (trm_let t1 t2)
   | term_app : forall t1 t2,
-      term t1 -> 
-      term t2 -> 
+      term t1 ->
+      term t2 ->
       term (trm_app t1 t2).
 
 (** Definition of the body of an abstraction *)
@@ -150,25 +151,25 @@ Definition env := env sch.
 Reserved Notation "E |= t ~: T" (at level 69).
 
 Inductive typing : env -> trm -> typ -> Prop :=
-  | typing_var : forall E x M Us, 
-      ok E -> 
-      binds x M E -> 
+  | typing_var : forall E x M Us,
+      ok E ->
+      binds x M E ->
       types (sch_arity M) Us ->
       scheme M ->
       E |= (trm_fvar x) ~: (M ^^ Us)
-  | typing_abs : forall L E U T t1, 
+  | typing_abs : forall L E U T t1,
       type U ->
-      (forall x, x \notin L -> 
-        (E & x ~ Sch 0 U) |= (t1 ^ x) ~: T) -> 
+      (forall x, x \notin L ->
+        (E & x ~ Sch 0 U) |= (t1 ^ x) ~: T) ->
       E |= (trm_abs t1) ~: (typ_arrow U T)
-  | typing_let : forall M L1 L2 E T2 t1 t2, 
+  | typing_let : forall M L1 L2 E T2 t1 t2,
       (forall Xs, fresh L1 (sch_arity M) Xs ->
          E |= t1 ~: (M ^ Xs)) ->
-      (forall x, x \notin L2 -> (E & x ~ M) |= (t2 ^ x) ~: T2) -> 
+      (forall x, x \notin L2 -> (E & x ~ M) |= (t2 ^ x) ~: T2) ->
       E |= (trm_let t1 t2) ~: T2
-  | typing_app : forall E S T t1 t2, 
+  | typing_app : forall E S T t1 t2,
       E |= t1 ~: (typ_arrow S T) ->
-      E |= t2 ~: S ->   
+      E |= t2 ~: S ->
       E |= (trm_app t1 t2) ~: T
 
 where "E |= t ~: T" := (typing E t T).
@@ -185,27 +186,27 @@ Inductive value : trm -> Prop :=
 (** Reduction rules *)
 
 Inductive red : trm -> trm -> Prop :=
-  | red_abs : forall t1 t2, 
-      term (trm_abs t1) -> 
-      value t2 ->  
+  | red_abs : forall t1 t2,
+      term (trm_abs t1) ->
+      value t2 ->
       red (trm_app (trm_abs t1) t2) (t1 ^^ t2)
-  | red_let : forall t1 t2, 
+  | red_let : forall t1 t2,
       term (trm_let t1 t2) ->
-      value t1 -> 
+      value t1 ->
       red (trm_let t1 t2) (t2 ^^ t1)
-  | red_let_1 : forall t1 t1' t2, 
+  | red_let_1 : forall t1 t1' t2,
       term_body t2 ->
-      red t1 t1' -> 
+      red t1 t1' ->
       red (trm_let t1 t2) (trm_let t1' t2)
   | red_app_1 : forall t1 t1' t2,
       term t2 ->
-      red t1 t1' -> 
+      red t1 t1' ->
       red (trm_app t1 t2) (trm_app t1' t2)
-  | red_app_2 : forall t1 t2 t2', 
+  | red_app_2 : forall t1 t2 t2',
       value t1 ->
       red t2 t2' ->
       red (trm_app t1 t2) (trm_app t1 t2').
-                  
+
 Notation "t --> t'" := (red t t') (at level 68).
 
 
@@ -219,7 +220,7 @@ Definition preservation := forall E t t' T,
   t --> t' ->
   E |= t' ~: T.
 
-Definition progress := forall t T, 
+Definition progress := forall t T,
   empty |= t ~: T ->
-     value t 
+     value t
   \/ exists t', t --> t'.

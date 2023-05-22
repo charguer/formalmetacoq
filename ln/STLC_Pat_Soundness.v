@@ -4,9 +4,9 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import List LibLN 
-  STLC_Pat_Definitions 
-  STLC_Pat_Infrastructure.
+From Coq Require Import List.
+From TLC Require Import LibLN.
+Require Import STLC_Pat_Definitions STLC_Pat_Infrastructure.
 
 
 (* ********************************************************************** *)
@@ -15,16 +15,16 @@ Require Import List LibLN
 (** Typing is preserved by weakening. *)
 
 Lemma typing_weaken : forall G E F t T,
-   (E & G) |= t ~: T -> 
+   (E & G) |= t ~: T ->
    ok (E & F & G) ->
    (E & F & G) |= t ~: T.
 Proof.
-  introv Typ. inductions Typ with gen_eq H:(E & G) 
+  introv Typ. inductions Typ with gen_eq H:(E & G)
    and gen G, introv end; introv Ok.
   apply* typing_var. apply* binds_weaken.
-  apply_fresh* typing_abs. 
+  apply_fresh* typing_abs.
    do_rew* concat_assoc (apply* H0).
-  apply_fresh* typing_let as xs. 
+  apply_fresh* typing_let as xs.
     do_rew* concat_assoc (apply* H1).
   autos*.
   autos*.
@@ -42,7 +42,7 @@ Proof.
   case_var.
     binds_get H0. apply_empty* typing_weaken.
     binds_cases H0; apply* typing_var.
-  apply_fresh typing_abs. 
+  apply_fresh typing_abs.
    rewrite* subst_open_vars.
    do_rew concat_assoc (apply* H0).
   apply_fresh* typing_let as xs.
@@ -60,10 +60,10 @@ Lemma typing_substs : forall Us E xs ts t T,
    E & (iter_push xs Us) |= t ~: T ->
    E |= substs xs ts t ~: T.
 Proof.
-  intros Us E xs. inductions xs with gen Us E end; 
+  intros Us E xs. inductions xs with gen Us E end;
    simpl; introv Le Typts Typt. auto.
-  destruct ts; simpls; inversions Le. inversions Typts. 
-  rewrite iter_push_cons in Typt. 
+  destruct ts; simpls; inversions Le. inversions Typts.
+  rewrite iter_push_cons in Typt.
   rewrite <- concat_assoc in Typt.
   apply* (@IHxs Us0).
   apply* typing_subst.
@@ -113,24 +113,24 @@ Proof.
   (* todo : prouver que :
   pat_typing Us p T ->   (* induction l dessus *)
   binds p ns ->
-  empty |= v ~: T -> 
+  empty |= v ~: T ->
   value v ->
   exists ms, .
 
 
    *)
-  
+
 Admitted.
 
-(** Progress (a well-typed term is either a value or it can 
+(** Progress (a well-typed term is either a value or it can
   take a step of reduction). *)
 
 Lemma progress_result : progress.
 Proof.
   introv Typ. lets Typ': Typ.
   inductions Typ with gen_eq E:(empty:env).
-  false. 
-  left*. 
+  false.
+  left*.
   right. destruct~ IHTyp as [Val1 | [t1' Red1]].
     destruct~ (@matching_successful p1 Us t1 T) as [vs Eq].
      exists~ (t2 ^^ vs).
@@ -138,8 +138,8 @@ Proof.
   right. destruct~ IHTyp1 as [Val1 | [t1' Red1]].
     destruct~ IHTyp2 as [Val2 | [t2' Red2]].
       inversions Typ1; inversions Val1.
-       exists* (t0 ^^ (t2::nil)). 
-      exists* (trm_app t1 t2'). 
+       exists* (t0 ^^ (t2::nil)).
+      exists* (trm_app t1 t2').
     exists* (trm_app t1' t2).
   destruct~ IHTyp1 as [Val1 | [t1' Red1]].
     destruct~ IHTyp2 as [Val2 | [t2' Red2]].

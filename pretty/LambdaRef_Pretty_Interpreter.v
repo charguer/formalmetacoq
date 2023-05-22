@@ -62,38 +62,38 @@ Inductive red : mem -> ctx -> ext -> out -> Prop :=
   | red_abs : forall m c x t,
       red m c (trm_abs x t) (out_ter m (val_clo c x t))
   | red_app : forall o1 o m c t1 t2,
-      red m c t1 o1 -> 
-      red m c (ext_app_1 o1 t2) o -> 
+      red m c t1 o1 ->
+      red m c (ext_app_1 o1 t2) o ->
       red m c (trm_app t1 t2) o
   | red_app_1 : forall o2 o m m0 c v1 t2,
-      red m c t2 o2 -> 
-      red m c (ext_app_2 v1 o2) o -> 
+      red m c t2 o2 ->
+      red m c (ext_app_2 v1 o2) o ->
       red m0 c (ext_app_1 (out_ter m v1) t2) o
   | red_app_2 : forall o m c m0 c0 v2 x t3,
-      red m (c & x ~~ v2) t3 o -> 
+      red m (c & x ~~ v2) t3 o ->
       red m0 c0 (ext_app_2 (val_clo c x t3) (out_ter m v2)) o
   | red_new : forall o1 o m c t1,
-      red m c t1 o1 -> 
-      red m c (ext_new_1 o1) o -> 
+      red m c t1 o1 ->
+      red m c (ext_new_1 o1) o ->
       red m c (trm_new t1) o
   | red_new_1 : forall l m' m m0 c v,
       l = fresh_for m ->
-      m' = Heap.write m l v ->      
+      m' = Heap.write m l v ->
       red m0 c (ext_new_1 (out_ter m v)) (out_ter m' (val_loc l))
   | red_get : forall o1 o m c t1,
-      red m c t1 o1 -> 
-      red m c (ext_get_1 o1) o -> 
+      red m c t1 o1 ->
+      red m c (ext_get_1 o1) o ->
       red m c (trm_get t1) o
   | red_get_1 : forall l m c m0 v,
-      Heap.binds m l v ->      
+      Heap.binds m l v ->
       red m0 c (ext_get_1 (out_ter m (val_loc l))) (out_ter m v)
   | red_set : forall o1 o m c t1 t2,
-      red m c t1 o1 -> 
-      red m c (ext_set_1 o1 t2) o -> 
+      red m c t1 o1 ->
+      red m c (ext_set_1 o1 t2) o ->
       red m c (trm_set t1 t2) o
   | red_set_1 : forall o2 o m c m0 v1 t2,
-      red m c t2 o2 -> 
-      red m c (ext_set_2 v1 o2) o -> 
+      red m c t2 o2 ->
+      red m c (ext_set_2 v1 o2) o ->
       red m0 c (ext_set_1 (out_ter m v1) t2) o
   | red_set_2 : forall l m' m c m0 v,
       Heap.indom m l ->
@@ -117,38 +117,38 @@ Inductive redh : nat -> mem -> ctx -> ext -> out -> Prop :=
   | redh_abs : forall n m c x t,
       redh (S n) m c (trm_abs x t) (out_ter m (val_clo c x t))
   | redh_app : forall n o1 o m c t1 t2,
-      redh n m c t1 o1 -> 
-      redh n m c (ext_app_1 o1 t2) o -> 
+      redh n m c t1 o1 ->
+      redh n m c (ext_app_1 o1 t2) o ->
       redh (S n) m c (trm_app t1 t2) o
   | redh_app_1 : forall n o2 o m m0 c v1 t2,
-      redh n m c t2 o2 -> 
-      redh n m c (ext_app_2 v1 o2) o -> 
+      redh n m c t2 o2 ->
+      redh n m c (ext_app_2 v1 o2) o ->
       redh (S n) m0 c (ext_app_1 (out_ter m v1) t2) o
   | redh_app_2 : forall n o m c m0 c0 v2 x t3,
-      redh n m (c & x ~~ v2) t3 o -> 
+      redh n m (c & x ~~ v2) t3 o ->
       redh (S n) m0 c0 (ext_app_2 (val_clo c x t3) (out_ter m v2)) o
   | redh_new : forall n o1 o m c t1,
-      redh n m c t1 o1 -> 
-      redh n m c (ext_new_1 o1) o -> 
+      redh n m c t1 o1 ->
+      redh n m c (ext_new_1 o1) o ->
       redh (S n) m c (trm_new t1) o
   | redh_new_1 : forall n l m' m c m0 v,
       l = fresh_for m ->
-      m' = Heap.write m l v ->      
+      m' = Heap.write m l v ->
       redh (S n) m0 c (ext_new_1 (out_ter m v)) (out_ter m' (val_loc l))
   | redh_get : forall n o1 o m c t1,
-      redh n m c t1 o1 -> 
-      redh n m c (ext_get_1 o1) o -> 
+      redh n m c t1 o1 ->
+      redh n m c (ext_get_1 o1) o ->
       redh (S n) m c (trm_get t1) o
   | redh_get_1 : forall n l m c m0 v,
-      Heap.binds m l v ->      
+      Heap.binds m l v ->
       redh (S n) m0 c (ext_get_1 (out_ter m (val_loc l))) (out_ter m v)
   | redh_set : forall n o1 o m c t1 t2,
-      redh n m c t1 o1 -> 
-      redh n m c (ext_set_1 o1 t2) o -> 
+      redh n m c t1 o1 ->
+      redh n m c (ext_set_1 o1 t2) o ->
       redh (S n) m c (trm_set t1 t2) o
   | redh_set_1 : forall n o2 o m c m0 v1 t2,
-      redh n m c t2 o2 -> 
-      redh n m c (ext_set_2 v1 o2) o -> 
+      redh n m c t2 o2 ->
+      redh n m c (ext_set_2 v1 o2) o ->
       redh (S n) m0 c (ext_set_1 (out_ter m v1) t2) o
   | redh_set_2 : forall n l m' m c m0 v,
       Heap.indom m l ->
@@ -161,7 +161,7 @@ Hint Extern 1 (_ < _) => math.
 Lemma redh_lt : forall n n' m c e o,
   redh n m c e o -> n < n' -> redh n' m c e o.
 Proof.
-  introv H. gen n'. induction H; introv L; 
+  introv H. gen n'. induction H; introv L;
    (destruct n' as [|n']; [ false; math | autos* ]).
 Qed.
 
@@ -220,34 +220,34 @@ Definition if_isloc (v:trm) (k:loc->res) : res :=
   end.
 
 Fixpoint run (n:nat) (m:mem) (c:ctx) (t:trm) : res :=
-  match n with 
+  match n with
   | O => res_bottom
-  | S n' => 
+  | S n' =>
     let run' := run n' in
     let ret := res_return m in
     match t with
     | trm_val v => ret v
-    | trm_var x => 
+    | trm_var x =>
        if_true (decide (x \in EnvOps.dom c)) (fun _ =>
          ret (get_or_arbitrary x c))
     | trm_abs x t1 => ret (val_clo c x t1)
-    | trm_app t1 t2 => 
+    | trm_app t1 t2 =>
        if_success (run' m c t1) (fun m1 v1 =>
          if_success (run' m1 c t2) (fun m2 v2 =>
            if_isclo v1 (fun c' x t3 =>
              run' m2 (c' & x ~~ v2) t3)))
-    | trm_new t1 => 
+    | trm_new t1 =>
        if_success (run' m c t1) (fun m1 v1 =>
          let l := fresh_for m1 in
          let m2 := Heap.write m1 l v1 in
          res_return m2 (val_loc l))
-    | trm_get t1 => 
+    | trm_get t1 =>
        if_success (run' m c t1) (fun m1 v1 =>
          if_isloc v1 (fun l =>
            let v := Heap.read m1 l in
            if_true (decide (indom m1 l)) (fun _ =>
              res_return m1 v)))
-    | trm_set t1 t2 => 
+    | trm_set t1 t2 =>
        if_success (run' m c t1) (fun m1 v1 =>
          if_success (run' m1 c t2) (fun m2 v2 =>
            if_isloc v1 (fun l =>
@@ -281,12 +281,12 @@ Lemma redh_not_div : forall n m c e,
 Proof. intro n ; induction* n ; introv H ; inverts* H. Qed.
 
 Lemma runh_complete_ter : forall n m c t m' v,
-  redh n m c t (out_ter m' v) -> 
-  forall k, k > n -> 
+  redh n m c t (out_ter m' v) ->
+  forall k, k > n ->
     run k m c t = res_return m' v.
 Proof.
   induction n using peano_induction.
-  introv R L. destruct k. math. 
+  introv R L. destruct k. math.
   asserts IH: (
     forall m0 c t m' v n',
     redh n' m0 c t (out_ter m' v) ->
@@ -306,21 +306,21 @@ Proof.
   introv R1 R2. inverts R2 as. rewrites~ (>> IH R1).
   introv R1 R2. inverts R2 as B.
    rewrites~ (>> IH R1). simpl.
-   erewrite if_true_elim; eauto. 
+   erewrite if_true_elim; eauto.
      fequals_rec. applys (binds_read B).
      rewrite istrue_decide. applys* @LibHeap.binds_indom.
   introv R1 R2. inverts R2 as R2 R3. inverts R3 as R3.
    rewrites~ (>> IH R1). simpl.
-   rewrites~ (>> IH R2). 
+   rewrites~ (>> IH R2).
 Qed.
 
 Theorem run_complete_ter : forall m c t m' v,
-  red m c t (out_ter m' v) -> 
-  exists n0, forall n, n > n0 -> 
+  red m c t (out_ter m' v) ->
+  exists n0, forall n, n > n0 ->
     run n m c t = res_return m' v.
 Proof.
   introv H. lets (n0&R): red_redh (rm H).
-  exists n0. introv L. 
+  exists n0. introv L.
   applys~ runh_complete_ter R.
 Qed.
 

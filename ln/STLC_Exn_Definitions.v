@@ -4,7 +4,7 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN.
+From TLC Require Import LibLN.
 
 (** Grammar of types. *)
 
@@ -34,7 +34,7 @@ Fixpoint open_rec (k : nat) (u : trm) (t : trm) {struct t} : trm :=
   | trm_abs t1    => trm_abs (open_rec (S k) u t1)
   | trm_app t1 t2 => trm_app (open_rec k u t1) (open_rec k u t2)
   | trm_raise t1  => trm_raise (open_rec k u t1)
-  | trm_catch t1 t2 => trm_catch (open_rec k u t1) (open_rec k u t2) 
+  | trm_catch t1 t2 => trm_catch (open_rec k u t1) (open_rec k u t2)
   end.
 
 Definition open t u := open_rec 0 u t.
@@ -118,7 +118,7 @@ Inductive fails : trm -> trm -> Prop :=
 
 Inductive red : trm -> trm -> Prop :=
   | red_beta : forall t1 t2,
-      term (trm_abs t1) -> 
+      term (trm_abs t1) ->
       value t2 ->
       red (trm_app (trm_abs t1) t2) (t1 ^^ t2)
   | red_app_1 : forall t1 t1' t2,
@@ -154,9 +154,9 @@ Definition preservation := forall E t t' T,
   t --> t' ->
   E |= t' ~: T.
 
-Definition progress := forall t T, 
+Definition progress := forall t T,
   empty |= t ~: T ->
-     value t 
+     value t
   \/ (exists e, fails t e)
   \/ (exists t', t --> t').
 

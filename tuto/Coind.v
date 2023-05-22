@@ -1,5 +1,5 @@
 Set Implicit Arguments.
-Require Import LibTactics.
+From TLC Require Import LibTactics.
 
 
 (*****************************************************)
@@ -18,12 +18,12 @@ Notation "x ::: s" := (stream_cons x s) (at level 60).
 
 (** Simple definition *)
 
-CoFixpoint nat_stream_1 n := 
+CoFixpoint nat_stream_1 n :=
   n ::: (nat_stream_1 (S n)).
 
 (** Definition with [let] *)
 
-CoFixpoint nat_stream_2 n := 
+CoFixpoint nat_stream_2 n :=
   let s' := nat_stream_2 (S n) in
   n ::: s'.
 
@@ -31,7 +31,7 @@ CoFixpoint nat_stream_2 n :=
 
 Definition bind (P Q:Type) (x:P) (f:P->Q) : Q := f x.
 
-CoFixpoint nat_stream_3 n := 
+CoFixpoint nat_stream_3 n :=
   bind (nat_stream_3 (S n)) (fun s' => n ::: s').
 
 (** Definition with [bind'] *)
@@ -39,7 +39,7 @@ CoFixpoint nat_stream_3 n :=
 Definition bind' (P Q:Type) (x:P) (f:P->Q) : Q.
 Proof. exact (f x). Defined.
 
-CoFixpoint nat_stream_4 n := 
+CoFixpoint nat_stream_4 n :=
   bind' (nat_stream_4 (S n)) (fun s' => n ::: s').
 
 (** Definition with [bind''] *)
@@ -48,7 +48,7 @@ Definition bind'' (P Q:Type) (x:P) (f:P->Q) : Q.
 Proof. exact (f x). Qed.
 
 (*
-CoFixpoint nat_stream_5 n := 
+CoFixpoint nat_stream_5 n :=
   bind'' (nat_stream_5 (S n)) (fun s' => n ::: s').
 
   Error:
@@ -82,7 +82,7 @@ Qed.
 
 Lemma bisim_refl_0a : forall s, bisim s s.
 Proof.
-  cofix IH. intros [x s']. apply IH. 
+  cofix IH. intros [x s']. apply IH.
   (* Guarded.
      Unguarded recursive call in "IH (x ::: s')". *)
 Admitted.
@@ -126,9 +126,9 @@ CoFixpoint bisim_refl_4 s : bisim s s :=
   end.
 
   Error:
-  Sub-expression 
+  Sub-expression
     "let_lemma_prop (bisim_refl_4 s')
-     (fun H : bisim s' s' => bisim_cons x H)" 
+     (fun H : bisim s' s' => bisim_cons x H)"
   not in guarded form
 *)
 
@@ -165,7 +165,7 @@ exact(
   match e in (_ = y0) return (P y0) with
   | eq_refl => f
   end).
-Defined.    
+Defined.
 
 Arguments eq_rect' [A].
 
@@ -188,7 +188,7 @@ exact(
   match e in (_ = y0) return (P y0) with
   | eq_refl => f
   end).
-Qed.    
+Qed.
 
 Arguments eq_rect'' [A].
 
@@ -223,26 +223,26 @@ Proof.
   apply (@let_lemma_prop' True).
     auto. intros.
   (* Guarded. *)
-  constructor. 
-  (* Guarded. *) 
-  apply IH. 
-  (* Guarded. 
+  constructor.
+  (* Guarded. *)
+  apply IH.
+  (* Guarded.
     Sub-expression "let_lemma_prop' I (fun _ : True => bisim_cons x (IH s'))" not
-    in guarded form 
+    in guarded form
   *)
 Admitted.
 
 Lemma bisim_refl_8 : forall s, bisim s s.
 Proof.
-  cofix IH. intros [x s']. constructor. 
+  cofix IH. intros [x s']. constructor.
   apply (@let_lemma_prop' True).
     auto. intros.
     (* Guarded. *)
    (* Guarded. *)
    apply IH.
-  (* Guarded. 
+  (* Guarded.
     Sub-expression "let_lemma_prop' I (fun _ : True => bisim_cons x (IH s'))" not
-    in guarded form 
+    in guarded form
   *)
 Admitted.
 
@@ -267,14 +267,14 @@ Qed.
 
 Lemma refl_reproduce_1 : (forall s, bisim s s) -> (forall s, bisim s s).
 Proof.
-  intros IH. apply IH. 
+  intros IH. apply IH.
 Defined.
 
 Lemma bisim_refl_9 : forall s, bisim s s.
 Proof.
   cofix IH. intros [x s'].
   apply refl_reproduce_1. apply IH.
-  (* 
+  (*
   Unguarded recursive call in
   "refl_reproduce IH (x ::: s')".
   Recursive definition is:
@@ -295,7 +295,7 @@ Qed.
 
 Lemma refl_reproduce_2 : (forall s, bisim s s) -> (forall s, bisim s s).
 Proof.
-  intros IH. intros [x s']. constructor. apply IH. 
+  intros IH. intros [x s']. constructor. apply IH.
 Defined.
 
 Lemma bisim_refl_10 : forall s, bisim s s.
@@ -310,7 +310,7 @@ Defined.
 
 Lemma bisim_refl_10a : forall s, bisim s s.
 Proof.
-  cofix IH. intros s. apply refl_reproduce_3. apply IH. 
+  cofix IH. intros s. apply refl_reproduce_3. apply IH.
 (*
   Guarded.
 Recursive call in a branch of
@@ -320,7 +320,7 @@ Recursive call in a branch of
  with
  end".
 
-Recursive definition is: 
+Recursive definition is:
   "fun s : stream => refl_reproduce_3 IH s".
 
 *)

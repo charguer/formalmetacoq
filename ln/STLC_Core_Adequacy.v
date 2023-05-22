@@ -4,10 +4,10 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-Require Import LibLN.
+From TLC Require Import LibLN.
 
-Require Import 
-  STLC_Core_Definitions 
+Require Import
+  STLC_Core_Definitions
   STLC_Core_Infrastructure
   STLC_Core_Soundness.
 
@@ -24,8 +24,8 @@ Inductive eterm : trm -> Prop :=
       eterm (t1 ^ x) ->
       eterm (trm_abs t1)
   | eterm_app : forall t1 t2,
-      eterm t1 -> 
-      eterm t2 -> 
+      eterm t1 ->
+      eterm t2 ->
       eterm (trm_app t1 t2).
 
 (** Typing relation *)
@@ -42,7 +42,7 @@ Inductive etyping : env -> trm -> typ -> Prop :=
       (E & x ~ U) |== (t1 ^ x) ~: T ->
       E |== (trm_abs t1) ~: (typ_arrow U T)
   | etyping_app : forall S T E t1 t2,
-      E |== t1 ~: (typ_arrow S T) -> 
+      E |== t1 ~: (typ_arrow S T) ->
       E |== t2 ~: S ->
       E |== (trm_app t1 t2) ~: T
 
@@ -51,7 +51,7 @@ where "E |== t ~: T" := (etyping E t T).
 (** Definition of values (only abstractions are values) *)
 
 Inductive evalue : trm -> Prop :=
-  | evalue_abs : forall t1, 
+  | evalue_abs : forall t1,
       eterm (trm_abs t1) -> evalue (trm_abs t1).
 
 (** Reduction relation - one step in call-by-value *)
@@ -79,9 +79,9 @@ Definition epreservation := forall E t t' T,
   t -->> t' ->
   E |== t' ~: T.
 
-Definition eprogress := forall t T, 
+Definition eprogress := forall t T,
   empty |== t ~: T ->
-     evalue t 
+     evalue t
   \/ exists t', t -->> t'.
 
 
@@ -95,13 +95,13 @@ Definition eprogress := forall t T,
 
 Lemma term_rename : forall x y t,
   term (t ^ x) ->
-  x \notin fv t -> 
-  y \notin fv t -> 
+  x \notin fv t ->
+  y \notin fv t ->
   term (t ^ y).
 Proof.
   introv Wx Frx Fry.
   (* introduce a renaming *)
-  rewrite (@subst_intro x). 
+  rewrite (@subst_intro x).
   (* apply substitution result *)
   apply* subst_term.
   (* use the fact that x is fresh *)
@@ -114,9 +114,9 @@ Qed.
 (** ** Proving the renaming lemma for [typing]. *)
 
 Lemma typing_rename : forall x y E t U T,
-  (E & x ~ U) |= (t ^ x) ~: T -> 
+  (E & x ~ U) |= (t ^ x) ~: T ->
   x \notin dom E \u fv t ->
-  y \notin dom E \u fv t -> 
+  y \notin dom E \u fv t ->
   (E & y ~ U) |= (t ^ y) ~: T.
 Proof.
   introv Typx Frx Fry.
@@ -129,7 +129,7 @@ Proof.
   (* apply substitution lemma *)
   apply_empty* typing_subst.
   (* apply weakening lemma *)
-  lets P: (@typing_weaken (x ~ U) E (y ~ U)). 
+  lets P: (@typing_weaken (x ~ U) E (y ~ U)).
    simpls. apply* P.
   (* prove (E & y ~ U |= trm_fvar y ~: U) *)
   apply* typing_var.
@@ -157,7 +157,7 @@ Lemma eterm_to_term : forall t,
 Proof.
   induction 1; eauto.
   apply_fresh* term_abs as y. apply* term_rename.
-Qed.   
+Qed.
 
 (* ********************************************************************** *)
 (** ** Proving the equivalence of [value] and [evalue] *)
@@ -209,7 +209,7 @@ Lemma etyping_to_typing : forall E t T,
   E |== t ~: T  ->  E |= t ~: T.
 Proof.
   induction 1; eauto.
-  apply_fresh* typing_abs as y. apply* typing_rename.   
+  apply_fresh* typing_abs as y. apply* typing_rename.
 Qed.
 
 (* ********************************************************************** *)
