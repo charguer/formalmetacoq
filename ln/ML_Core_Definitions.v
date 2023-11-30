@@ -44,7 +44,7 @@ Definition typ_fvars :=
 Definition typ_open_vars T Xs :=
   typ_open T (typ_fvars Xs).
 
-(** Instanciation of a type scheme *)
+(** Instantiation of a type scheme *)
 
 Definition sch_open M :=
   typ_open (sch_type M).

@@ -59,7 +59,7 @@ Definition typings (E : env) (m : inst) (M : environment typ) :=
 
 
 (* ********************************************************************** *)
-(** ** Instanciation of Tactics *)
+(** ** Instantiation of Tactics *)
 
 Ltac gather_vars :=
   let A := gather_vars_with (fun x : vars => x) in

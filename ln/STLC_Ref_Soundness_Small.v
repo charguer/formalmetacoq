@@ -1,11 +1,33 @@
 (***************************************************************************
-* Safety for STLC with References - Proofs                                 *
-* Arthur Chargueraud, July 2007                                            *
+* Safety for STLC with References - Proofs in Small-Step                   *
+* Arthur Chargueraud, July 2007, updated Dec 2023                          *
 ***************************************************************************)
 
 Set Implicit Arguments.
-From TLC Require Import LibLN.
+From TLC Require Import LibLN LibNat.
 Require Import STLC_Ref_Definitions STLC_Ref_Infrastructure.
+
+
+(* ********************************************************************** *)
+(** * Statements *)
+
+(** Goal is to prove preservation and progress. Soundness will follow. *)
+
+Definition preservation := forall Y t t' mu mu' T,
+  empty ! Y |= t ~: T ->
+  (t,mu) --> (t',mu') ->
+  Y |== mu ->
+  exists Y',
+     extends Y Y'
+  /\ empty ! Y' |= t' ~: T
+  /\ Y' |== mu'.
+
+Definition progress := forall Y t mu T,
+  empty ! Y |= t ~: T ->
+  Y |== mu ->
+     value t
+  \/ exists t', exists mu', (t,mu) --> (t',mu').
+
 
 (* ********************************************************************** *)
 (** * Proofs *)
@@ -14,10 +36,10 @@ Hint Constructors typing.
 
 (** Typing is preserved by weakening. *)
 
-Lemma typing_weaken : forall G E F P t T,
-   (E & G) ! P |= t ~: T ->
+Lemma typing_weaken : forall G E F Y t T,
+   (E & G) ! Y |= t ~: T ->
    ok (E & F & G) ->
-   (E & F & G) ! P |= t ~: T.
+   (E & F & G) ! Y |= t ~: T.
 Proof.
   introv Typ. gen_eq H: (E & G). gen G.
   induction Typ; introv EQ Ok; subst.
@@ -29,14 +51,16 @@ Proof.
   autos*.
   autos*.
   autos*.
+  autos*.
+  autos*.
 Qed.
 
 (** Typing is preserved by substitution. *)
 
-Lemma typing_subst : forall F E P t T z u U,
-  (E & z ~ U & F) ! P |= t ~: T ->
-  E ! P |= u ~: U ->
-  (E & F) ! P |= [z ~> u]t ~: T.
+Lemma typing_subst : forall F E Y t T z u U,
+  (E & z ~ U & F) ! Y |= t ~: T ->
+  E ! Y |= u ~: U ->
+  (E & F) ! Y |= [z ~> u]t ~: T.
 Proof.
   introv Typt Typu. gen_eq G: (E & z ~ U & F). gen F.
   induction Typt; introv Equ; subst; simpl subst.
@@ -51,33 +75,34 @@ Proof.
   autos*.
   autos*.
   autos*.
+  autos*.
+  autos*.
 Qed.
 
 (** Typing is preserved by an extension of store typing. *)
 
-Lemma typing_stability : forall P E P' t T,
-  E ! P |= t ~: T ->
-  extends P P' ->
-  E ! P' |= t ~: T.
+Lemma typing_stability : forall Y E Y' t T,
+  E ! Y |= t ~: T ->
+  extends Y Y' ->
+  E ! Y' |= t ~: T.
 Proof.
   introv Typ Ext. induction* Typ.
 Qed.
 
 Hint Resolve typing_stability.
 
-
 (** Store typing preserved by allocation of a well-typed term. *)
 
-Lemma sto_typing_push : forall P mu l t T,
-  P |== mu ->
-  empty ! P |= t ~: T ->
-  l # mu -> l # P ->
-  (P & l ~ T) |== (mu & l ~ t).
+Lemma sto_typing_push : forall Y mu l t T,
+  Y |== mu ->
+  empty ! Y |= t ~: T ->
+  l # mu -> l # Y ->
+  (Y & l ~ T) |== (mu & l ~ t).
 Proof.
   unfold sto_typing. introv [StoOk [Dom Ext]]. splits 3.
     auto.
     intros l0 Fr. simpl_dom. lets: (Dom l0).
-      asserts* Fr2: (l <> l0). asserts* Fr3: (l0 # P). auto.
+      asserts* Fr2: (l <> l0). asserts* Fr3: (l0 # Y). auto.
     intros l' T' Has. binds_cases Has.
       destruct (Ext _ _ B) as [t' [Hast' Typt']].
        exists* t'.
@@ -88,13 +113,12 @@ Qed.
   It simply destruct the induction hypothesis into smaller pieces. *)
 
 Ltac pres H t' mu' :=
-  let P' := fresh "P'" in
+  let Y' := fresh "Y'" in
   let Ext := fresh "Ext" in
   let Typt' := fresh "Typt'" in
   let TypSto' := fresh "TypSto'" in
   destruct~ (H (@refl_equal env empty) t' mu')
-                  as [P' [Ext [Typt' TypSto']]].
-
+                  as [Y' [Ext [Typt' TypSto']]].
 
 (** Preservation (typing is preserved by reduction). *)
 
@@ -103,29 +127,30 @@ Proof.
   introv Typ. gen t' mu'. gen_eq E: (empty : env).
   induction Typ; intros EQ t' mu' Red TypSto; subst;
    inversions Red. (* todo env_fix.*)
-  exists P. inversions Typ1. splits~ 3.
+  exists Y. inversions Typ1. splits~ 3.
     pick_fresh x. rewrite* (@subst_intro x).
      apply_empty* typing_subst.
-  pres IHTyp1 t1' mu'. exists* P'.
-  pres IHTyp2 t2' mu'. exists* P'.
-  exists (P & l ~ T).
-   asserts Fr: (l # P). lets: (proj32 TypSto). auto.
+  pres IHTyp1 t1' mu'. exists* Y'.
+  pres IHTyp2 t2' mu'. exists* Y'.
+  exists (Y & l ~ T).
+   asserts Fr: (l # Y). lets: (proj32 TypSto). auto.
    splits~ 3. apply* sto_typing_push.
-  pres IHTyp t1' mu'. exists* P'.
-  exists P. splits~ 3.
+  pres IHTyp t1' mu'. exists* Y'.
+  exists Y. splits~ 3.
     inversions Typ.
      destruct~ ((proj33 TypSto) l T) as [t [Hast Typt]].
      rewrite~ (binds_functional H4 Hast).
-  pres IHTyp t1' mu'. exists* P'.
-  exists P. inversions Typ1. splits~ 3.
+  pres IHTyp t1' mu'. exists* Y'.
+  exists Y. inversions Typ1. splits~ 3.
     destruct TypSto as [StoOk [Dom Map]]. splits~ 3.
      intros. tests: (l = l0).
        exists t2. split~. rewrite~ (binds_functional H H6).
        destruct (Map _ _ H) as [t [Has Typ]]. exists* t.
-  pres IHTyp1 t1' mu'. exists* P'.
-  pres IHTyp2 t2' mu'. exists* P'.
+  pres IHTyp1 t1' mu'. exists* Y'.
+  pres IHTyp2 t2' mu'. exists* Y'.
+  exists* Y.
+  pres IHTyp t1' mu'. exists* Y'.
 Qed.
-
 
 (** Progression (a well-typed term is either a value or it can
   take a step of reduction). *)
@@ -141,6 +166,7 @@ Proof.
       inversions Typ1; inversions Val1. exists* (t0 ^^ t2) mu.
       exists* (trm_app t1 t2') mu'.
     exists* (trm_app t1' t2).
+  left*.
   left*.
   left*.
   right. destruct~ IHTyp as [Val1 | [t1' [mu' Red1]]].
@@ -159,6 +185,26 @@ Proof.
        exists* trm_unit (mu & l ~ t2).
       exists* (trm_set t1 t2') mu'.
     exists* (trm_set t1' t2) mu'.
+  right. destruct~ IHTyp as [Val1 | [t1' [mu' Red1]]].
+    inversions Val1; inversions Typ.
+     exists* (trm_int 0) mu. constructors*. lia.
+    exists* (trm_rand t1') mu'.
 Qed.
+
+(** Type soundness (well-typed configurations can only reach
+    safe configurations, i.e. configurations that are values
+    or can take a reduction step) *)
+
+Lemma soundness_result : soundness.
+Proof using.
+  intros (t,mu) (Y&T&HT&HS). introv R.
+  gen_eq c: (t,mu). gen Y t mu. induction R; intros; subst.
+  { intros. lets [Hv|(t'&mu'&Hp)]: progress_result HT HS.
+    { left. hnfs*. }
+    { right. exists*. } }
+  { intros. destruct c2 as (t2,mu2).
+    forwards* (Y'&EP'&HT'&HS'): preservation_result HT H. }
+Qed.
+
 
 

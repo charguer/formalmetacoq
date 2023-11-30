@@ -84,7 +84,7 @@ Inductive typings (E : env) : list trm -> list typ -> Prop :=
 
 
 (* ********************************************************************** *)
-(** ** Instanciation of Tactics *)
+(** ** Instantiation of Tactics *)
 
 Ltac gather_vars :=
   let A := gather_vars_with (fun x : vars => x) in

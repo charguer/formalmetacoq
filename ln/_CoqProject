@@ -1,2 +1,2 @@
 
--arg -w -arg -deprecated
+-R . Top -arg -w -arg -deprecated

@@ -80,7 +80,7 @@ Definition typ_fvars :=
 Definition typ_open_vars T Xs :=
   typ_open T (typ_fvars Xs).
 
-(** Instanciation of a type scheme *)
+(** Instantiation of a type scheme *)
 
 Definition sch_open M :=
   typ_open (sch_type M).
@@ -295,7 +295,7 @@ Inductive term : trm -> Prop :=
       term (trm_inj2 t1)
   | term_loc : forall l,
       term (trm_loc l)
-  | term_new : forall t1,
+  | term_ref : forall t1,
       term t1 ->
       term (trm_ref t1)
   | term_get : forall t1,
@@ -385,7 +385,7 @@ Inductive fails : trm -> trm -> Prop :=
       term t2 ->
       fails t1 e ->
       fails (trm_match t1 p b t2) e
-  | fails_new_1 : forall t1 e,
+  | fails_ref_1 : forall t1 e,
       fails t1 e ->
       fails (trm_ref t1) e
   | fails_get_1 : forall t1 e,
@@ -448,7 +448,7 @@ Inductive red : conf -> conf -> Prop :=
       sto_ok mu ->
       red (trm_app (trm_app trm_add (trm_nat n1)) (trm_nat n2), mu)
           (trm_nat (n1 + n2), mu)
-  | red_new : forall mu t1 l,
+  | red_ref : forall mu t1 l,
       sto_ok mu ->
       value t1 ->
       l # mu ->
@@ -501,7 +501,7 @@ Inductive red : conf -> conf -> Prop :=
   | red_inj2_1 : forall mu mu' t1 t1',
       red (t1, mu) (t1', mu') ->
       red (trm_inj2 t1, mu) (trm_inj2 t1', mu')
-  | red_new_1 : forall mu mu' t1 t1',
+  | red_ref_1 : forall mu mu' t1 t1',
       red (t1, mu) (t1', mu') ->
       red (trm_ref t1, mu) (trm_ref t1', mu')
   | red_get_1 : forall mu mu' t1 t1',

@@ -630,7 +630,7 @@ Qed.
 
 Lemma okt_push_sub_type : forall E X T,
   okt (E & X ~<: T) -> type T.
-Proof. intros. applys wft_type. forwards*: okt_push_sub_inv. Qed.
+Proof. intros. applys wft_type. forwards*: okt_push_sub_inv X. Qed.
 
 Lemma okt_push_typ_inv : forall E x T,
   okt (E & x ~: T) -> okt E /\ wft E T /\ x # E.
@@ -643,7 +643,7 @@ Qed.
 
 Lemma okt_push_typ_type : forall E X T,
   okt (E & X ~: T) -> type T.
-Proof. intros. applys wft_type. forwards*: okt_push_typ_inv. Qed.
+Proof. intros. applys wft_type. forwards*: okt_push_typ_inv X. Qed.
 
 Hint Immediate okt_push_sub_type okt_push_typ_type.
 
@@ -760,28 +760,28 @@ Proof.
   splits*.
   splits.
    pick_fresh y. specializes H0 y. destructs~ H0.
-    forwards*: okt_push_typ_inv.
+    forwards*: okt_push_typ_inv E.
    apply_fresh* term_abs as y.
      pick_fresh y. specializes H0 y. destructs~ H0.
-      forwards*: okt_push_typ_inv.
+      forwards*: okt_push_typ_inv E.
      specializes H0 y. destructs~ H0.
    pick_fresh y. specializes H0 y. destructs~ H0.
     apply* wft_arrow.
-      forwards*: okt_push_typ_inv.
+      forwards*: okt_push_typ_inv E.
       apply_empty* wft_strengthen.
   splits*. destructs IHtyping1. inversion* H3.
   splits.
    pick_fresh y. specializes H0 y. destructs~ H0.
-    forwards*: okt_push_sub_inv.
+    forwards*: okt_push_sub_inv E.
    apply_fresh* term_tabs as y.
      pick_fresh y. forwards~ K: (H0 y). destructs K.
-       forwards*: okt_push_sub_inv.
+       forwards*: okt_push_sub_inv E.
      forwards~ K: (H0 y). destructs K. auto.
    apply_fresh* wft_all as Y.
      pick_fresh y. forwards~ K: (H0 y). destructs K.
-      forwards*: okt_push_sub_inv.
+      forwards*: okt_push_sub_inv E.
      forwards~ K: (H0 Y). destructs K.
-      forwards*: okt_push_sub_inv.
+      forwards*: okt_push_sub_inv E.
   splits*; destructs (sub_regular H0).
    apply* term_tapp. applys* wft_type.
    applys* wft_open T1.

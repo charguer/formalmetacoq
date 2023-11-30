@@ -104,7 +104,7 @@ Definition red_through (R : relation) :=
 
 
 (* ********************************************************************** *)
-(** ** Instanciation of Tactics *)
+(** ** Instantiation of Tactics *)
 
 Ltac gather_vars :=
   let A := gather_vars_with (fun x : vars => x) in
@@ -569,7 +569,7 @@ Proof.
   intros. lets W: (wf_left H). inversions keep W.
   false (empty_push_inv H2).
   destruct (eq_push_inv H1) as [? [? ?]]. subst~.
-  lets W': (wf_left W). apply* notin_fv_from_binds.
+  lets W': (wf_left W). applys* notin_fv_from_binds E.
 Qed.
 
 Hint Extern 1 (?x \notin fv ?V) =>

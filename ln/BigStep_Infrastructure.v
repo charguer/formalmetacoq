@@ -40,7 +40,7 @@ Local Open Scope infrastructure_scope.
 
 
 (* ********************************************************************** *)
-(** ** Instanciation of tactics *)
+(** ** Instantiation of tactics *)
 
 (** Tactic [gather_vars] returns a set of variables occurring in
     the context of proofs, including domain of environments and

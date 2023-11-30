@@ -15,61 +15,62 @@ CORE :=\
 BIG :=\
 	BigStep_Definitions \
 	BigStep_Infrastructure \
-	BigStep_Equivalence 
+	BigStep_Equivalence
 FSUB :=\
 	Fsub_Definitions \
 	Fsub_Infrastructure \
-	Fsub_Soundness 
+	Fsub_Soundness
 COC :=\
 	CoC_Definitions \
 	CoC_Infrastructure \
 	CoC_BetaStar \
 	CoC_ChurchRosser \
 	CoC_Conversion \
-	CoC_Preservation 
+	CoC_Preservation
 ML :=\
 	ML_Definitions \
 	ML_Infrastructure \
-	ML_Soundness 
+	ML_Soundness
 EXN :=\
 	STLC_Exn_Definitions \
 	STLC_Exn_Infrastructure \
-	STLC_Exn_Soundness 
+	STLC_Exn_Soundness
 REF :=\
 	STLC_Ref_Definitions \
 	STLC_Ref_Infrastructure \
-	STLC_Ref_Soundness 
+	STLC_Ref_Soundness_Small
+#STLC_Ref_Soundness_Small
 COREWF :=\
 	STLC_Core_WF_Definitions \
 	STLC_Core_WF_Infrastructure \
-	STLC_Core_WF_Soundness 
+	STLC_Core_WF_Soundness
 DATA :=\
 	STLC_Data_Definitions \
 	STLC_Data_Infrastructure \
-	STLC_Data_Soundness 
+	STLC_Data_Soundness
 CPS :=\
 	CPS_Definitions \
 	CPS_Infrastructure \
-	CPS_Correctness 
+	CPS_Correctness
 PAT :=\
 	STLC_Pat_Definitions \
 	STLC_Pat_Infrastructure \
-	STLC_Pat_Soundness 
+	STLC_Pat_Soundness
 LAMBDA :=\
 	Lambda_Definitions \
 	Lambda_Infrastructure \
-	Lambda_ChurchRosser 
+	Lambda_ChurchRosser
 JAR :=\
-	Lambda_JAR_paper 
+	Lambda_JAR_paper
 MLCORE :=\
 	ML_Core_Definitions \
 	ML_Core_Infrastructure \
-	ML_Core_Soundness 
+	ML_Core_Soundness
 ISK :=\
    ISK_Confluence
 
 BASEFILES := $(CORE) $(BIG) $(EXN) $(REF) $(CPS) $(ISK) $(LAMBDA) $(COC) $(ML) $(FSUB) $(JAR)
-	
+
 VFILES=$(BASEFILES:=.v)
 
 
@@ -93,7 +94,7 @@ NOT_COMPILING := $(COREWF) $(DATA) $(PAT) $(MLCORE)
 PATOPEN :=\
 	STLC_PatOpen_Definitions \
 	STLC_PatOpen_Infrastructure \
-	STLC_PatOpen_Soundness 
+	STLC_PatOpen_Soundness
 MUT :=\
 	STLC_Mut_Definitions \
 	STLC_Mut_Infrastructure \
@@ -151,19 +152,19 @@ clean::
 # Other goals
 
 core: $(CORE:=.vok)
-big: $(BIG:=.vok) 
-mut: $(MUT:=.vok) 
-fsub: $(FSUB:=.vok) 
-coc: $(COC:=.vok) 
-ml: $(ML:=.vok) 
-exn: $(EXN:=.vok) 
-ref: $(REF:=.vok) 
+big: $(BIG:=.vok)
+mut: $(MUT:=.vok)
+fsub: $(FSUB:=.vok)
+coc: $(COC:=.vok)
+ml: $(ML:=.vok)
+exn: $(EXN:=.vok)
+ref: $(REF:=.vok)
 corewf: $(COREWF:=.vok)
-data: $(DATA:=.vok) 
-cps: $(CPS:=.vok) 
-isk: $(ISK:=.vok) 
-pat: $(PAT:=.vok) 
-patopen: $(PATOPEN:=.vok) 
+data: $(DATA:=.vok)
+cps: $(CPS:=.vok)
+isk: $(ISK:=.vok)
+pat: $(PAT:=.vok)
+patopen: $(PATOPEN:=.vok)
 lambda: $(LAMBDA:=.vok)
 mlcore: $(MLCORE:=.vok)
 

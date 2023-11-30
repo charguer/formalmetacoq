@@ -42,7 +42,7 @@ Definition body t :=
   exists L, forall x, x \notin L -> term (t ^ x).
 
 (* ********************************************************************** *)
-(** ** Instanciation of Tactics *)
+(** ** Instantiation of Tactics *)
 
 (** Tactic [pick_fresh] is used to pick fresh names *)
 

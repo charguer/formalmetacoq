@@ -19,10 +19,12 @@ Fixpoint fv (t : trm) {struct t} : vars :=
   | trm_abs t1    => (fv t1)
   | trm_app t1 t2 => (fv t1) \u (fv t2)
   | trm_unit      => \{}
+  | trm_int n     => \{}
   | trm_loc l     => \{}
   | trm_ref t1    => (fv t1)
   | trm_get t1    => (fv t1)
   | trm_set t1 t2 => (fv t1) \u (fv t2)
+  | trm_rand t1   => (fv t1)
   end.
 
 (** Substitution for names *)
@@ -34,10 +36,12 @@ Fixpoint subst (z : var) (u : trm) (t : trm) {struct t} : trm :=
   | trm_abs t1    => trm_abs (subst z u t1)
   | trm_app t1 t2 => trm_app (subst z u t1) (subst z u t2)
   | trm_unit      => trm_unit
+  | trm_int n     => trm_int n
   | trm_loc l     => trm_loc l
   | trm_ref t1    => trm_ref (subst z u t1)
   | trm_get t1    => trm_get (subst z u t1)
   | trm_set t1 t2 => trm_set (subst z u t1) (subst z u t2)
+  | trm_rand t1   => trm_rand (subst z u t1)
   end.
 
 Notation "[ z ~> u ] t" := (subst z u t) (at level 68).
@@ -49,7 +53,7 @@ Definition body t :=
 
 
 (* ********************************************************************** *)
-(** ** Instanciation of Tactics *)
+(** ** Instantiation of Tactics *)
 
 Ltac gather_vars :=
   let A := gather_vars_with (fun x : vars => x) in
