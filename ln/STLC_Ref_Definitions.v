@@ -4,14 +4,12 @@
 ***************************************************************************)
 
 Set Implicit Arguments.
-From TLC Require Export LibLN.
+From TLC Require Export LibLN LibNat.
 
 
 (* ********************************************************************** *)
 
 (** Grammar of types. *)
-
-Parameter atm : Set.
 
 Inductive typ : Set :=
   | typ_var   : var -> typ
@@ -22,8 +20,6 @@ Inductive typ : Set :=
 
 (** Grammar of pre-terms. For simplicity, integers are restricted to naturals. *)
 
-Definition int := nat.
-
 Definition loc := var.
 
 Inductive trm : Set :=
@@ -32,7 +28,7 @@ Inductive trm : Set :=
   | trm_abs  : trm -> trm
   | trm_app  : trm -> trm -> trm
   | trm_unit : trm
-  | trm_int : int -> trm
+  | trm_int : nat -> trm
   | trm_loc : loc -> trm
   | trm_ref : trm -> trm
   | trm_get : trm -> trm
@@ -152,17 +148,6 @@ Inductive typing : env -> phi -> trm -> typ -> Prop :=
 
 where "E ! Y |= t ~: T" := (typing E Y t T).
 
-(** Typing store *)
-
-Definition sto_typing Y mu :=
-     sto_ok mu
-  /\ (forall l, l # mu -> l # Y)
-  /\ (forall l T, binds l T Y ->
-        exists t, binds l t mu
-               /\ empty ! Y |= t ~: T).
-
-Notation "Y |== mu" := (sto_typing Y mu) (at level 68).
-
 (** Definition of values *)
 
 Inductive value : trm -> Prop :=
@@ -175,6 +160,18 @@ Inductive value : trm -> Prop :=
       value (trm_int n)
   | value_loc : forall l,
       value (trm_loc l).
+
+(** Typing store *)
+
+Definition sto_typing Y mu :=
+     sto_ok mu
+  /\ (forall l, l # mu -> l # Y)
+  /\ (forall l T, binds l T Y ->
+        exists t, value t
+               /\ binds l t mu
+               /\ empty ! Y |= t ~: T).
+
+Notation "Y |== mu" := (sto_typing Y mu) (at level 68).
 
 (** Reduction relation - one step in call-by-value *)
 

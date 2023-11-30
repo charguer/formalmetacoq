@@ -38,8 +38,10 @@ EXN :=\
 REF :=\
 	STLC_Ref_Definitions \
 	STLC_Ref_Infrastructure \
-	STLC_Ref_Soundness_Small
-#STLC_Ref_Soundness_Small
+	STLC_Ref_Soundness_Common \
+	STLC_Ref_Soundness_Small \
+	STLC_Ref_Soundness_OmniSmall \
+	STLC_Ref_Soundness_OmniBig
 COREWF :=\
 	STLC_Core_WF_Definitions \
 	STLC_Core_WF_Infrastructure \

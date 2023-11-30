@@ -1,0 +1,11 @@
+*.vo
+*.vok
+*.vos
+*.aux
+*.cmx
+*.glob
+*.native
+*/Makefile.generated
+*/*Makefile.generated.d
+*/Makefile.generated.conf
+*.lia.cache
