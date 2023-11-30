@@ -202,7 +202,7 @@ Ltac doi_base :=
   match goal with IH: forall _, _ |- _ =>
     eapply IH
   end;
-  [ eauto | instantiate; intros ?;
+  [ eauto | intros ?;
     match goal with N: ~ red _ _ |- _  => false N end ].
 
 Ltac doi := doi_base; eauto.

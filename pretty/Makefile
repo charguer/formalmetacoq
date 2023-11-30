@@ -9,14 +9,14 @@ DEV_LAMBDA :=\
 	Lambda_CombiErr \
 	Lambda_Typing \
 	Lambda_Typing_PrettyErr_Sound \
-	Lambda_Typing_CombiErr_Sound 
+	Lambda_Typing_CombiErr_Sound
  #	Lambda_Trace \
 
 DEV_LAMBDAEXN :=\
 	LambdaExn_Syntax \
 	LambdaExn_Big \
 	LambdaExn_Pretty \
-	LambdaExn_Combi 
+	LambdaExn_Combi
 
 
 DEV_LAMBDAEXNERR :=\
@@ -41,7 +41,7 @@ DEV_LAMBDAEXNSUM :=\
 	LambdaExnSum_Small \
 	LambdaExnSum_Big \
 	LambdaExnSum_EncodeExn \
-	LambdaExnSum_EncodeExn_Big_Correct 
+	LambdaExnSum_EncodeExn_Big_Correct
 
 #	LambdaExnSum_EncodeExn_Combi_Correct \
 #	LambdaExnSum_EncodeExn_Small_Correct \

@@ -1,4 +1,0 @@
-- Lambda_CombiErr : equivalence with pretty_err
-- LambdaExnSum_Combi : equivalence with pretty-big-step 
-- LambdaExn_Combi : equivalence with pretty-big-step 
-- lambdaexnsum_combi_correct : prove beta using beta' 
