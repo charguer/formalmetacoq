@@ -164,7 +164,6 @@ Hint Extern 1 (faster_before _ _ _) => apply faster_before_max.
 End OtherAutomation.
 
 
-
 (************************************************************)
 (* ** Equivalence with pretty-big-step *)
 
@@ -267,7 +266,6 @@ Lemma cdiverge_diverge : forall e,
 Proof. intros. applys~ (>> cred_cored out_div). Qed.
 
 
-
 (************************************************************)
 (* ** Equivalence with big-step *)
 
@@ -328,6 +326,4 @@ Proof.
        apply* bigdiv_app_2.
        introv R5 L5. inverts L5. apply* bigdiv_app_3.
 Qed.
-
-
 

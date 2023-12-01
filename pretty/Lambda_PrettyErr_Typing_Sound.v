@@ -98,13 +98,6 @@ Inductive exttyping : ext -> typ -> Prop :=
 Hint Constructors outtyping exttyping.
 Hint Unfold trmtyping.
 
-(*
-Lemma red_not_div : forall t o,
-  red (ext_trm t) o -> o <> out_div.
-Admitted.
-Hint Resolve red_not_div.
-*)
-
 Lemma abort_outyping : forall o T T',
   abort o -> outtyping o T -> outtyping o T'.
 Proof.

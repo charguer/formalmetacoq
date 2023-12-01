@@ -283,5 +283,3 @@ Hint Resolve faster_before_max.
 Hint Extern 1 (before _ _) => (abstracts max_resolve); constructor.
 Hint Extern 1 (faster_before _ _ _) => apply faster_before_max.
 
-
-

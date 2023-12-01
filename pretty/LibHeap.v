@@ -1,16 +1,14 @@
+(************************************************************
+* Heaps: finite maps from keys to values                    *
+*************************************************************)
 
-
-(**************************************************************************
-* TLC: A library for Coq                                                  *
-* Heaps: finite maps from keys to values                                  *
-**************************************************************************)
+(** We could use TLC's LibMap library. However, to avoid complications
+    with typeclasses, we reproduce a direct formalization of heaps. *)
 
 Set Implicit Arguments.
 From TLC Require Import LibTactics LibReflect LibList LibListAssoc
   LibSet LibExec.
 Generalizable Variable K V.
-
-
 
 
 (* ********************************************************************** *)
@@ -27,7 +25,6 @@ Class Decidable (P:Prop) := decidable_make {
 
 Hint Rewrite @decide_spec : rew_refl.
 Arguments decide P {Decidable}.
-
 
 (** Notation [ifb P then x else y] can be used for
     testing a proposition [P] for which there exists an

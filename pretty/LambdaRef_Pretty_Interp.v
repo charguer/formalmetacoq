@@ -324,4 +324,3 @@ Proof.
   applys~ runh_complete_ter R.
 Qed.
 
-

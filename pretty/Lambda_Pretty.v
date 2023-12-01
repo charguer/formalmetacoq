@@ -292,6 +292,3 @@ Proof.
           intros. apply* bigdiv_app_2.
           introv R3. apply* bigdiv_app_3.
 Qed.
-
-
-

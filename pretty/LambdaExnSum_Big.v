@@ -19,7 +19,7 @@ Implicit Types t : trm.
 Inductive beh :=
   | beh_ret : val -> beh
   | beh_exn : val -> beh.
-  
+
 Coercion beh_ret : val >-> beh.
 
 (** Reduction *)
@@ -62,11 +62,11 @@ Inductive bigred : trm -> beh -> Prop :=
       bigred (trm_inj b t1) (beh_exn v)
   | bigred_case_true : forall t1 t2 t3 v1 o,
       bigred t1 (val_inj true v1) ->
-      bigred (trm_app t2 v1) o -> 
+      bigred (trm_app t2 v1) o ->
       bigred (trm_case t1 t2 t3) o
   | bigred_case_false : forall t1 t2 t3 v1 o,
       bigred t1 (val_inj false v1) ->
-      bigred (trm_app t3 v1) o -> 
+      bigred (trm_app t3 v1) o ->
       bigred (trm_case t1 t2 t3) o
   | bigred_case_1 : forall t1 t2 t3 v,
       bigred t1 (beh_exn v) ->
@@ -77,19 +77,19 @@ Inductive bigred : trm -> beh -> Prop :=
 CoInductive bigdiv : trm -> Prop :=
   | bigdiv_app_1 : forall t1 t2,
       bigdiv t1 ->
-      bigdiv (trm_app t1 t2) 
+      bigdiv (trm_app t1 t2)
   | bigdiv_app_2 : forall t1 v1 t2,
       bigred t1 v1 ->
       bigdiv t2 ->
-      bigdiv (trm_app t1 t2) 
+      bigdiv (trm_app t1 t2)
   | bigdiv_app_3 : forall t1 t2 x t3 v2,
       bigred t1 (val_abs x t3) ->
       bigred t2 v2 ->
       bigdiv (subst x v2 t3) ->
-      bigdiv (trm_app t1 t2) 
+      bigdiv (trm_app t1 t2)
   | bigdiv_try_1 : forall t1 t2,
       bigdiv t1 ->
-      bigdiv (trm_try t1 t2) 
+      bigdiv (trm_try t1 t2)
   | bigdiv_try_2 : forall t1 t2 v,
       bigred t1 (beh_exn v) ->
       bigdiv (trm_app t2 v) ->
@@ -102,15 +102,13 @@ CoInductive bigdiv : trm -> Prop :=
       bigdiv (trm_inj b t1)
   | bigdiv_case_1 : forall t1 t2 t3,
       bigdiv t1 ->
-      bigdiv (trm_case t1 t2 t3) 
+      bigdiv (trm_case t1 t2 t3)
   | bigdiv_case_true : forall t1 t2 t3 v1,
       bigred t1 (val_inj true v1) ->
-      bigdiv (trm_app t2 v1) -> 
+      bigdiv (trm_app t2 v1) ->
       bigdiv (trm_case t1 t2 t3)
   | bigdiv_case_false : forall t1 t2 t3 v1,
       bigred t1 (val_inj false v1) ->
-      bigdiv (trm_app t3 v1) -> 
+      bigdiv (trm_app t3 v1) ->
       bigdiv (trm_case t1 t2 t3).
-
-
 

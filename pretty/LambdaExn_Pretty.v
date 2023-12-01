@@ -23,7 +23,7 @@ Implicit Types b : beh.
         | out_ret : val -> out
         | out_exn : val -> out
         | out_div : out.
-    *)
+*)
 
 Inductive out :=
   | out_beh : beh -> out
@@ -309,7 +309,7 @@ Qed.
 (** Note that for extended terms, the above result holds only
     for those satisfying [ext_not_diverge] *)
 
-Remark red_not_diverge_ext :
+Lemma red_not_diverge_ext :
   ParamDeterministic ->
   forall e o, red e o -> diverge e -> ext_not_diverge e -> False.
 Proof.
@@ -544,4 +544,3 @@ Proof.
     apply* div_raise.
   constructors*.
 Qed.
-

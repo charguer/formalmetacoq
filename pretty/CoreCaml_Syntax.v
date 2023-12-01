@@ -153,10 +153,7 @@ Coercion val_loc : loc >-> val.
 Coercion val_cst : cst >-> val.
 Coercion trm_cst : cst >-> trm.
 
-
 (** Fresh locations *)
 
 Definition fresh (m:mem) l :=
   ~ Heap.indom m l.
-
-

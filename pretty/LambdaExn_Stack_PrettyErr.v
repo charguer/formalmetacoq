@@ -22,7 +22,7 @@ Implicit Types b : beh.
       Inductive out :=
         | out_ret : val -> out
         | out_exn : val -> out
-        | out_div : out.  
+        | out_div : out.
     *)
 
 Inductive out :=
@@ -58,25 +58,25 @@ Inductive abort : out -> Prop :=
 
 Inductive one : ext -> Prop :=
   | one_val : forall v,
-      one v 
+      one v
   | one_abs : forall x t,
-      one (trm_abs x t) 
+      one (trm_abs x t)
   | one_app : forall t1 t2,
-      one (trm_app t1 t2) 
+      one (trm_app t1 t2)
   | one_app_1_abort : forall o1 t2,
       abort o1 ->
       one (ext_app_1 o1 t2)
   | one_app_1 : forall v1 t2,
-      one (ext_app_1 v1 t2) 
+      one (ext_app_1 v1 t2)
   | one_app_2_abort : forall v1 o2,
       abort o2 ->
-      one (ext_app_2 v1 o2) 
+      one (ext_app_2 v1 o2)
   | one_app_2 : forall x t3 v2,
       one (ext_app_2 (val_clo x t3) v2)
   | one_try : forall t1 t2,
       one (trm_try t1 t2)
   | one_try_1_val : forall v1 t2,
-      one (ext_try_1 v1 t2) 
+      one (ext_try_1 v1 t2)
   | one_try_1_exn : forall t2 v,
       one (ext_try_1 (out_exn v) t2)
   | one_try_1_div : forall t2,
@@ -85,7 +85,7 @@ Inductive one : ext -> Prop :=
       one (trm_raise t1)
   | one_raise_1_abort : forall o1,
       abort o1 ->
-      one (ext_raise_1 o1) 
+      one (ext_raise_1 o1)
   | one_raise_1 : forall v,
       one (ext_raise_1 v).
 
@@ -139,7 +139,7 @@ Inductive red : ext -> out -> Prop :=
 
 
 (** Coevaluation judgment:
-    copy-paste of the above definition, 
+    copy-paste of the above definition,
     simply replacing [red] with [cored] *)
 
 CoInductive cored : ext -> out -> Prop :=
@@ -188,7 +188,6 @@ CoInductive cored : ext -> out -> Prop :=
       ~ one e ->
       cored e out_err.
 
-
 (** Definition of divergence *)
 
 Definition diverge e := cored e out_div.
@@ -227,12 +226,7 @@ Inductive typing : env typ -> trm -> typ -> Prop :=
       typing (E & x ~~ U) t1 T ->
       typing E (trm_abs x t1) (typ_arrow U T)
   | typing_app : forall T1 T2 E t1 t2,
-      typing E t1 (typ_arrow T1 T2) -> 
+      typing E t1 (typ_arrow T1 T2) ->
       typing E t2 T1 ->
       typing E (trm_app t1 t2) T2.
-
-
-(*==========================================================*)
-(* * Proofs *)
-
 

@@ -79,7 +79,3 @@ Proof. hint bigredh_lt. introv H. induction H; try induct_height. Qed.
 
 End BigredInd.
 
-
-
-
-

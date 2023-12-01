@@ -299,7 +299,3 @@ Qed.
 
 End Full.
 
-
-
-
-

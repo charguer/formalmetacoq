@@ -190,7 +190,6 @@ Definition mismatching v p :=
 Parameter primitive_eq : val -> val -> bool -> Prop.
 
 
-
 (************************************************************)
 (* ** Reduction contexts *)
 
@@ -487,23 +486,3 @@ Inductive step : binary conf :=
       (val_cst z) / m
 
 where "t1 / m1 ---> t2 / m2" := (step (t1:trm,m1) (t2:trm,m2)).
-
-
-
-
-(************************************************************)
-(* ** Complete reduction sequences *)
-
-(** Complete evaluation  [TODO]
-
-Definition sredstar t t' := (rtclosure step) t t'.
-
-Definition sredplus t t' := (tclosure step) t t'.
-
-Definition sredval t v := sredstar t v.
-
-Definition sredexn t v := sredstar t (trm_raise v).
-
-Definition sdiverge t := (infclosure step) t.
-
-*)

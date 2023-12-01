@@ -8,8 +8,12 @@ DEV_LAMBDA :=\
 	Lambda_PrettyErr \
 	Lambda_CombiErr \
 	Lambda_Typing \
-	Lambda_Typing_PrettyErr_Sound \
-	Lambda_Typing_CombiErr_Sound
+	Lambda_PrettyErr_Typing_Sound \
+	Lambda_CombiErr_Typing_Sound
+
+DEV_LAMBDAREF :=\
+	LambdaRef_Syntax \
+	LambdaRef_Pretty_Interp \
 
 DEV_LAMBDAEXN :=\
 	LambdaExn_Syntax \
@@ -21,8 +25,10 @@ DEV_LAMBDAEXNERR :=\
 	LambdaExn_Interp \
 	LambdaExn_CombiErr \
 	LambdaExn_BigErr \
-	LambdaExn_Interp_CombiErr_Match \
-	LambdaExn_Interp_BigErr_Match
+	LambdaExn_PrettyErr \
+  LambdaExn_PrettyErr_Typing_Sound \
+	LambdaExn_Interp_CombiErr_Correct \
+	LambdaExn_Interp_BigErr_Correct
 
 DEV_CORECAML :=\
 	CoreCaml_Syntax \

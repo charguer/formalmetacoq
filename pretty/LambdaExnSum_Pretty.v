@@ -186,24 +186,191 @@ CoInductive cored : ext -> out -> Prop :=
 Definition diverge e := cored e out_div.
 
 
-(*==========================================================*)
-(* * Proofs *)
 
 (************************************************************)
-(* ** Properties *)
+(* ** Equivalence with small-step semantics *)
 
-Axiom cored_to_diverge_or_red : forall e o,
-  cored e o -> diverge e \/ red e o.
+Require Import LambdaExnSum_Small.
+Implicit Types c : ctx.
 
-Axiom red_trm_not_div : forall t,
-  red (ext_trm t) out_div -> False.
+Hint Constructors step.
 
-Section L.
-#[local]
-Hint Constructors cored.
-Theorem red_cored : forall e o,
-  red e o -> cored e o.
-Proof. introv H. induction* H. Qed.
-End L.
+Hint Unfold sredval sredstar sredplus.
+Hint Resolve rtclosure_once.
 
-(* TODO: equivalence with pretty *)
+Hint Constructors rtclosure infclosure.
+
+(** Addition reduction contexts *)
+
+Definition isctx (f:trm->trm) :=
+  forall t1 t2, step t1 t2 -> step (f t1) (f t2).
+
+Lemma isctx_ctx : forall c, isctx c.
+Proof. intros_all. applys* step_ctx. Qed.
+
+Hint Resolve isctx_ctx.
+
+(** Transitive reduction in contexts *)
+
+Lemma stepstar_ctx : forall f t1 t2,
+  isctx f ->
+  stepstar t1 t2 ->
+  stepstar (f t1) (f t2).
+Proof. introv C R. induction* R. Qed.
+
+(** Extended forms with divergence *)
+
+Definition ext_not_diverge e :=
+  let n o := o <> out_div in
+  match e with
+  | ext_trm _ => True
+  | ext_app_1 o1 t2 => n o1
+  | ext_app_2 v1 o2 => n o2
+  | ext_inj_1 b o1 => n o1
+  | ext_case_1 o1 t2 t3 => n o1
+  | ext_try_1 o1 t2 => n o1
+  | ext_raise_1 o1 => n o1
+  end.
+
+Hint Unfold ext_not_diverge.
+
+Lemma red_not_div : forall e o,
+  red e o -> ext_not_diverge e -> o <> out_div.
+Proof. introv H. induction* H; auto_false. Qed.
+
+Hint Resolve red_not_div.
+
+(** Conversions of extended forms into terms *)
+
+Instance trm_inhab : Inhab trm.
+Proof. applys Inhab_of_val (trm_val (val_int 0)). Qed.
+
+Definition trm_of_out o : trm :=
+  match o with
+  | out_ret v => v
+  | out_exn v => trm_raise v
+  | out_div => arbitrary
+  end.
+
+Definition trm_of_ext e : trm :=
+  let r := trm_of_out in
+  match e with
+  | ext_trm t => t
+  | ext_app_1 o1 t2 => trm_app (r o1) t2
+  | ext_app_2 v1 o2 => trm_app v1 (r o2)
+  | ext_inj_1 b o1 => trm_inj b (r o1)
+  | ext_case_1 o1 t2 t3 => trm_case (r o1) t2 t3
+  | ext_try_1 o1 t2 => trm_try (r o1) t2
+  | ext_raise_1 o1 => trm_raise (r o1)
+  end.
+
+Hint Unfold ctx_notry.
+
+(** Proof of equivalence *)
+
+Section Equiv.
+
+Tactic Notation "applys_simpl" constr(E) :=
+  let M := fresh "TEMP" in
+  lets M: E; simpl in M; applys M; clear M.
+
+Tactic Notation "applys_simpl" "~" constr(E) :=
+  applys_simpl E; auto_tilde.
+Tactic Notation "applys_simpl" "*" constr(E) :=
+  applys_simpl E; auto_star.
+
+(** [sredval] to [red] *)
+
+Lemma sredval_red : forall t v,
+  sredval t v -> red t v.
+Proof. skip. Qed.
+
+(** [red] to [sredval] *)
+
+Lemma red_sredstar : forall e o,
+  red e o -> ext_not_diverge e -> sredstar (trm_of_ext e) (trm_of_out o).
+Proof.
+  introv R. induction R; introv N; simpls.
+  auto.
+  auto.
+  applys rtclosure_trans; [ | applys* IHR2].
+   applys* stepstar_ctx (ctx_app_1 ctx_hole t2).
+  inverts H; tryfalse. simpl. applys rtclosure_once.
+   applys~ step_exn (ctx_app_1 ctx_hole t2).
+  applys rtclosure_trans; [ | applys* IHR2].
+   applys* stepstar_ctx (ctx_app_2 v1 ctx_hole).
+  inverts H; tryfalse. simpl. applys rtclosure_once.
+   applys~ step_exn (ctx_app_2 v1 ctx_hole).
+  applys rtclosure_trans; [ | applys* IHR].
+   applys* rtclosure_once.
+  applys rtclosure_trans; [ | applys* IHR2].
+   applys* stepstar_ctx (ctx_inj b ctx_hole).
+  inverts H; tryfalse. simpl. applys rtclosure_once.
+   applys~ step_exn (ctx_inj b ctx_hole).
+  auto.
+  applys rtclosure_trans; [ | applys* IHR2].
+   applys* stepstar_ctx (ctx_case ctx_hole t2 t3).
+  inverts H; tryfalse. simpl. applys rtclosure_once.
+   applys~ step_exn (ctx_case ctx_hole t2 t3).
+  applys rtclosure_trans; [ | applys* IHR].
+   applys rtclosure_once. simple*.
+  applys rtclosure_trans; [ | applys* IHR].
+   applys rtclosure_once. simple*.
+  applys rtclosure_trans; [ | applys* IHR2].
+   applys* stepstar_ctx (ctx_try ctx_hole t2).
+  applys* rtclosure_once.
+  applys rtclosure_trans; [ | applys* IHR].
+   applys* rtclosure_once.
+  false.
+  applys rtclosure_trans; [ | applys* IHR2].
+   applys* stepstar_ctx (ctx_raise ctx_hole).
+  inverts H; tryfalse. simpl. applys rtclosure_once.
+   applys~ step_exn (ctx_raise ctx_hole).
+  auto.
+Qed.
+
+Lemma red_sredval : forall t v,
+  red t v -> sredval t v.
+Proof. introv R. applys~ red_sredstar R. Qed.
+
+End Equiv.
+
+
+(************************************************************)
+(* ** Determinacy *)
+
+Definition deterministic :=
+  forall e o1 o2, red e o1 -> cored e o2 -> o1 = o2.
+
+(** Proof that the language is deterministic *)
+
+Ltac off :=
+  try solve [ match goal with
+    H: abort _ |- _ => tryfalse_invert H
+  end | false ].
+
+Lemma red_cored_deterministic :
+  deterministic.
+Proof.
+  introv R C. gen o2. induction R; intros;
+   inverts C; off; auto; try solve [ false; auto ].
+  rewrite~ <- IHR2. erewrite* IHR1.
+  rewrite~ <- IHR2. erewrite* IHR1.
+  rewrite~ <- IHR2. erewrite* IHR1.
+  rewrite~ <- IHR2. erewrite* IHR1.
+  rewrite~ <- IHR2. erewrite* IHR1.
+  rewrite~ <- IHR2. erewrite* IHR1.
+Qed.
+
+(** Proof that [red] and [diverge] are exclusive *)
+
+Lemma red_not_diverge_ext :
+  forall e o, red e o -> diverge e -> ext_not_diverge e -> False.
+Proof.
+  introv R1 R2 N. forwards M: red_cored_deterministic R1 R2.
+  applys* red_not_div M.
+Qed.
+
+Lemma red_not_diverge_trm :
+  forall t o, red t o -> diverge t -> False.
+Proof. introv R1 R2. applys* red_not_diverge_ext. Qed.

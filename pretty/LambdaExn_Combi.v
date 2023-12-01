@@ -169,7 +169,7 @@ Hint Extern 1 (before _ _) => apply before_succ.
 Hint Extern 1 (faster _ _) => apply faster_succ.
 Hint Extern 3 (faster_before _ _ _) => split.
 
-(** Other automation not needed here *)
+(** Other automation, not needed here *)
 
 Section OtherAutomation.
 
@@ -298,13 +298,13 @@ Qed.
 
 (** Bonus *)
 
-Remark det_ter_ter : forall e n1 n2 b1 b2,
+Lemma det_ter_ter : forall e n1 n2 b1 b2,
   cred e (out_ter n1 b1) -> cred e (out_ter n2 b2) -> b1 = b2.
 Proof.
   introv R1 R2. forwards~ (?&M): det_ter_any R1 R2. inverts~ M.
 Qed.
 
-Remark det_ter_div : forall e n b,
+Lemma det_ter_div : forall e n b,
   cred e (out_ter n b) -> cred e out_div -> False.
 Proof.
   introv R1 R2. forwards~ M: det_ter_any R1 R2. inverts M. false.

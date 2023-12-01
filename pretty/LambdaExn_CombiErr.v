@@ -4,6 +4,7 @@
 *************************************************************)
 
 Set Implicit Arguments.
+From TLC Require Export LibNat.
 Require Export LambdaExn_Pretty.
 Export BehaviorsWithErrors.
 
