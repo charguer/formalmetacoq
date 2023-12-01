@@ -279,12 +279,6 @@ Tactic Notation "applys_simpl" "~" constr(E) :=
 Tactic Notation "applys_simpl" "*" constr(E) :=
   applys_simpl E; auto_star.
 
-(** [sredval] to [red] *)
-
-Lemma sredval_red : forall t v,
-  sredval t v -> red t v.
-Proof. skip. Qed.
-
 (** [red] to [sredval] *)
 
 Lemma red_sredstar : forall e o,

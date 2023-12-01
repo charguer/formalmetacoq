@@ -257,10 +257,19 @@ Proof.
   introv R S E. inverts R as.
   inverts E. inverts* S.
   inverts E. inverts* S.
-  skip.
+  introv R1 R2 [L2 L1]. inverts E. inverts S as S1 S2 [M2 M1].
+    inverts L1. inverts L2.
+     forwards~ (n1'&N1): IH R1 S1. subst.
+     forwards~ (n2'&N2): IH R2 S2. subst.
+     inverts M2. eauto.
   introv A B. inverts B. inverts2 E. inverts A;
     inverts S as A' B'; inverts B'; eauto.
-  skip.
+  introv R1 R2 [L2 L1]. inverts2 E. inverts S as S1 S2 [M2 M1].
+    inverts S1.
+    inverts L1. inverts L2.
+     forwards~ (n1'&N1): IH R1 S1. subst.
+     forwards~ (n2'&N2): IH R2 S2. subst.
+     inverts M2. eauto.
   introv A B. inverts B. inverts2 E. inverts A;
     inverts S as A' B'; inverts B'; eauto.
   introv R1 L1. inverts L1. inverts2 E. inverts S as.

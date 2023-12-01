@@ -249,7 +249,7 @@ Proof.
   applys bigred_case_false. applys IH (beh_exn v). auto. auto.
   asserts~ Fr1: (fresh (trm_vars not_used t1) 3 L).
   forwards M: fresh_bigred R1 Fr1. simpl in M.
-  applys bigred_tr_cont. skip. (* applys IH. makes Guarded loop ! *)
+  applys bigred_tr_cont. exact IH.
   auto. auto. auto.
   (* case_raise *)
   applys* bigred_tr_bind_ret. simpl_substs. auto.
@@ -267,7 +267,7 @@ Proof.
   do 2 rewrite~ subst_tr_cont.
   do 2 (rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ]).
   applys* bigred_case_true.
-  applys bigred_tr_cont R2. skip. (* applys IH. makes Guarded loop ! *)
+  applys bigred_tr_cont R2. exact IH.
   auto. auto.
   (* case_false *)
   asserts~ Fr1: (fresh (trm_vars not_used t1) 3 L).
@@ -277,7 +277,7 @@ Proof.
   do 2 rewrite~ subst_tr_cont.
   do 2 (rewrite (@subst_id not_free); [ | applys~ tr_trm_vars ]).
   applys* bigred_case_false.
-  applys bigred_tr_cont R2. skip. (* applys IH. makes Guarded loop ! *)
+  applys bigred_tr_cont R2. exact IH.
   auto. auto.
   (* case_1 *)
   applys* bigred_tr_bind_exn.
@@ -346,6 +346,3 @@ Proof.
   applys* bigdiv_case_false.
   applys* bigdiv_tr_cont R2.
 Qed.
-
-
-
