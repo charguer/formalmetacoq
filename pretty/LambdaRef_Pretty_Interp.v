@@ -57,7 +57,7 @@ Inductive red : mem -> ctx -> ext -> out -> Prop :=
   | red_val : forall m c v,
       red m c v (out_ter m v)
   | red_var : forall m c x v,
-      Heap.binds c x v ->
+      binds x v c ->
       red m c (trm_var x) (out_ter m v)
   | red_abs : forall m c x t,
       red m c (trm_abs x t) (out_ter m (val_clo c x t))
@@ -177,11 +177,8 @@ End BigredInd.
 
 Hint Constructors red.
 
-Instance val_Inhab : Inhab val.
+Global Instance val_Inhab : Inhab val.
 Proof. apply (Inhab_of_val (val_int 0)). Qed.
-
-Instance loc_Comparable : Comparable loc.
-(*Proof. constructor ; apply eq_nat_dec. Qed.*)
 
 
 (************************************************************)
@@ -228,8 +225,10 @@ Fixpoint run (n:nat) (m:mem) (c:ctx) (t:trm) : res :=
     match t with
     | trm_val v => ret v
     | trm_var x =>
-       if_true (decide (Heap.indom c x)) (fun _ =>
-         ret (get_or_arbitrary x c))
+       match LibEnv.EnvOps.get x c with
+       | None => res_unspec
+       | Some v => ret v
+       end
     | trm_abs x t1 => ret (val_clo c x t1)
     | trm_app t1 t2 =>
        if_success (run' m c t1) (fun m1 v1 =>
@@ -244,9 +243,10 @@ Fixpoint run (n:nat) (m:mem) (c:ctx) (t:trm) : res :=
     | trm_get t1 =>
        if_success (run' m c t1) (fun m1 v1 =>
          if_isloc v1 (fun l =>
-           if_true (decide (indom m1 l)) (fun _ =>
-             let v := Heap.read m1 l in (* or read_opt *)
-             res_return m1 v)))
+          match Heap.read_opt m1 l with
+          | None => res_unspec
+          | Some v => res_return m1 v
+          end))
     | trm_set t1 t2 =>
        if_success (run' m c t1) (fun m1 v1 =>
          if_success (run' m1 c t2) (fun m2 v2 =>
@@ -295,9 +295,7 @@ Proof.
     intros. applys* H. clear H.
   inverts R as; simpl.
   auto.
-  introv B. erewrite if_true_elim; eauto.
-   fequals. rewrite~ (binds_get_or_arbitrary B).
-   rewrite istrue_decide. applys* get_some_inv.
+  introv B. rewrite* (binds_get B).
   auto.
   introv R1 R2. inverts R2 as R2 R3. inverts R3 as R3.
    rewrites~ (>> IH R1). simpl.
@@ -305,10 +303,7 @@ Proof.
    applys* IH.
   introv R1 R2. inverts R2 as. rewrites~ (>> IH R1).
   introv R1 R2. inverts R2 as B.
-   rewrites~ (>> IH R1). simpl.
-   erewrite if_true_elim; eauto.
-     fequals_rec. applys (binds_read B).
-     rewrite istrue_decide. applys* @LibHeap.binds_indom.
+   rewrites~ (>> IH R1). simpl. rewrites* (>> Heap.binds_inv_read_opt B).
   introv R1 R2. inverts R2 as R2 R3. inverts R3 as R3.
    rewrites~ (>> IH R1). simpl.
    rewrites~ (>> IH R2).

@@ -5,7 +5,7 @@
 
 Set Implicit Arguments.
 Require Export Common LibHeap.
-Module Heap := LibHeap.HeapList.
+Module Heap := LibHeap.
 Notation "x ~~ a" := (single x a)
   (at level 27, left associativity) : env_scope.
 
@@ -34,6 +34,9 @@ Parameter constr_assert_failure : constr.
 (** Representation of locations *)
 
 Definition loc := var.
+
+Global Instance loc_Comparable : Comparable loc.
+Proof using. apply comparable_var. Qed.
 
 (** Representation of the direction of a for-loop *)
 
@@ -110,6 +113,7 @@ Inductive val : Type :=
   | val_record : list (lab*val) -> val.
 
 (** Representation of the memory store *)
+
 
 Definition mem := Heap.heap loc val.
 

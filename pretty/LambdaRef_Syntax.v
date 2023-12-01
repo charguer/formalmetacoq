@@ -5,7 +5,6 @@
 
 Set Implicit Arguments.
 Require Export Common LibHeap.
-Module Heap := LibHeap.HeapList.
 Notation "x ~~ a" := (single x a)
   (at level 27, left associativity) : env_scope.
 
