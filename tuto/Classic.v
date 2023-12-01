@@ -5,7 +5,7 @@
 
 Set Implicit Arguments.
 Require Import Coq.micromega.Lia Coq.Arith.Plus Coq.Arith.Wf_nat.
-Require Coq.Classes.Equivalence Coq.Arith.Even.
+Require Coq.Classes.Equivalence.
 
 (** By default, Coq features a constructive logic and provides a
     relatively weak notion of equality. This contrasts with most
@@ -76,8 +76,8 @@ Proof.
   try reflexivity.
   (* rewriting [n + 1 = 1 + n] is not possible because it is not
      possible to perform rewriting involving bound names *)
-  unfold succ_3. try rewrite plus_comm.
-Admitted.
+  unfold succ_3. try rewrite Nat.add_comm.
+Abort.
 
 (** Even though we cannot prove [succ_1] and [succ_3] equal, we can
     prove them extensionaly equal: for any argument [n], the applications
@@ -85,7 +85,7 @@ Admitted.
 
 Lemma succ_1_eq_succ_3_ext :
   forall n, succ_1 n = succ_3 n.
-Proof. intros. unfold succ_1, succ_3. rewrite plus_comm. reflexivity. Qed.
+Proof. intros. unfold succ_1, succ_3. rewrite Nat.add_comm. reflexivity. Qed.
 
 (** From this lemma, it is possible to derive the equality [succ_1 = succ_3]
     by using the axiom of "functional extensionality". This axioms states
@@ -338,12 +338,12 @@ Lemma not_not_elim : forall (P : Prop),
   ~ ~ P -> P.
 Proof.
   (* complete the proof usint the tactic [test]; at some point in
-     the proof, you need to invoke [elimtype False] in order to
+     the proof, you need to invoke [exfalso] in order to
      discard one absurd subgoal *)
   (* BEGIN SOLUTION *)
    intros P N. test P.
       auto.
-      elimtype False. apply N. auto.
+      contradiction.
   (* END SOLUTION *)
 Qed.
 
@@ -659,7 +659,7 @@ Qed.
     statement that it finds and perform a case analysis on its condition. *)
 
 Ltac case_if :=
-  let go P := destruct P; try solve [elimtype False; congruence] in
+  let go P := destruct P; try solve [exfalso; congruence] in
   match goal with
   | |- context [if ?P then _ else _] => go P
   | K: context [if ?P then _ else _] |- _ => go P
@@ -794,11 +794,9 @@ Qed.
     The proofs are out of the scope of this tutorial. They can be found
     in the TLC library. *)
 
-Lemma classic_derivable : forall (P : Prop), P \/ ~ P.
-Admitted.
+Parameter classic_derivable : forall (P : Prop), P \/ ~ P.
 
-Lemma classicT_derivable : forall (P : Prop), {P} + {~ P}.
-Admitted.
+Parameter classicT_derivable : forall (P : Prop), {P} + {~ P}.
 
 (** A third and very useful application of indefinite description
     is the construction of Hilbert's epsilon operator, which can
@@ -930,7 +928,7 @@ Lemma epsilon_aux : forall `{Inhab A} (P : A->Prop),
 Proof.
   intros. destruct (classic (exists y, P y)) as [[y Py]|M].
     exists y. intros _. auto.
-    exists arbitrary. intros N. elimtype False. auto.
+    exists arbitrary. intros N. exfalso. auto.
 Qed.
 
 (** We can now define [epsilon] by applying indefinite description
@@ -1095,10 +1093,10 @@ Proof. intros. apply exist_eq. auto. Qed.
     information about equalities between two such objects. This lemma,
     called "injectivity of dependent pairs" is as follows: *)
 
-Lemma inj_pairT2 :
+Parameter inj_pairT2 :
   forall (A : Type) (P : A -> Type) (x : A) (H1 H2 : P x),
   existT P x H1 = existT P x H2 -> H1 = H2.
-Admitted. (* the proof uses proof irrelevance *)
+(* The proof uses proof irrelevance *)
 
 
 (* ********************************************************************** *)
@@ -1262,8 +1260,16 @@ End Quotient.
 (* ********************************************************************** *)
 (** * Recursive functions *)
 
+(** The example from this section make use of the predicate [even n]. *)
+
+Fixpoint even n : Prop :=
+  match n with
+    | 0 => True
+    | 1 => False
+    | S (S n') => even n'
+  end.
+
 Module FixedPoints.
-Import Even.
 
 (** The epsilon operator can be used to define the "optimal fixed
     point combinator". This combinator can be used to define (partial)
@@ -1421,7 +1427,7 @@ Arguments FixFun_fix [A] R P [B] [H] F f.
     for reasoning about the fact that [even n] implies [even (n-2)] when
     [n] is not 0 nor 1. The tactic and the lemma appear below. *)
 
-Ltac math := first [ simpl; lia | elimtype False; lia ].
+Ltac math := first [ simpl; lia | exfalso; lia ].
 
 Lemma even_minus_2 : forall n,
   even n ->
@@ -1429,8 +1435,8 @@ Lemma even_minus_2 : forall n,
   n <> 1 ->
   even (n - 2).
 Proof.
-  intros. inversion H. math. inversion H2.
-  simpl. replace (n1 - 0) with n1. auto. lia.
+  intros. destruct n as [|[|]]; try contradiction. simpl.
+  replace (n - 0) with n. auto. lia.
 Qed.
 
 (** The proof of the fixed point equation is then as follows. It
@@ -1451,7 +1457,7 @@ Proof.
   case_if.
     (* the case where the function diverge cannot happen because
        [n = 1] is not possible when we have [even n] *)
-    subst. inversion Pn. inversion H0.
+    subst. contradiction.
     (* in the general case, we simplify the two bodies *)
     f_equal.
     (* until the point where we reach a recursive call, in which
@@ -1480,7 +1486,7 @@ Proof.
   rewrite f_fix; [| assumption ]. unfold F.
   (* now we can analyse the body of [f] *)
   case_if. math.
-  case_if. subst. inversion E. inversion H0.
+  case_if. subst. contradiction.
   (* on the recursive call, we invoke the induction hypothesis *)
   rewrite IH. math. math. apply even_minus_2; auto.
 Qed.
@@ -1593,7 +1599,7 @@ Qed.
     automatically unfold the definition of [measure]. *)
 
 Ltac math ::=
-  unfold measure in *; first [ simpl; lia | elimtype False; lia ].
+  unfold measure in *; first [ simpl; lia | exfalso; lia ].
 
 (** For our division function [div] takes two arguments. As explained
     earlier, our termination relation needs to be a binary relation
@@ -1714,7 +1720,7 @@ Proof.
     subst. lia.
     simpl. case_if. auto. rewrite If_l.
       replace ((n + (k * n)) - n) with (k * n). auto. lia.
-      apply le_plus_l.
+      apply Nat.le_add_r.
 Qed.
 
 (* END SOLUTION *)
