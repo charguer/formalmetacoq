@@ -10,14 +10,10 @@ Contents
 Type soundness proofs:
 
 - `STLC_Core`: simply typed lambda-calculus (STLC)
-- `STLC_Core_WF`: STLC using reductin context (Wright & Felleisen's style)
 - `STLC_Ref`: STLC plus references and nondeterminism
 - `STLC_Exn`: STLC plus exceptions
-- `STLC_Pat`: STLC plus basic pattern matching
-- `STLC_Data`: a variant of STLC plus basic pattern matching
 - `Fsub`: System-F with subtyping (POPLMark challenge)
 - `CoC`: Calculus of constructions (dependent types)
-- `ML_Core`: ML type schemes (types with only head universal quantification)
 - `ML`: ML types with references and exceptions and pattern matching
 
 Other results on semantics:
@@ -31,3 +27,4 @@ Other results on semantics:
 Other files:
 
 - `Lambda_JAR_paper`: companion to the JAR'11 paper "The Locally Nameless Representation"
+
