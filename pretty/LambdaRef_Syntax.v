@@ -35,11 +35,11 @@ with trm : Type :=
 
 Coercion trm_val : val >-> trm.
 
-(** Contexts *)
+(** Contexts (executable) *)
 
 Definition ctx := env val.
 
-(** Memory store *)
+(** Memory store (executable) *)
 
 Definition mem := Heap.heap loc val.
 

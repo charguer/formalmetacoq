@@ -2,12 +2,15 @@
 * Heaps: finite maps from keys to values                    *
 *************************************************************)
 
-(** We could use TLC's LibMap library. However, to avoid complications
-    with typeclasses, we reproduce a direct formalization of heaps. *)
+(** This file aims to provide what would be a TLC LibMapExec library,
+    that is, a counterpart to LibMap with executable implementation.
+    LibHeap is similar to LibEnv, but LibEnv is specialized for keys
+    that are variables, whereas LibHeap is typically instantiated with
+    locations (natural numbers) as keys. *)
 
 Set Implicit Arguments.
 From TLC Require Import LibTactics LibReflect LibList LibListAssoc
-  LibSet LibExec.
+  LibSet LibListExec.
 Generalizable Variable K V.
 
 
@@ -235,8 +238,7 @@ Qed.
 (** [Comparable] can be proved by exhibiting a decidability
     result in the form of a strong sum *)
 
-(* --TODO: rename dec_to_comparable *)
-Lemma comparable_of_dec : forall (A:Type),
+Lemma dec_to_comparable : forall (A:Type),
   (forall x y : A, {x = y} + {x <> y}) ->
   Comparable A.
 Proof using.
@@ -276,92 +278,38 @@ Qed.
 
 Module Type HeapSpec.
 
+(** Abstract Type *)
+
 Parameter heap : Type -> Type -> Type.
 
-
-(***********************************************************)
-(** Operations *)
+(** Required operations *)
 
 Section HeapDef.
 Variables K V : Type.
-
 Parameter empty : heap K V.
-Parameter dom : heap K V -> set K. (* --LATER: should be a finite set *)
-Parameter binds : heap K V -> K -> V -> Prop.
 Parameter write : heap K V -> K -> V -> heap K V.
-Parameter to_list : heap K V -> list (K * V).
-Definition indom h r :=	(r \in dom h).
-
+Parameter rem : forall `{Comparable K} V, heap K V -> K -> heap K V.
+Parameter read_opt : forall `{Comparable K} V, heap K V -> K -> option V.
 End HeapDef.
 
-Parameter read : forall `{Comparable K} `{Inhab V}, heap K V -> K -> V.
-Parameter read_option : forall `{Comparable K} V, heap K V -> K -> option V.
-Parameter rem : forall `{Comparable K} V, heap K V -> K -> heap K V.
+(** Required properties *)
 
-Arguments empty {K} {V}.
-
-
-(***********************************************************)
-(** Properties *)
-
-Section HeapParameters.
-Context K (HK:Comparable K) V (HV:Inhab V).
+Section HeapProp.
+Context (K:Type) (HK:Comparable K) (V:Type).
+Implicit Types k : K.
+Implicit Types v : V.
 Implicit Types h : heap K V.
 
-Parameter indom_equiv_binds : forall h k,
-  indom h k = (exists v, binds h k v).
+Parameter read_opt_empty : forall k,
+  read_opt (@empty K V) k = None.
 
-Parameter dom_empty :
-  dom (@empty K V) = \{}.
+Parameter read_opt_write : forall k k' v h,
+  read_opt (write h k' v) k = ifb k = k' then Some v else read_opt h k.
 
-Parameter binds_equiv_read : forall h k,
-  indom h k -> (forall v, (binds h k v) = (read h k = v)).
+Parameter read_opt_rem : forall k k' v h,
+  read_opt (rem h k') k = ifb k = k' then None else read_opt h k.
 
-Parameter dom_write : forall h r v,
-  dom (write h r v) = dom h \u \{r}.
-
-Parameter binds_write_eq : forall h k v,
-  binds (write h k v) k v.
-
-Parameter binds_write_neq : forall h k v k' v',
-  binds h k v -> k <> k' ->
-  binds (write h k' v') k v.
-
-Parameter binds_write_inv : forall h k v k' v',
-  binds (write h k' v') k v ->
-  (k = k' /\ v = v') \/ (k <> k' /\ binds h k v).
-
-Parameter binds_rem : forall h k k' v,
-  binds h k v -> k <> k' -> binds (rem h k') k v.
-
-Parameter binds_rem_inv : forall h k v k',
-  binds (rem h k') k v -> k <> k' /\ binds h k v.
-
-(* --TODO: need to add the instance BagRemove to LibSet
-Parameter dom_rem : forall h k,
-  dom (rem h k) = (dom h) \- k.
-For now, we used this derived form:
-*)
-
-Parameter not_indom_rem : forall h k,
-  ~ indom (rem h k) k.
-
-Parameter binds_equiv_read_option : forall `{Inhab V} h k v,
-  (binds h k v) = (read_option h k = Some v).
-
-Parameter not_indom_equiv_read_option : forall `{Inhab V} h k,
-  (~ indom h k) = (read_option h k = None).
-
-Parameter read_option_def : forall h k,
-  read_option h k = (If indom h k then Some (read h k) else None).
-
-End HeapParameters.
-
-Arguments binds_equiv_read : clear implicits.
-
-Parameter indom_decidable : forall `{Comparable K} V (h:heap K V) k,
-  Decidable (indom h k).
-Existing Instance indom_decidable.
+End HeapProp.
 
 End HeapSpec.
 
@@ -371,58 +319,177 @@ End HeapSpec.
 (***********************************************************)
 (** Implementation of heaps as lists *)
 
+Lemma filter_eq' : forall A (P:A->Prop) (p:A->bool) l,
+  isTrue_pred p P ->
+  filter p l = LibList.filter P l.
+Proof using. intros. applys* filter_eq. Qed.
+
 Module HeapList : HeapSpec.
+
+(** Realize Type *)
 
 Definition heap K V := list (K*V).
 
-Section HeapDefs.
-(*Variables K V : Type.*)
-Context `{Comparable K} `{Inhab V}.
-Definition empty : heap K V := nil.
-Definition dom (l : heap K V) : set K :=
-  fold_right (fun p acc => acc \u \{fst p}) \{} l.
-Definition binds (l : heap K V) k v :=
-  Assoc k v l.
-Definition to_list (l : heap K V) := l.
+(** Realize operations *)
 
-(* --TODO: move *)
+Section HeapDef.
+Variables K V : Type.
+Implicit Types k : K.
+Implicit Types v : V.
+Implicit Types h : heap K V.
+
+Definition empty : heap K V :=
+  nil.
+
+Definition write h k v :=
+  (k, v) :: h.
+
+Definition rem `{Comparable K} h k :=
+  LibListExec.filter (fun '(k',v) => ! (decide (k' = k))) h.
+
+Fixpoint read_opt `{Comparable K} h k :=
+  match h with
+  | nil => None
+  | (k', v) :: h' => ifb k = k' then Some v else read_opt h' k
+  end.
+
+End HeapDef.
+
+(** Realize properties *)
+
+Section HeapProp.
+Context (K:Type) (HK:Comparable K) (V:Type).
+Implicit Types k : K.
+Implicit Types v : V.
+Implicit Types h : heap K V.
+
+Lemma read_opt_empty : forall k,
+  read_opt (@empty K V) k = None.
+Proof using. auto. Qed.
+
+Lemma read_opt_write : forall k k' v h,
+  read_opt (write h k' v) k = ifb k = k' then Some v else read_opt h k.
+Proof using. auto. Qed.
+
+Lemma rem_eq_filter : forall h k,
+  rem h k = LibList.filter (fun '(k',v) => k' <> k) h.
+Proof using.
+  intros. unfold rem. rewrite (@filter_eq' _ (fun (kvi:K*V) => fst kvi <> k)).
+  { fequal. extens. intros (ki,vi). simple*. }
+  { intros (ki,vi). simpl. rewrite decide_spec. rewrite* isTrue_not. }
+Qed.
+
+Hint Rewrite (@decide_spec) : rew_bool_eq.
+
+Lemma read_opt_rem : forall k k' v h,
+  read_opt (rem h k') k = ifb k = k' then None else read_opt h k.
+Proof using HK.
+  intros. rewrite rem_eq_filter. case_if.
+  { induction h as [|[ki vi] h']; rew_listx.
+    { auto. }
+    { case_if*. { simpl. case_if*. } } }
+  { induction h as [|[ki vi] h']; rew_listx.
+    { auto. }
+    { simpl. case_if. { simpl. case_if*. } { case_if*. } } }
+Qed.
+
+End HeapProp.
+
+End HeapList.
+
+
+
+
+
+
+(***********************************************************)
+(***********************************************************)
+(***********************************************************)
+(* Note: move to LibListAssocExec *)
+
 Generalizable Variable A B.
+
 Fixpoint assoc `{Comparable A} `{Inhab B} k (l:list (A*B)) : B :=
   match l with
   | nil => arbitrary
   | (x, v) :: l' => ifb x = k then v else assoc k l'
   end.
-Definition read (l : heap K V) k :=
-  assoc k l.
-Definition write (l : heap K V) k v :=
-  (k, v) :: l.
-Definition rem K `{Comparable K} V (l : heap K V) k :=
-  LibList.filter (fun p => ifb (fst p) = k then false else true) l.
-Definition indom h r := (r \in dom h).
-Fixpoint read_option (l : heap K V) k :=
+
+
+Module HeapList : HeapSpec.
+
+Definition heap K V := list (K*V).
+
+Section HeapDefs.
+Context `{Comparable K} `{Inhab V}.
+Implicit Types h : heap K V.
+
+Definition empty : heap K V := nil.
+
+Definition dom h : set K :=
+  fold_right (fun p acc => acc \u \{fst p}) \{} h.
+
+Definition binds h k v :=
+  Assoc k v h.
+
+Definition to_list h :=
+  h.
+
+Definition read h k :=
+  assoc k h.
+
+Definition write h k v :=
+  (k, v) :: h.
+
+Definition rem K `{Comparable K} V (h : heap K V) k :=
+  LibList.filter (fun p => ifb (fst p) = k then false else true) h.
+
+Definition indom h r :=
+  List.Exists (fun '(k,v) => k = r) h.
+  (*(r \in dom h).*)
+
+Fixpoint read_opt (h : heap K V) k :=
   match l with
   | nil => None
-  | (x, v) :: l' => ifb x = k then Some v else read_option l' k
+  | (x, v) :: h' => ifb x = k then Some v else read_opt h' k
   end.
 
 End HeapDefs.
 
 Arguments empty {K} {V}.
 
+Generalizable Variable A.
+
+Fixpoint mem_assoc B `{Comparable A} k (l : list (A * B)) : bool :=
+  match l with
+  | nil => false
+  | (x, _) :: l' => decide (x = k) || mem_assoc k l'
+  end.
+
+Definition indom_dec `{Comparable K} V (h:heap K V) (k:K) : bool :=
+  mem_assoc k h.
+
+(** Properties *)
 
 Section HeapParameters.
 Context (K:Type) (HK: Comparable K) (V:Type) (IV: Inhab V).
 Implicit Types h : heap K V.
-(* --TODO: do the right proof using *)
-
-Lemma indom_equiv_binds : forall h k,
-  indom h k = (exists v, binds h k v).
-Proof using.
-Admitted. (* File will be soon deprecated *)
 
 Lemma dom_empty :
   dom (@empty K V) = \{}.
 Proof using. auto. Qed.
+
+Lemma dom_write : forall h r v,
+  dom (write h r v) = dom h \u \{r}.
+Proof. intros. unfold dom, write. rew_list. auto. Qed.
+
+Lemma indom_equiv_binds : forall h k,
+  indom h k = (exists v, binds h k v).
+Proof using.
+  intros. unfold indom, binds, dom.
+Admitted.
+
+(r \in dom h)
 
 Lemma binds_equiv_read : forall h k,
   indom h k -> (forall v, (binds h k v) = (read h k = v)).
@@ -431,9 +498,6 @@ Admitted. (* File will be soon deprecated *)
 
 Arguments binds_equiv_read : clear implicits.
 
-Lemma dom_write : forall h r v,
-  dom (write h r v) = dom h \u \{r}.
-Proof. intros. unfold dom, write. rew_list. auto. Qed.
 
 Lemma binds_write_eq : forall h k v,
   binds (write h k v) k v.
@@ -459,11 +523,6 @@ Lemma binds_rem_inv : forall h k v k',
 Proof using HK.
 Admitted. (* File will be soon deprecated *)
 
-(* --TODO: need to add the instance BagRemove to LibSet
-Lemma dom_rem : forall h k,
-  dom (rem h k) = (dom h) \- k.
-For now, we used this derived form:
-*)
 
 Lemma not_indom_rem : forall h k,
   ~ indom (rem h k) k.
@@ -471,8 +530,8 @@ Proof using HK.
 Admitted. (* File will be soon deprecated *)
 
 
-Lemma binds_equiv_read_option : forall h k v,
-  (binds h k v) = (read_option h k = Some v).
+Lemma binds_equiv_read_opt : forall h k v,
+  (binds h k v) = (read_opt h k = Some v).
 Admitted. (* File will be soon deprecated *)
 
 (*
@@ -488,42 +547,35 @@ Proof using. clear IV.
 Qed.
 *)
 
-Lemma not_indom_equiv_read_option : forall h k,
-  (~ indom h k) = (read_option h k = None).
+Lemma not_indom_equiv_read_opt : forall h k,
+  (~ indom h k) = (read_opt h k = None).
 Proof using IV.
 Admitted. (* File will be soon deprecated *)
 (*
   introv. apply* injective_not. rew_logic. rewrite indom_equiv_binds.
   splits ; intro N.
    lets (v & B): rm N.
-    rewrite binds_equiv_read_option in B. rewrite* B. discriminate.
-   asserts (v & E): (exists v, read_option h k = Some v).
-     destruct* @read_option.
-    rewrite* <- binds_equiv_read_option in E.
+    rewrite binds_equiv_read_opt in B. rewrite* B. discriminate.
+   asserts (v & E): (exists v, read_opt h k = Some v).
+     destruct* @read_opt.
+    rewrite* <- binds_equiv_read_opt in E.
 Qed.
 *)
 
-Lemma read_option_def : forall h k,
-  read_option h k = (If indom h k then Some (read h k) else None).
+Lemma read_opt_def : forall h k,
+  read_opt h k = (If indom h k then Some (read h k) else None).
 Proof using.
 (* --TODO
   introv. cases_if.
-   rewrite* <- binds_equiv_read_option.
+   rewrite* <- binds_equiv_read_opt.
     rewrites* binds_equiv_read.
-   rewrite* <- @not_indom_equiv_read_option.
+   rewrite* <- @not_indom_equiv_read_opt.
 *)
 Admitted. (* File will be soon deprecated *)
 
 (* --TODO: move *)
-Generalizable Variable A.
-Fixpoint mem_assoc B `{Comparable A} k (l : list (A * B)) : bool :=
-  match l with
-  | nil => false
-  | (x, _) :: l' => decide (x = k) || mem_assoc k l'
-  end.
 
-Definition indom_dec `{Comparable K} V (h:heap K V) (k:K) : bool :=
-  mem_assoc k h.
+
 
 Lemma indom_dec_spec : forall (CK:Comparable K) V (h:heap K V) k,
   indom_dec h k = isTrue (indom h k).
@@ -550,7 +602,7 @@ Export HeapList.
 
 
 (***********************************************************)
-(** Facts *)
+(** Derived facts true for all heap implementations *)
 
 Global Instance Inhab_heap : forall (K V : Type), Inhab (heap K V).
 Proof using. introv. apply (Inhab_of_val empty). Qed.
@@ -672,35 +724,170 @@ Qed.
 
 Lemma not_indom_empty : forall k,
   ~ indom (@empty K V) k.
-Proof using HV. introv H. unfold indom in H. rewrite dom_empty in H.
-Admitted. (* File will be soon deprecated *)
-  (* --TODO: add an instance for in_empty_eq in LibSet.
-  apply* in_empty_eq. *)
+Proof using HV.
+  introv H. unfold indom in H. rewrite dom_empty in H.
+  rew_set in H. eauto.
+Qed.
 
 Lemma not_binds_empty : forall k v,
   ~ binds (@empty K V) k v.
 Proof using HV. introv H. eapply not_indom_empty. apply* binds_indom. Qed.
 
+(** binds--read_opt **)
 
-(** binds--read_option **)
+Lemma binds_read_opt : forall h k v,
+  binds h k v -> read_opt h k = Some v.
+Proof using HV. introv. rewrite* <- @binds_equiv_read_opt. Qed.
 
-Lemma binds_read_option : forall h k v,
-  binds h k v -> read_option h k = Some v.
-Proof using HV. introv. rewrite* <- @binds_equiv_read_option. Qed.
+Lemma read_opt_binds : forall h k v,
+  read_opt h k = Some v -> binds h k v.
+Proof using HV. introv R. rewrite* <- @binds_equiv_read_opt in R. Qed.
 
-Lemma read_option_binds : forall h k v,
-  read_option h k = Some v -> binds h k v.
-Proof using HV. introv R. rewrite* <- @binds_equiv_read_option in R. Qed.
+(** indom--read_opt **)
 
+Lemma not_indom_read_opt : forall h k,
+  ~ indom h k -> read_opt h k = None.
+Proof using HV. introv. erewrite not_indom_equiv_read_opt; autos*. Qed.
 
-(** indom--read_option **)
-
-Lemma not_indom_read_option : forall h k,
-  ~ indom h k -> read_option h k = None.
-Proof using HV. introv. erewrite not_indom_equiv_read_option; autos*. Qed.
-
-Lemma read_option_not_indom : forall h k,
-  read_option h k = None -> ~ indom h k.
-Proof using HV. introv. erewrite not_indom_equiv_read_option; autos*. Qed.
+Lemma read_opt_not_indom : forall h k,
+  read_opt h k = None -> ~ indom h k.
+Proof using HV. introv. erewrite not_indom_equiv_read_opt; autos*. Qed.
 
 End HeapFacts.
+
+
+
+
+
+
+Parameter indom_equiv_binds : forall h k,
+  indom h k = (exists v, binds h k v).
+
+Parameter dom_empty :
+  dom (@empty K V) = \{}.
+
+Parameter binds_equiv_read : forall h k,
+  indom h k -> (forall v, (binds h k v) = (read h k = v)).
+
+Parameter dom_write : forall h r v,
+  dom (write h r v) = dom h \u \{r}.
+
+Parameter binds_write_eq : forall h k v,
+  binds (write h k v) k v.
+
+Parameter binds_write_neq : forall h k v k' v',
+  binds h k v -> k <> k' ->
+  binds (write h k' v') k v.
+
+Parameter binds_write_inv : forall h k v k' v',
+  binds (write h k' v') k v ->
+  (k = k' /\ v = v') \/ (k <> k' /\ binds h k v).
+
+Parameter binds_rem : forall h k k' v,
+  binds h k v -> k <> k' -> binds (rem h k') k v.
+
+Parameter binds_rem_inv : forall h k v k',
+  binds (rem h k') k v -> k <> k' /\ binds h k v.
+
+Parameter not_indom_rem : forall h k,
+  ~ indom (rem h k) k.
+
+Parameter binds_equiv_read_opt : forall `{Inhab V} h k v,
+  (binds h k v) = (read_opt h k = Some v).
+
+Parameter not_indom_equiv_read_opt : forall `{Inhab V} h k,
+  (~ indom h k) = (read_opt h k = None).
+
+Parameter read_opt_def : forall h k,
+  read_opt h k = (If indom h k then Some (read h k) else None).
+
+End HeapParameters.
+
+Arguments binds_equiv_read : clear implicits.
+
+Parameter indom_decidable : forall `{Comparable K} V (h:heap K V) k,
+  Decidable (indom h k).
+Existing Instance indom_decidable.
+
+End HeapSpec.
+
+
+(***********************************************************)
+(** Properties *)
+
+
+
+
+
+
+
+Arguments empty {K} {V}.
+
+Parameter binds : heap K V -> K -> V -> Prop.
+
+Definition indom h r :=	(r \in dom h).
+
+Parameter read : forall `{Comparable K} `{Inhab V}, heap K V -> K -> V.
+
+
+
+
+
+
+(***********************************************************)
+(** Properties *)
+
+Section HeapParameters.
+Context K (HK:Comparable K) V (HV:Inhab V).
+Implicit Types h : heap K V.
+
+Parameter indom_equiv_binds : forall h k,
+  indom h k = (exists v, binds h k v).
+
+Parameter dom_empty :
+  dom (@empty K V) = \{}.
+
+Parameter binds_equiv_read : forall h k,
+  indom h k -> (forall v, (binds h k v) = (read h k = v)).
+
+Parameter dom_write : forall h r v,
+  dom (write h r v) = dom h \u \{r}.
+
+Parameter binds_write_eq : forall h k v,
+  binds (write h k v) k v.
+
+Parameter binds_write_neq : forall h k v k' v',
+  binds h k v -> k <> k' ->
+  binds (write h k' v') k v.
+
+Parameter binds_write_inv : forall h k v k' v',
+  binds (write h k' v') k v ->
+  (k = k' /\ v = v') \/ (k <> k' /\ binds h k v).
+
+Parameter binds_rem : forall h k k' v,
+  binds h k v -> k <> k' -> binds (rem h k') k v.
+
+Parameter binds_rem_inv : forall h k v k',
+  binds (rem h k') k v -> k <> k' /\ binds h k v.
+
+Parameter not_indom_rem : forall h k,
+  ~ indom (rem h k) k.
+
+Parameter binds_equiv_read_opt : forall `{Inhab V} h k v,
+  (binds h k v) = (read_opt h k = Some v).
+
+Parameter not_indom_equiv_read_opt : forall `{Inhab V} h k,
+  (~ indom h k) = (read_opt h k = None).
+
+Parameter read_opt_def : forall h k,
+  read_opt h k = (If indom h k then Some (read h k) else None).
+
+End HeapParameters.
+
+Arguments binds_equiv_read : clear implicits.
+
+Parameter indom_decidable : forall `{Comparable K} V (h:heap K V) k,
+  Decidable (indom h k).
+Existing Instance indom_decidable.
+
+End HeapSpec.

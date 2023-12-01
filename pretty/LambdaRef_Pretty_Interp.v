@@ -4,7 +4,7 @@
 *************************************************************)
 
 Set Implicit Arguments.
-Require Import LambdaRef.
+Require Import LambdaRef_Syntax.
 
 Implicit Types v : val.
 Implicit Types t : trm.
@@ -57,7 +57,7 @@ Inductive red : mem -> ctx -> ext -> out -> Prop :=
   | red_val : forall m c v,
       red m c v (out_ter m v)
   | red_var : forall m c x v,
-      LibEnv.binds x v c ->
+      Heap.binds c x v ->
       red m c (trm_var x) (out_ter m v)
   | red_abs : forall m c x t,
       red m c (trm_abs x t) (out_ter m (val_clo c x t))
@@ -228,7 +228,7 @@ Fixpoint run (n:nat) (m:mem) (c:ctx) (t:trm) : res :=
     match t with
     | trm_val v => ret v
     | trm_var x =>
-       if_true (decide (x \in EnvOps.dom c)) (fun _ =>
+       if_true (decide (Heap.indom c x)) (fun _ =>
          ret (get_or_arbitrary x c))
     | trm_abs x t1 => ret (val_clo c x t1)
     | trm_app t1 t2 =>
@@ -244,8 +244,8 @@ Fixpoint run (n:nat) (m:mem) (c:ctx) (t:trm) : res :=
     | trm_get t1 =>
        if_success (run' m c t1) (fun m1 v1 =>
          if_isloc v1 (fun l =>
-           let v := Heap.read m1 l in
            if_true (decide (indom m1 l)) (fun _ =>
+             let v := Heap.read m1 l in (* or read_opt *)
              res_return m1 v)))
     | trm_set t1 t2 =>
        if_success (run' m c t1) (fun m1 v1 =>
