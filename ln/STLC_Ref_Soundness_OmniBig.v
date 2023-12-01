@@ -10,6 +10,7 @@
 Set Implicit Arguments.
 Require Import STLC_Ref_Soundness_Common.
 Implicit Types Y : phi.
+Implicit Types P : conf->Prop.
 
 (* ********************************************************************** *)
 (** * Definition of Co-Omni-Big-Step Semantics *)
@@ -157,7 +158,7 @@ Proof using.
   { applys* coomnibig_set_1. }
   { applys* coomnibig_set_2. }
   { applys* coomnibig_rand_1. }
-Qed.
+Defined.
 
 Lemma extends_trans : forall Y2 Y1 Y3,
   extends Y1 Y2 ->
@@ -177,7 +178,7 @@ Qed.
 (* ########################################################### *)
 (** ** Type soundness proof, as it would be if the guard condition wasn't so strict *)
 
-Ltac sound_ctx E :=
+Ltac sound_ctx E := (* tactic for context evaluation rules *)
   applys* E; [ introv (?&?&?&?&?); eauto ].
 
 Hint Extern 1 (post _ _ _) => esplit; splits.
@@ -186,8 +187,11 @@ Lemma coomnibig_soundness_result_without_guard_condition :
   coomnibig_soundness.
 Proof using.
   unfolds. cofix IH.
-  asserts IH': (forall mu t Y' Y T,
-    Y' |== mu -> extends Y Y' ->  empty ! Y' |= t ~: T -> coomnibig (t, mu) (post Y T)).
+  asserts IH2: (forall mu t Y' Y T,
+    Y' |== mu ->
+    extends Y Y' ->
+    empty ! Y' |= t ~: T ->
+    coomnibig (t, mu) (post Y T)).
   { intros. applys coomnibig_conseq. applys* IH. applys* post_extends. }
   introv HS HT. inverts HT as.
   { introv HK HT1. false* binds_empty_inv. }
@@ -233,22 +237,9 @@ Abort. (* Guard condition unhappy *)
 (* ########################################################### *)
 (** ** Type soundness proof, to satisfy Coq's guard condition *)
 
-(** There are some repeated proof patterns for handling evaluation under a context;
-    due to restrictions of the guard condition checker, it is hard to capture
-    those patterns using a lemma, hence we need a tactic to factorize the work. *)
-
-Ltac sound_ctx E ::=
-  let IH := match goal with IH: context [ coomnibig ] |- _ => constr:(IH) end in
-  applys E; try match goal with |- value _ => eauto | |- ~value _ => eauto end;
-  [ applys* IH; try applys himpl_refl
-  | let EY' := fresh "EY'" in
-    introv (Y'&EY'&?&?&?); applys* IH;
-    try (match goal with HQ: post _ _ ==> _ |- _ => applys himpl_trans HQ end;
-         applys post_extends EY') ].
-
 (** For technical reasons associated with the guard condition of the
     coinductive proof, we need to reformulate the soundness statement,
-    by introducing a postcondition [P] that contains [post Y T]. *)
+    by introducing a postcondition [P] that overapproximates [post Y T]. *)
 
 Lemma coomnibig_soundness_result' : forall t mu Y T P,
   Y |== mu ->
@@ -256,7 +247,20 @@ Lemma coomnibig_soundness_result' : forall t mu Y T P,
   (post Y T ==> P) ->
   coomnibig (t,mu) P.
 Proof using.
-  cofix IH. introv HS HT HQ. inverts HT as.
+  cofix IH.
+  asserts IH1: (forall mu t Y T,
+    Y |== mu ->
+    empty ! Y |= t ~: T ->
+    coomnibig (t, mu) (post Y T)).
+  { intros. applys* IH. applys himpl_refl. }
+  asserts IH2: (forall mu t Y' Y T P,
+    Y' |== mu ->
+    extends Y Y' ->
+    empty ! Y' |= t ~: T ->
+    (post Y T) ==> P ->
+    coomnibig (t, mu) P).
+  { introv ? ? ? HP. applys* IH. applys himpl_trans HP. applys* post_extends. }
+  introv HS HT HQ. inverts HT as.
   { introv HK HT1. false* binds_empty_inv. }
   { intros L M. asserts Wf1: (term (trm_abs t1)).
     { applys term_abs L. intros x Hx. forwards*: M x. }

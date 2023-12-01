@@ -120,7 +120,7 @@ Qed.
 Hint Resolve post_current.
 Hint Constructors typing.
 
-Ltac sound_ctx E := (* tactic for evaluation under context *)
+Ltac sound_ctx E := (* tactic for context evaluation rules *)
   let Y' := fresh "Y'" in
   applys* E; try (introv (Y'&?&?&?); exists* Y').
 
