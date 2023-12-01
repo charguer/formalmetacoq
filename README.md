@@ -13,13 +13,15 @@ Contents
      See the paper "The Locally Nameless Representation" (JAR'11).
      http://www.chargueraud.org/research/2009/ln/main.pdf
 
+     The folder `ln` includes type soundness proofs, w.r.t. omni-big-step and omni-small-step semantics.
+     See the Omni-Semantics paper (TOPLAS'23).
+     http://www.chargueraud.org/research/2022/omnisemantics/omnisemantics.pdf
+
    - Folder `pretty` contains pretty-big-step developments.
      See the Pretty-Big-Step paper (ESOP'13).
      http://www.chargueraud.org/research/2012/pretty/pretty.pdf
 
-   - Folder `omni` formalizes omni-big-step and omni-small-step.
-     See the Omni-Semantics paper (TOPLAS'23).
-     http://www.chargueraud.org/research/2022/omnisemantics/omnisemantics.pdf
+     The folder `pretty` also contains type soundness proofs, w.r.t. pretty-big-step semantics
 
    - Folder `tuto` contains a tutorial on the use of classical logic in Coq.
 
