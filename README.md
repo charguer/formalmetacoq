@@ -9,7 +9,7 @@ Feel free to use them as templates for your own developments.
 Contents
 ========
 
-   - Folder `ln` contains locally nameless developments.
+   - The folder `ln` contains locally nameless developments.
      See the paper "The Locally Nameless Representation" (JAR'11).
      http://www.chargueraud.org/research/2009/ln/main.pdf
 
@@ -17,7 +17,7 @@ Contents
      See the Omni-Semantics paper (TOPLAS'23).
      http://www.chargueraud.org/research/2022/omnisemantics/omnisemantics.pdf
 
-   - Folder `pretty` contains pretty-big-step developments.
+   - The folder `pretty` contains pretty-big-step developments.
      See the Pretty-Big-Step paper (ESOP'13).
      http://www.chargueraud.org/research/2012/pretty/pretty.pdf
 
