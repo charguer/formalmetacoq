@@ -2,11 +2,17 @@
 * Heaps: finite maps from keys to values                    *
 *************************************************************)
 
-(** This file aims to provide what would be a TLC LibMapExec library,
-    that is, a counterpart to LibMap with executable implementation.
+(** This file aims to provide an executable implementation of finite
+    maps, implemented as lists.
+
     LibHeap is similar to LibEnv, but LibEnv is specialized for keys
     that are variables, whereas LibHeap is typically instantiated with
-    locations (natural numbers) as keys. *)
+    locations (natural numbers) as keys.
+
+    For a non-executable yet more complete module for representing
+    finite maps, consider using TLC's LibMap module (designed using
+    typeclasses) or the LibSepFmap module used in the CFML tool and
+    in the course "Separation Logic Foundations". *)
 
 Set Implicit Arguments.
 From TLC Require Import LibTactics LibReflect LibList LibListAssoc
