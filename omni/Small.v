@@ -119,7 +119,7 @@ Inductive seventually : state->trm->(state->trm->Prop)->Prop :=
       P s t ->
       seventually s t P
   | seventually_step : forall s t P,
-      (exists s' t', step s t s' t') ->
+      (reducible s t) ->
       (forall s' t', step s t s' t' -> seventually s' t' P) ->
       seventually s t P.
 
@@ -310,15 +310,18 @@ Qed.
 
 (** If all executions of [(t,s)] eventually fall into the set of configuration
     made the final configurations satisfying [Q], then all executions of [(t,s)]
-    terminate with postcondition [Q]. *)
+    terminate with postcondition [Q]. And reciprocally. *)
 
-Lemma eventually_of_stepsinto : forall s t Q,
-  seventually s t (pred_of_post Q) ->
-  stepsinto s t Q.
+Lemma stepsinto_iff_eventually : forall s t Q,
+  stepsinto s t Q <-> seventually s t (pred_of_post Q).
 Proof using.
-  introv M. gen_eq P: (pred_of_post Q). gen Q. induction M; intros; subst.
-  { rename H into K. destruct K as (v&->&?). constructors*. }
-  { constructors*. }
+  iff M.
+  { induction M.
+    { applys* seventually_here. hnfs*. }
+    { applys* seventually_step. } }
+  {  gen_eq P: (pred_of_post Q). gen Q. induction M; intros; subst.
+    { rename H into K. destruct K as (v&->&?). constructors*. }
+    { constructors*. } }
 Qed.
 
 
@@ -486,6 +489,19 @@ Lemma partial_safe : forall s t Q,
 Proof using.
   introv M R. forwards [(v2&->&?)|(s3&t3&?)]: M R.
   { left*. } { right*. }
+Qed.
+
+(** In fact, [partial] instantiated with the always-true postcondition
+    captures safety and nothing more. *)
+
+Lemma ssafe_eq_safe : forall s t,
+  partial s t Any <-> safe s t.
+Proof using.
+  intros s t. iff M.
+  { applys* partial_safe. }
+  { introv R. forwards [K|K]: M R.
+    { left. unfold Any. destruct t2; tryfalse; eauto. }
+    { right*. } }
 Qed.
 
 (* [partial] captures correctness. *)

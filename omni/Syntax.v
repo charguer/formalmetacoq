@@ -225,4 +225,14 @@ Definition Empty : val->state->Prop :=
 Hint Unfold Empty.
 
 
+(* ########################################################### *)
+(* ########################################################### *)
+(* ########################################################### *)
+(** * TLC LibTactic Patch *)
+
+Ltac false_invert_iter ::=
+  match goal with H:_ |- _ =>
+    solve [ inversion H; false
+          | clear H; false_invert_iter
+          | fail 2 ] end.
 

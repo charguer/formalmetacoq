@@ -4,14 +4,31 @@
 *****************************************************************)
 
 Set Implicit Arguments.
-Require Export Syntax.
+Require Export OmniBig OmniSmall.
+
+Implicit Types f : var.
+Implicit Types b : bool.
+Implicit Types p : loc.
+Implicit Types n : int.
+Implicit Types v w r vf vx : val.
+Implicit Types t : trm.
+Implicit Types s : state.
+
+Implicit Types P : state->trm->Prop.
+Implicit Types Q : val->state->Prop.
 
 
 (* ########################################################### *)
-(** ** Equivalence Between Eventually and Omni-Big-Step Semantics *)
+(* ########################################################### *)
+(* ########################################################### *)
+(** * Equivalence Proofs for Total Correctness *)
 
 (** We start by establishing the equivalence between [stepsinto] and [omnibig].
     We focus first on the direction from [stepsinto] to [omnibig]. *)
+
+
+(* ########################################################### *)
+(** ** From Omni-Big-Step to Inductive-Small-Steps [stepsinto] *)
 
 (** We begin with a key lemma: if a configuration [(s1,t1)] takes a step to
     [(s2,t2)], then this first configuration admits the same postconditions
@@ -64,6 +81,10 @@ Proof using.
   { applys* omnibig_val. }
   { applys* omnibig_of_step_and_omnibig. }
 Qed.
+
+
+(* ########################################################### *)
+(** ** From Inductive-Small-Steps [stepsinto] to Omni-Big-Step *)
 
 (** Let's now turn to the second direction, from [omnibig] to [stepsinto].
     We first need an introduction lemma for let-bindings for [stepsinto]. *)
@@ -141,6 +162,10 @@ Proof using.
     { introv K. inverts K; tryfalse. applys* stepsinto_val. } }
 Qed.
 
+
+(* ########################################################### *)
+(** ** Equivalence of Omni-Big-Step with Small-Step Characterizations *)
+
 (** Combining the two directions, we obtain the desired equivalence between
     omni-big-step and inductive-small-step. *)
 
@@ -162,14 +187,93 @@ Proof using.
 Qed.
 
 
-
 (* ########################################################### *)
-(** ** Equivalence Between CoInductive Big-Step and Standard Partial Correctness *)
+(* ########################################################### *)
+(* ########################################################### *)
+(** * Equivalence Proofs for Partial Correctness *)
 
 (** The first step of the proof is to formally relate [costepsinto]
    and [coomnibig], which are both defined coinductively. *)
 
-(** The first direction is from [costepsinto] to [coomnibig].
+
+(* ########################################################### *)
+(** ** From Co-Omni-Big-Step to Co-Inductive-Small-Steps [costepsinto] *)
+
+(** For the first direction, we need one key inversion lemma. It
+    is stated below. Its hypothesis is [coomnibig s t Q], and its conclusion
+    corresponds to the disjunction of the constructors of the inductive
+    definition of [costepsinto s t Q]. *)
+
+Lemma coomnibig_inv_step : forall s t Q,
+  coomnibig s t Q ->
+     (exists v, t = trm_val v /\ Q v s)
+  \/ ((exists s' t', step s t s' t' /\ coomnibig s' t' Q)
+      /\ (forall s' t', step s t s' t' -> coomnibig s' t' Q)).
+Proof using.
+  introv M. gen s Q. induction t; intros; inverts M as.
+  { introv R. left. eauto. }
+  { introv R. right. split.
+    { exists. split. { applys step_fix. } { applys* coomnibig_val. } }
+    { intros s' t' S. inverts S. applys* coomnibig_val. } }
+  { introv M1. right. split.
+    { exists. split. { applys* step_app_fix. } { auto. } }
+    { intros s' t' S. inverts S as E. inverts E. auto. } }
+  { introv R. right. split.
+    { exists. split. { applys* step_div. } { applys* coomnibig_val. } }
+    { intros s' t' S. inverts S. applys* coomnibig_val. } }
+  { introv N R. right. split.
+    { exists. split. { applys* step_rand 0. math. }
+       { applys* coomnibig_val. applys R. math. } }
+    { intros s' t' S. inverts S; tryfalse. applys* coomnibig_val. } }
+  { introv R. right. split.
+    { forwards~ (p&D&N): (exists_fresh null s).
+      exists. split. { applys* step_ref. } { applys* coomnibig_val. } }
+    { intros s' t' S. inverts S; tryfalse. applys* coomnibig_val. } }
+  { introv D R. right. split.
+    { exists. split. { applys* step_get. } { applys* coomnibig_val. } }
+    { intros s' t' S. inverts S; tryfalse. applys* coomnibig_val. } }
+  { introv D R. right. split.
+    { exists. split. { applys* step_set. } { applys* coomnibig_val. } }
+    { intros s' t' S. inverts S; tryfalse. applys* coomnibig_val. } }
+  { introv D R. right. split.
+    { exists. split. { applys* step_free. } { applys* coomnibig_val. } }
+    { intros s' t' S. inverts S; tryfalse. applys* coomnibig_val. } }
+  { introv M1 M2. rename v into x. right. split.
+    { forwards [(v1&->&HQ1)|((s'&t'&S'&M')&_)]: IHt1 M1.
+      { exists. split. { applys step_let. } { applys* M2. } }
+      { exists. split.
+        { applys step_let_ctx S'. }
+        { applys coomnibig_let M'. applys M2. } } }
+    { intros s' t' S. inverts S as S.
+      { forwards [(v1&->&HQ1)|(_&M3)]: IHt1 M1.
+        { inverts S. }
+        { specializes M3 S. applys coomnibig_let M3 M2. } }
+      { inverts M1 as R. applys* M2. } } }
+  { introv M1. right. split.
+    { exists. split. { applys step_if. } { auto. } }
+    { intros s' t' S. inverts S. auto. } }
+Qed.
+
+(** Using this inversion lemma, it is straightforward to derive the
+    implication from [coomnibig] to [costepsinto]. *)
+
+Lemma costepsinto_of_coeval : forall s t Q,
+  coomnibig s t Q ->
+  costepsinto s t Q.
+Proof.
+  cofix IH. introv M. lets C: coomnibig_inv_step M.
+  destruct C as [(v&->&HQ)|((s'&t'&S&M1)&M2)].
+  { applys costepsinto_val HQ. }
+  { applys costepsinto_step.
+    { exists. applys S. }
+    { intros s1 t1 S'. applys IH. applys M2 S'. } }
+Qed.
+
+
+(* ########################################################### *)
+(** ** From Co-Inductive-Small-Steps [costepsinto] to Co-Omni-Big-Step *)
+
+(** The reciprocal direction is from [costepsinto] to [coomnibig].
     To establish it, we need inversion lemmas for let-bindings. *)
 
 Lemma costepsinto_let_inv_ctx : forall x s1 t1 t2 Q Q1,
@@ -232,8 +336,8 @@ Proof using.
   { inverts M as (s'&t'&S) M1. inverts S as.
     { applys coomnibig_app_fix. { reflexivity. } applys IH.
       applys M1. applys* step_app_fix. }
-    { applys coomnibig_div.
-      forwards M1': M1. { applys step_div. }
+    { introv N. applys* coomnibig_div.
+      forwards M1': M1. { applys* step_div. }
       inverts M1' as. { auto. } { intros. false* exists_step_val_inv. } }
     { introv N. applys* coomnibig_rand. { math. }
       intros n1' N1.
@@ -258,75 +362,9 @@ Proof using.
     applys IH. applys M1. applys step_if. }
 Qed.
 
-(** For the reciprocal direction, we also need one key inversion lemma. It
-    is stated below. Its hypothesis is [coomnibig s t Q], and its conclusion
-    corresponds to the disjunction of the constructors of the inductive
-    definition of [costepsinto s t Q]. *)
 
-Lemma coomnibig_inv_step : forall s t Q,
-  coomnibig s t Q ->
-     (exists v, t = trm_val v /\ Q v s)
-  \/ ((exists s' t', step s t s' t' /\ coomnibig s' t' Q)
-      /\ (forall s' t', step s t s' t' -> coomnibig s' t' Q)).
-Proof using.
-  introv M. gen s Q. induction t; intros; inverts M as.
-  { introv R. left. eauto. }
-  { introv R. right. split.
-    { exists. split. { applys step_fix. } { applys* coomnibig_val. } }
-    { intros s' t' S. inverts S. applys* coomnibig_val. } }
-  { introv M1. right. split.
-    { exists. split. { applys* step_app_fix. } { auto. } }
-    { intros s' t' S. inverts S as E. inverts E. auto. } }
-  { introv R. right. split.
-    { exists. split. { applys step_div. } { applys* coomnibig_val. } }
-    { intros s' t' S. inverts S. applys* coomnibig_val. } }
-  { introv N R. right. split.
-    { exists. split. { applys* step_rand 0. math. }
-       { applys* coomnibig_val. applys R. math. } }
-    { intros s' t' S. inverts S; tryfalse. applys* coomnibig_val. } }
-  { introv R. right. split.
-    { forwards~ (p&D&N): (exists_fresh null s).
-      exists. split. { applys* step_ref. } { applys* coomnibig_val. } }
-    { intros s' t' S. inverts S; tryfalse. applys* coomnibig_val. } }
-  { introv D R. right. split.
-    { exists. split. { applys* step_get. } { applys* coomnibig_val. } }
-    { intros s' t' S. inverts S; tryfalse. applys* coomnibig_val. } }
-  { introv D R. right. split.
-    { exists. split. { applys* step_set. } { applys* coomnibig_val. } }
-    { intros s' t' S. inverts S; tryfalse. applys* coomnibig_val. } }
-  { introv D R. right. split.
-    { exists. split. { applys* step_free. } { applys* coomnibig_val. } }
-    { intros s' t' S. inverts S; tryfalse. applys* coomnibig_val. } }
-  { introv M1 M2. rename v into x. right. split.
-    { forwards [(v1&->&HQ1)|((s'&t'&S'&M')&_)]: IHt1 M1.
-      { exists. split. { applys step_let. } { applys* M2. } }
-      { exists. split.
-        { applys step_let_ctx S'. }
-        { applys coomnibig_let M'. applys M2. } } }
-    { intros s' t' S. inverts S as S.
-      { forwards [(v1&->&HQ1)|(_&M3)]: IHt1 M1.
-        { inverts S. }
-        { specializes M3 S. applys coomnibig_let M3 M2. } }
-      { inverts M1 as R. applys* M2. } } }
-  { introv M1. right. split.
-    { exists. split. { applys step_if. } { auto. } }
-    { intros s' t' S. inverts S. auto. } }
-Qed.
-
-(** Using this inversion lemma, it is straightforward to derive the
-    implication from [coomnibig] to [costepsinto]. *)
-
-Lemma costepsinto_of_coeval : forall s t Q,
-  coomnibig s t Q ->
-  costepsinto s t Q.
-Proof.
-  cofix IH. introv M. lets C: coomnibig_inv_step M.
-  destruct C as [(v&->&HQ)|((s'&t'&S&M1)&M2)].
-  { applys costepsinto_val HQ. }
-  { applys costepsinto_step.
-    { exists. applys S. }
-    { intros s1 t1 S'. applys IH. applys M2 S'. } }
-Qed.
+(* ########################################################### *)
+(** ** Equivalence of Co-Omni-Big-Step with Small-Step Characterizations *)
 
 (** Combining the two directions yields the equality between [costepsinto] and
     [coomnibig], and that between [partial] and [coomnibig]. *)
@@ -349,36 +387,10 @@ Proof using.
 Qed.
 
 
-
 (* ########################################################### *)
-(** ** Small-Step Characterization of Safety *)
-
-(** Safety corresponds to partial correctness with the always-true
-    postcondition. We let [ssafe] denote the corresponding
-    judgment. *)
-
-Definition ssafe (s:state) (t:trm) : Prop :=
-  partial s t Any.
-
-(** [ssafe] is equivalent to [safe] *)
-
-Lemma ssafe_eq_safe :
-  ssafe = safe.
-Proof using.
-  extens. intros s t. unfold ssafe.
-  rewrite <- coomnibig_eq_partial.
-  rewrite* safe_iff_coomnibig_any.
-Qed.
-
-
-
-
 (* ########################################################### *)
-(** ** Equivalence Between Definitions of Divergence *)
-
-(** We prove that [sdiv] matches [costeps] and [coomnidiv]. *)
-
-
+(* ########################################################### *)
+(** * Equivalence Proofs for Divergence *)
 
 (** We establish the equivalence between the small-step characterisation
    and the coinductive Omni-big-step characterization of divergence. *)
@@ -391,121 +403,3 @@ Proof using.
   rewrite <- costepsinto_eq_omnibigp.
   rewrite* costepsinto_eq_partial.
 Qed.
-
-
-
-
-(* ########################################################### *)
-(** ** Equivalence of Omni-Small-Step with Standard Small Step *)
-
-Section OmnismallEquiv.
-Hint Constructors step.
-
-(* Characterization lemma (omni-small-step-iff-progress-and-correct). *)
-
-Lemma omnismall_iff_step_st : forall s t P,
-       omnismall s t P
-  <-> (   (exists s' t', step s t s' t')
-       /\ (forall s' t', step s t s' t' -> P s' t')).
-Proof using.
-  iff M.
-  { induction M.
-    { forwards (R&M1): IHM. split.
-      { destruct R as (s'&t'&S). exists. applys step_let_ctx S. }
-      { intros s' t' S. inverts S as.
-        { rename H into IHM1. introv S1. lets K1: M1 S1. applys IHM1 K1. }
-        { destruct R as (s''&t''&S'). false* step_val_inv. } } }
-    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
-    { split*. { intros s' t' S. inverts S as; try false_invert.
-                { inverts* TEMP. } } }
-    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
-    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
-    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
-    { split.
-       { exists. applys step_rand 0. math. }
-       { intros s' t' S. inverts S as; try false_invert.
-         { intros R. inverts R. auto. } } }
-    { split.
-       { forwards~ (p&F&N): (exists_fresh null s).
-         exists. applys* step_ref p. }
-       { intros s' t' S. inverts S as; try false_invert. { auto. } } }
-    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
-    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
-    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } } }
-  { destruct M as (R&M). destruct R as (s'&t'&S).
-    gen P. induction S; intros.
-    { rename S into S1. applys omnismall_let_ctx (step s1 t1).
-      { applys IHS. auto. }
-      { intros s' t' S1'. applys M. applys step_let_ctx S1'. } }
-    { applys* omnismall_fix. }
-    { applys* omnismall_app_fix. }
-    { applys* omnismall_if. }
-    { applys* omnismall_let. }
-    { applys* omnismall_div. }
-    { applys* omnismall_rand. math. }
-    { applys* omnismall_ref. }
-    { applys* omnismall_get. }
-    { applys* omnismall_set. }
-    { applys* omnismall_free. } }
-Qed.
-
-End OmnismallEquiv.
-
-
-
-(** [eventually] is equivalent to [seventually]. *)
-
-Lemma eventually_eq_seventually :
-  eventually = seventually.
-Proof using.
-  extens. intros s t P. iff M.
-  { induction M.
-    { applys* seventually_here. }
-    { rename H into M1, H0 into M2, H1 into IHM2.
-      rewrite omnismall_iff_step_st in M1. destruct M1 as (R&M1).
-      applys* seventually_step R. } }
-  { induction M.
-    { applys* eventually_here. }
-    { rename H into R, H0 into M1, H1 into IHM1.
-      applys eventually_step (step s t).
-      { rewrite omnismall_iff_step_st. split*. }
-      { autos*. } } }
-Qed.
-
-
-
-
-(* ########################################################### *)
-(** ** Inductive Small-Step Judgment *)
-
-(** The judgment [stepsinto] introduced in this section helps
-    carrying out several proofs of equivalence---see the next
-    section. *)
-
-(** Viewing postconditions as predicates over configurations *)
-
-Definition pred_of_post (Q:val->hprop) : state->trm->Prop :=
-  fun s' t' => exists v', t' = trm_val v' /\ Q v' s'.
-
-(** We introduce the inductive small-step judgment, as it is useful
-    to relate Omni-Small-Step with Omni-Big-Step.
-
-(** [stepsinto] is equivalent to [eventually]. *)
-
-Lemma stepsinto_iff_eventually : forall s t Q,
-  stepsinto s t Q <-> eventually s t (pred_of_post Q).
-Proof using.
-  rewrite eventually_eq_seventually.
-  iff M.
-  { induction M.
-    { applys seventually_here. hnf. exists*. }
-    { rename H into R, H0 into M1, H1 into IH1.
-      applys seventually_step R. applys IH1. } }
-  { gen_eq C: (pred_of_post Q). induction M; intros; subst.
-    { destruct H as (v'&->&Hv'). applys stepsinto_val Hv'. }
-    { rename H into R, H0 into M1, H1 into IH1.
-      applys stepsinto_step R.
-      intros s' t' S. applys* IH1 S. } }
-Qed.
-
-

@@ -132,3 +132,114 @@ Lemma eventually_cut_chained : forall s t P,
 Proof using. introv M. applys* eventually_cut M. Qed.
 
 
+(* ########################################################### *)
+(** ** Equivalence of Omni-Small-Step with Standard Small Step *)
+
+Section OmnismallEquiv.
+Hint Constructors step.
+
+(* Characterization lemma (omni-small-step-iff-progress-and-correct). *)
+
+Lemma omnismall_iff_step_st : forall s t P,
+       omnismall s t P
+  <-> (   (exists s' t', step s t s' t')
+       /\ (forall s' t', step s t s' t' -> P s' t')).
+Proof using.
+  iff M.
+  { induction M.
+    { forwards (R&M1): IHM. split.
+      { destruct R as (s'&t'&S). exists. applys step_let_ctx S. }
+      { intros s' t' S. inverts S as.
+        { rename H into IHM1. introv S1. lets K1: M1 S1. applys IHM1 K1. }
+        { destruct R as (s''&t''&S'). false* step_val_inv. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert.
+                { inverts* TEMP. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
+    { split.
+       { exists. applys step_rand 0. math. }
+       { intros s' t' S. inverts S as; try false_invert.
+         { intros R. inverts R. auto. } } }
+    { split.
+       { forwards~ (p&F&N): (exists_fresh null s).
+         exists. applys* step_ref p. }
+       { intros s' t' S. inverts S as; try false_invert. { auto. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } } }
+  { destruct M as (R&M). destruct R as (s'&t'&S).
+    gen P. induction S; intros.
+    { rename S into S1. applys omnismall_let_ctx (step s1 t1).
+      { applys IHS. auto. }
+      { intros s' t' S1'. applys M. applys step_let_ctx S1'. } }
+    { applys* omnismall_fix. }
+    { applys* omnismall_app_fix. }
+    { applys* omnismall_if. }
+    { applys* omnismall_let. }
+    { applys* omnismall_div. }
+    { applys* omnismall_rand. math. }
+    { applys* omnismall_ref. }
+    { applys* omnismall_get. }
+    { applys* omnismall_set. }
+    { applys* omnismall_free. } }
+Qed.
+
+End OmnismallEquiv.
+
+
+(* ########################################################### *)
+(** ** Equivalence of Eventually is Small-Step and Omni-Small-Step *)
+
+(** [eventually] is equivalent to [seventually]. *)
+
+Lemma eventually_eq_seventually :
+  eventually = seventually.
+Proof using.
+  extens. intros s t P. iff M.
+  { induction M.
+    { applys* seventually_here. }
+    { rename H into M1, H0 into M2, H1 into IHM2.
+      rewrite omnismall_iff_step_st in M1. destruct M1 as (R&M1).
+      applys* seventually_step R. } }
+  { induction M.
+    { applys* eventually_here. }
+    { rename H into R, H0 into M1, H1 into IHM1.
+      applys eventually_step (step s t).
+      { rewrite omnismall_iff_step_st. split*. }
+      { autos*. } } }
+Qed.
+
+
+(* ########################################################### *)
+(** ** Equivalence of Eventually is Small-Step and Omni-Small-Step *)
+
+(** If all executions of [(t,s)] eventually fall into the set of configuration
+    made the final configurations satisfying [Q], then all executions of [(t,s)]
+    terminate with postcondition [Q]. And reciprocally. *)
+
+Lemma stepsinto_iff_eventually : forall s t Q,
+  stepsinto s t Q <-> eventually s t (pred_of_post Q).
+Proof using.
+  rewrite eventually_eq_seventually. applys stepsinto_iff_eventually.
+Qed.
+
+(** Another direct proof *)
+
+Lemma stepsinto_iff_eventually' : forall s t Q,
+  stepsinto s t Q <-> eventually s t (pred_of_post Q).
+Proof using.
+  rewrite eventually_eq_seventually.
+  iff M.
+  { induction M.
+    { applys seventually_here. hnf. exists*. }
+    { rename H into R, H0 into M1, H1 into IH1.
+      applys seventually_step R. applys IH1. } }
+  { gen_eq C: (pred_of_post Q). induction M; intros; subst.
+    { destruct H as (v'&->&Hv'). applys stepsinto_val Hv'. }
+    { rename H into R, H0 into M1, H1 into IH1.
+      applys stepsinto_step R.
+      intros s' t' S. applys* IH1 S. } }
+Qed.
+

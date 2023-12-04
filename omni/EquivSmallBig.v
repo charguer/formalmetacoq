@@ -4,11 +4,24 @@
 *****************************************************************)
 
 Set Implicit Arguments.
-Require Export Syntax.
+Require Export Small Big.
+
+Implicit Types f : var.
+Implicit Types b : bool.
+Implicit Types p : loc.
+Implicit Types n : int.
+Implicit Types v w r vf vx : val.
+Implicit Types t : trm.
+Implicit Types s : state.
 
 
 (* ########################################################### *)
-(** ** Equivalence for Between Standard Small-Step and Standard Big-Step *)
+(* ########################################################### *)
+(* ########################################################### *)
+(** * Proofs *)
+
+(* ########################################################### *)
+(** ** From Standard Small-Step to Standard Big-Step *)
 
 (** In this section, we establish the equivalence between
     the big-step judgment [big s t s' v] and the iterated
@@ -53,6 +66,10 @@ Proof.
   { applys* big_of_step_and_eval. }
 Qed.
 
+
+(* ########################################################### *)
+(** ** From Standard Big-Step to Standard Small-Step *)
+
 (** Let's now tackle the reciprocal direction, from big-step to
     small-step. This time, the key auxiliary lemma is a context
     rule for describing how a sequence of steps can be applied
@@ -92,6 +109,9 @@ Proof using.
   { applys steps_step. { applys* step_set. } { applys steps_refl. } }
   { applys steps_step. { applys* step_free. } { applys steps_refl. } }
 Qed.
+
+(* ########################################################### *)
+(** ** Equivalence for Between Standard Small-Step and Standard Big-Step *)
 
 (** Putting the two directions together yields the desired equivalence. *)
 

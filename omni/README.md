@@ -30,8 +30,10 @@ Languages formalized:
 - `Syntax`: syntax of a nondeterministic, imperative lambda calculus, and of the entailment judgment
 - `Small`: standard small-step semantics
 - `Big`: standard big-step semantics
-- `OmniSmall`: omni-small-step semantics, and eventually and divergence judgment, and their properties
-- `OmniBig`: omni-big-step semantics, inductive and coinductive, and their properties
+- `OmniSmall`: omni-small-step semantics, and eventually and divergence judgment,
+   their properties, and equivalence with small-step semantics.
+- `OmniBig`: omni-big-step semantics, inductive and coinductive,
+   their properties, and equivalence with big-step semantics.
 - `EquivSmallBig`: equivalence between standard small-step and standard big-step semantics
 - `EquivOmni`: equivalence of omni-semantics and standard semantics
 

@@ -346,7 +346,7 @@ Proof using.
       { intros v s' R2. applys big_let R1 R2. } } }
   { applys omnibig_if. applys omnibig_conseq IHM.
     { intros v s' R. applys big_if R. } }
-  { applys* omnibig_div. applys big_div. }
+  { applys* omnibig_div. applys* big_div. }
   { applys* omnibig_rand. intros n1 N1. applys* big_rand. }
   { applys* omnibig_ref. intros p Hp. applys* big_ref. }
   { applys* omnibig_get. applys* big_get. }
