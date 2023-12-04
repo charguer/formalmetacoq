@@ -4,7 +4,7 @@
 *****************************************************************)
 
 Set Implicit Arguments.
-Require Export Syntax.
+Require Export Syntax Small.
 
 Implicit Types f : var.
 Implicit Types b : bool.
@@ -15,6 +15,7 @@ Implicit Types t : trm.
 Implicit Types s : state.
 
 Implicit Types P : state->trm->Prop.
+Implicit Types Q : val->state->Prop.
 
 
 (* ########################################################### *)
@@ -94,7 +95,6 @@ Inductive eventually : state->trm->(state->trm->Prop)->Prop :=
       eventually s t P.
 
 
-
 (* ########################################################### *)
 (* ########################################################### *)
 (* ########################################################### *)
@@ -131,38 +131,4 @@ Lemma eventually_cut_chained : forall s t P,
   eventually s t P.
 Proof using. introv M. applys* eventually_cut M. Qed.
 
-
-(* ########################################################### *)
-(** ** Reformulation of the Eventually Judgment without Omni-Small-Step *)
-
-(** Alternative definition of [eventually], with respect to standard small-step.
-    (eventually-step-using-standard-small-step) *)
-
-Inductive eventually' : state->trm->(state->trm->Prop)->Prop :=
-  | eventually'_here : forall s t P,
-      P s t ->
-      eventually' s t P
-  | eventually'_step : forall s t P,
-      (exists s' t', step s t s' t') ->
-      (forall s' t', step s t s' t' -> eventually' s' t' P) ->
-      eventually' s t P.
-
-(** [eventually] is equivalent to [eventually']. *)
-
-Lemma eventually_eq_eventually' :
-  eventually = eventually'.
-Proof using.
-  extens. intros s t P. iff M.
-  { induction M.
-    { applys* eventually'_here. }
-    { rename H into M1, H0 into M2, H1 into IHM2.
-      rewrite omnismall_iff_step_st in M1. destruct M1 as (R&M1).
-      applys* eventually'_step R. } }
-  { induction M.
-    { applys* eventually_here. }
-    { rename H into R, H0 into M1, H1 into IHM1.
-      applys eventually_step (step s t).
-      { rewrite omnismall_iff_step_st. split*. }
-      { autos*. } } }
-Qed.
 

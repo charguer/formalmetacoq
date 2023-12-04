@@ -109,6 +109,29 @@ Inductive steps : state -> trm -> state -> trm -> Prop :=
 
 
 (* ########################################################### *)
+(** ** Small-Step-Eventually Judgment *)
+
+(** [seventually s t P] asserts that all executions starting from [(s,t)]
+    eventually reach a configuration [(s',t')] satisfying the predicate [P]. *)
+
+Inductive seventually : state->trm->(state->trm->Prop)->Prop :=
+  | seventually_here : forall s t P,
+      P s t ->
+      seventually s t P
+  | seventually_step : forall s t P,
+      (exists s' t', step s t s' t') ->
+      (forall s' t', step s t s' t' -> seventually s' t' P) ->
+      seventually s t P.
+
+
+(* ########################################################### *)
+(** ** Viewing postconditions as predicates over configurations *)
+
+Definition pred_of_post (Q:val->hprop) : state->trm->Prop :=
+  fun s' t' => exists v', t' = trm_val v' /\ Q v' s'.
+
+
+(* ########################################################### *)
 (** ** Closure-Based Characterization of Partial Correctness *)
 
 (** [partial s t Q] asserts that the executions of [(t,s)] are safe
@@ -134,33 +157,33 @@ Definition sdiv (s:state) (t:trm) : Prop :=
 (* ########################################################### *)
 (** ** Inductive Characterization of Total Correctness *)
 
-(** [bigsmall s t Q] asserts that all executions starting from [(s,t)]
+(** [stepsinto s t Q] asserts that all executions starting from [(s,t)]
     eventually reach *final* configurations satisfying the predicate [Q]. *)
 
-Inductive bigsmall : state->trm->(val->hprop)->Prop :=
-  | bigsmall_val : forall s v Q,
+Inductive stepsinto : state->trm->(val->hprop)->Prop :=
+  | stepsinto_val : forall s v Q,
       Q v s ->
-      bigsmall s v Q
-  | bigsmall_step : forall s t Q,
+      stepsinto s v Q
+  | stepsinto_step : forall s t Q,
       reducible s t ->
-      (forall s' t', step s t s' t' -> bigsmall s' t' Q) ->
-      bigsmall s t Q.
+      (forall s' t', step s t s' t' -> stepsinto s' t' Q) ->
+      stepsinto s t Q.
 
 
 (* ########################################################### *)
 (** ** Coinductive Characterization of Partial Correctness *)
 
-(** [cobigsmall s t Q] asserts that all executions of [(s,t)] are
+(** [costepsinto s t Q] asserts that all executions of [(s,t)] are
     safe, and if they terminate then they satisfy the postcondition [Q]. *)
 
-CoInductive cobigsmall : state->trm->(val->hprop)->Prop :=
-  | cobigsmall_val : forall s v Q,
+CoInductive costepsinto : state->trm->(val->hprop)->Prop :=
+  | costepsinto_val : forall s v Q,
       Q v s ->
-      cobigsmall s v Q
-  | cobigsmall_step : forall s t Q,
+      costepsinto s v Q
+  | costepsinto_step : forall s t Q,
       reducible s t ->
-      (forall s' t', step s t s' t' -> cobigsmall s' t' Q) ->
-      cobigsmall s t Q.
+      (forall s' t', step s t s' t' -> costepsinto s' t' Q) ->
+      costepsinto s t Q.
 
 
 (* ########################################################### *)
@@ -283,14 +306,31 @@ Qed.
 
 
 (* ########################################################### *)
+(** ** [stepsinto] Included in [seventually] *)
+
+(** If all executions of [(t,s)] eventually fall into the set of configuration
+    made the final configurations satisfying [Q], then all executions of [(t,s)]
+    terminate with postcondition [Q]. *)
+
+Lemma eventually_of_stepsinto : forall s t Q,
+  seventually s t (pred_of_post Q) ->
+  stepsinto s t Q.
+Proof using.
+  introv M. gen_eq P: (pred_of_post Q). gen Q. induction M; intros; subst.
+  { rename H into K. destruct K as (v&->&?). constructors*. }
+  { constructors*. }
+Qed.
+
+
+(* ########################################################### *)
 (** ** Total Correctness Entails Partial Correctness *)
 
 (** Total correctness is a stronger property than partial correctness:
     [omnibig s t Q] entails [coomnibig s t Q]. *)
 
-Lemma cobigsmall_of_bigsmall : forall s t Q,
-  bigsmall s t Q ->
-  cobigsmall s t Q.
+Lemma costepsinto_of_stepsinto : forall s t Q,
+  stepsinto s t Q ->
+  costepsinto s t Q.
 Proof using.
   introv M. induction M; try solve [ constructors* ].
 Qed.
@@ -300,7 +340,8 @@ Qed.
 (** ** Equivalence of Divergence and Partial Correctness with Empty Postcondition *)
 
 (** For closure-based definitions, we relate [sdiv] with the specialization
-    of [partial] to the empty postcondition [Empty]. *)
+    of [partial] to the empty postcondition [Empty].
+    [Empty] is defined in the file [Syntax]. *)
 
 Lemma sdiv_iff_omnibigps_Empty : forall s t,
   sdiv s t <-> partial s t Empty.
@@ -313,14 +354,14 @@ Proof using.
 Qed.
 
 (** For coinductive definitions, we relate [costeps] with the specialization
-    of [cobigsmall] to the empty postcondition [Empty]. *)
+    of [costepsinto] to the empty postcondition [Empty]. *)
 
-Lemma costeps_iff_cobigsmall_Empty : forall s t,
-  costeps s t <-> cobigsmall s t Empty.
+Lemma costeps_iff_costepsinto_Empty : forall s t,
+  costeps s t <-> costepsinto s t Empty.
 Proof using.
   iff M.
   { gen s t. cofix IH. intros. inverts M as S M'.
-    applys cobigsmall_step S. introv S'. applys IH. applys M' S'. }
+    applys costepsinto_step S. introv S'. applys IH. applys M' S'. }
   { gen s t. cofix IH. intros. inverts M as.
     { introv N. unfolds Empty. false. }
     { introv S M'. applys costeps_step S.
@@ -331,11 +372,11 @@ Qed.
 (* ########################################################### *)
 (** ** Equivalence of CoInductive and Closure-Based Characterizations *)
 
-(** [cobigsmall] patches the standard definition of partial correctness
+(** [costepsinto] patches the standard definition of partial correctness
     with respect to standard small-step. *)
 
-Lemma cobigsmall_eq_partial :
-  cobigsmall = partial.
+Lemma costepsinto_eq_partial :
+  costepsinto = partial.
 Proof using.
   extens. intros s t Q. iff M.
   { introv R. gen M. induction R; intros.
@@ -347,9 +388,9 @@ Proof using.
       { applys IHR. applys M2 R1. } } }
   { gen s t Q. cofix IH. intros.
     tests C: (exists v, t = trm_val v).
-    { destruct C as (v&->). applys cobigsmall_val. applys partial_val_inv M. }
+    { destruct C as (v&->). applys costepsinto_val. applys partial_val_inv M. }
     { lets (s2&t2&R2&RS): partial_not_val_inv M C.
-      applys cobigsmall_step.
+      applys costepsinto_step.
       { exists* s2 t2. }
       { intros s' t' R'. applys IH. applys partial_inv_step M R'. } } }
 Qed.
@@ -359,8 +400,8 @@ Lemma costeps_eq_sdiv :
 Proof using.
   extens. intros s t.
   rewrite sdiv_iff_omnibigps_Empty.
-  rewrite costeps_iff_cobigsmall_Empty.
-  rewrite* cobigsmall_eq_partial.
+  rewrite costeps_iff_costepsinto_Empty.
+  rewrite* costepsinto_eq_partial.
 Qed.
 
 
@@ -373,10 +414,10 @@ Lemma reducible_val_inv : forall s v,
   ~ reducible s v.
 Proof using. introv (s'&t'&M). inverts M. Qed.
 
-(** [bigsmall] captures safety. *)
+(** [stepsinto] captures safety. *)
 
-Lemma bigsmall_safe : forall s t Q,
-  bigsmall s t Q ->
+Lemma stepsinto_safe : forall s t Q,
+  stepsinto s t Q ->
   safe s t.
 Proof using.
   introv M R. gen Q. induction R; intros.
@@ -384,10 +425,10 @@ Proof using.
   { rename H into S. inverts M. { inverts S. } { applys* IHR. } }
 Qed.
 
-(* [bigsmall] captures correctness. *)
+(* [stepsinto] captures correctness. *)
 
-Lemma bigsmall_correct : forall s t Q,
-  bigsmall s t Q ->
+Lemma stepsinto_correct : forall s t Q,
+  stepsinto s t Q ->
   correct s t Q.
 Proof using.
   introv M. induction M; introv R.
@@ -395,10 +436,10 @@ Proof using.
   { rename H1 into IH. inverts R. { false* reducible_val_inv. } applys* IH. }
 Qed.
 
-(** [bigsmall] captures termination. *)
+(** [stepsinto] captures termination. *)
 
-Lemma bigsmall_terminates : forall s t Q,
-  bigsmall s t Q ->
+Lemma stepsinto_terminates : forall s t Q,
+  stepsinto s t Q ->
   terminates s t.
 Proof using.
   introv M. induction M; constructors; introv R.
@@ -410,10 +451,10 @@ Qed.
 (* ########################################################### *)
 (** ** Properties Captured by Partial Correctness, for the CoInductive Characterization *)
 
-(** [cobigsmall] captures safety. *)
+(** [costepsinto] captures safety. *)
 
-Lemma cobigsmall_safe : forall s t Q,
-  cobigsmall s t Q ->
+Lemma costepsinto_safe : forall s t Q,
+  costepsinto s t Q ->
   safe s t.
 Proof using.
   introv M R. gen Q. induction R; intros.
@@ -421,10 +462,10 @@ Proof using.
   { rename H into S. inverts M. { inverts S. } { applys* IHR. } }
 Qed.
 
-(* [cobigsmall] captures correctness. *)
+(* [costepsinto] captures correctness. *)
 
-Lemma cobigsmall_correct : forall s t Q,
-  cobigsmall s t Q ->
+Lemma costepsinto_correct : forall s t Q,
+  costepsinto s t Q ->
   correct s t Q.
 Proof using.
   introv M R. gen_eq t': (trm_val v). gen v Q. induction R; intros; subst.
