@@ -392,3 +392,99 @@ Proof using.
   rewrite* cobigsmall_eq_partial.
 Qed.
 
+
+
+
+(* ########################################################### *)
+(** ** Equivalence of Omni-Small-Step with Standard Small Step *)
+
+Section OmnismallEquiv.
+Hint Constructors step.
+
+(* Characterization lemma (omni-small-step-iff-progress-and-correct). *)
+
+Lemma omnismall_iff_step_st : forall s t P,
+       omnismall s t P
+  <-> (   (exists s' t', step s t s' t')
+       /\ (forall s' t', step s t s' t' -> P s' t')).
+Proof using.
+  iff M.
+  { induction M.
+    { forwards (R&M1): IHM. split.
+      { destruct R as (s'&t'&S). exists. applys step_let_ctx S. }
+      { intros s' t' S. inverts S as.
+        { rename H into IHM1. introv S1. lets K1: M1 S1. applys IHM1 K1. }
+        { destruct R as (s''&t''&S'). false* step_val_inv. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert.
+                { inverts* TEMP. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
+    { split.
+       { exists. applys step_rand 0. math. }
+       { intros s' t' S. inverts S as; try false_invert.
+         { intros R. inverts R. auto. } } }
+    { split.
+       { forwards~ (p&F&N): (exists_fresh null s).
+         exists. applys* step_ref p. }
+       { intros s' t' S. inverts S as; try false_invert. { auto. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } }
+    { split*. { intros s' t' S. inverts S as; try false_invert. { auto. } } } }
+  { destruct M as (R&M). destruct R as (s'&t'&S).
+    gen P. induction S; intros.
+    { rename S into S1. applys omnismall_let_ctx (step s1 t1).
+      { applys IHS. auto. }
+      { intros s' t' S1'. applys M. applys step_let_ctx S1'. } }
+    { applys* omnismall_fix. }
+    { applys* omnismall_app_fix. }
+    { applys* omnismall_if. }
+    { applys* omnismall_let. }
+    { applys* omnismall_div. }
+    { applys* omnismall_rand. math. }
+    { applys* omnismall_ref. }
+    { applys* omnismall_get. }
+    { applys* omnismall_set. }
+    { applys* omnismall_free. } }
+Qed.
+
+End OmnismallEquiv.
+
+
+
+
+(* ########################################################### *)
+(** ** Inductive Small-Step Judgment *)
+
+(** The judgment [bigsmall] introduced in this section helps
+    carrying out several proofs of equivalence---see the next
+    section. *)
+
+(** Viewing postconditions as predicates over configurations *)
+
+Definition pred_of_post (Q:val->hprop) : state->trm->Prop :=
+  fun s' t' => exists v', t' = trm_val v' /\ Q v' s'.
+
+(** We introduce the inductive small-step judgment, as it is useful
+    to relate Omni-Small-Step with Omni-Big-Step.
+
+(** [bigsmall] is equivalent to [eventually]. *)
+
+Lemma bigsmall_iff_eventually : forall s t Q,
+  bigsmall s t Q <-> eventually s t (pred_of_post Q).
+Proof using.
+  rewrite eventually_eq_eventually'.
+  iff M.
+  { induction M.
+    { applys eventually'_here. hnf. exists*. }
+    { rename H into R, H0 into M1, H1 into IH1.
+      applys eventually'_step R. applys IH1. } }
+  { gen_eq C: (pred_of_post Q). induction M; intros; subst.
+    { destruct H as (v'&->&Hv'). applys bigsmall_val Hv'. }
+    { rename H into R, H0 into M1, H1 into IH1.
+      applys bigsmall_step R.
+      intros s' t' S. applys* IH1 S. } }
+Qed.
+
+

@@ -14,16 +14,19 @@ Implicit Types v w r vf vx : val.
 Implicit Types t : trm.
 Implicit Types s : state.
 
+Implicit Types Q : state->val->Prop.
+
 
 (* ########################################################### *)
 (* ########################################################### *)
 (* ########################################################### *)
-(** * Standard semantics *)
+(** * Definitions *)
 
 (* ########################################################### *)
-(** ** Standard Big-step *)
+(** ** Big-Step Judgment *)
 
-(** Judgment [big s t s' v]. *)
+(** Judgment [big s t s' v] asserts that there exists an execution of
+    the program [(s,t)] that reaches the final configuraiton [(s',v)]. *)
 
 Inductive big : state -> trm -> state -> val -> Prop :=
   | big_val : forall s v,
@@ -83,3 +86,8 @@ CoInductive codiv : state -> trm -> Prop :=
   | codiv_if : forall s1 b t1 t2,
       codiv s1 (if b then t1 else t2) ->
       codiv s1 (trm_if (val_bool b) t1 t2).
+
+(** Reference:
+    Coinductive big-step operational semantics,
+    Xavier Leroy and Hervé Grall, ESOP 2006,
+    https://xavierleroy.org/coindsem/ *)

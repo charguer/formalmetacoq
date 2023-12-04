@@ -14,6 +14,8 @@ Implicit Types v w r vf vx : val.
 Implicit Types t : trm.
 Implicit Types s : state.
 
+Implicit Types Q : val->state->Prop.
+
 
 (* ########################################################### *)
 (* ########################################################### *)
@@ -68,6 +70,29 @@ Inductive step : state -> trm -> state -> trm -> Prop :=
 
 
 (* ########################################################### *)
+(** ** Reducible and Stuck Configurations *)
+
+(** Consider a configuration [(s,t)], where [t] is not a value. If this
+    configuration cannot take any reduction step, it is said to be "stuck". On
+    the contrary, a configuration [(s,t)] that may take a step is said to be
+    "reducible". *)
+
+Definition reducible (s:state) (t:trm) : Prop :=
+  exists s' t', step s t s' t'.
+
+(** The predicate [trm_is_val t] asserts that [t] is a value. *)
+
+Definition trm_is_val (t:trm) : Prop :=
+  match t with trm_val v => True | _ => False end.
+
+(** The predicate [notstuck s t] asserts that either [t] is a value or [t] is
+    reducible. *)
+
+Definition notstuck (s:state) (t:trm) : Prop :=
+  trm_is_val t \/ reducible s t.
+
+
+(* ########################################################### *)
 (** ** Transitive Closure of the Small-Step Judgment *)
 
 (** The judgment [steps s t s' t'] corresponds to the reflexive-transitive
@@ -107,6 +132,22 @@ Definition sdiv (s:state) (t:trm) : Prop :=
 
 
 (* ########################################################### *)
+(** ** Inductive Characterization of Total Correctness *)
+
+(** [bigsmall s t Q] asserts that all executions starting from [(s,t)]
+    eventually reach *final* configurations satisfying the predicate [Q]. *)
+
+Inductive bigsmall : state->trm->(val->hprop)->Prop :=
+  | bigsmall_val : forall s v Q,
+      Q v s ->
+      bigsmall s v Q
+  | bigsmall_step : forall s t Q,
+      reducible s t ->
+      (forall s' t', step s t s' t' -> bigsmall s' t' Q) ->
+      bigsmall s t Q.
+
+
+(* ########################################################### *)
 (** ** Coinductive Characterization of Partial Correctness *)
 
 (** [cobigsmall s t Q] asserts that all executions of [(s,t)] are
@@ -117,7 +158,7 @@ CoInductive cobigsmall : state->trm->(val->hprop)->Prop :=
       Q v s ->
       cobigsmall s v Q
   | cobigsmall_step : forall s t Q,
-      (exists s' t', step s t s' t') ->
+      reducible s t ->
       (forall s' t', step s t s' t' -> cobigsmall s' t' Q) ->
       cobigsmall s t Q.
 
@@ -129,15 +170,46 @@ CoInductive cobigsmall : state->trm->(val->hprop)->Prop :=
 
 CoInductive costeps : state -> trm -> Prop :=
   | costeps_step : forall s1 t1,
-      (exists s2 t2, step s1 t1 s2 t2) ->
+      reducible s1 t1 ->
       (forall s2 t2, step s1 t1 s2 t2 -> costeps s2 t2) ->
       costeps s1 t1.
+
+
+(* ########################################################### *)
+(** ** Properties of a Small-Step Semantics *)
+
+(** The judgment [safe s t] asserts that no execution may reach a stuck term. In
+    other words, for any configuration [(s',t')] reachable from [(s,t)], it is
+    the case that the configuration [(s',t')] is either a value or is reducible.
+    *)
+
+Definition safe (s:state) (t:trm) : Prop :=
+  forall s' t', steps s t s' t' -> notstuck s' t'.
+
+(** The judgment [correct s t Q] asserts that if the execution of [(s,t)]
+    reaches a final configuration, then this final configuration satisfies [Q].
+    *)
+
+Definition correct (s:state) (t:trm) (Q:val->hprop) : Prop :=
+  forall s' v, steps s t s' v -> Q v s'.
+
+(** The judgment [terminates s t] is defined inductively. The execution starting
+    from [(s,t)] terminates if, for any possible step leads to a configuration
+    that terminates. Note that a configuration that has reached a value cannot
+    take a step, hence is considered terminating. *)
+
+Inductive terminates : state->trm->Prop :=
+  | terminates_step : forall s t,
+      (forall s' t', step s t s' t' -> terminates s' t') ->
+      terminates s t.
 
 
 (* ########################################################### *)
 (* ########################################################### *)
 (* ########################################################### *)
 (** * Properties *)
+
+Hint Unfold reducible trm_is_val.
 
 
 (* ########################################################### *)
@@ -211,6 +283,20 @@ Qed.
 
 
 (* ########################################################### *)
+(** ** Total Correctness Entails Partial Correctness *)
+
+(** Total correctness is a stronger property than partial correctness:
+    [omnibig s t Q] entails [coomnibig s t Q]. *)
+
+Lemma cobigsmall_of_bigsmall : forall s t Q,
+  bigsmall s t Q ->
+  cobigsmall s t Q.
+Proof using.
+  introv M. induction M; try solve [ constructors* ].
+Qed.
+
+
+(* ########################################################### *)
 (** ** Equivalence of Divergence and Partial Correctness with Empty Postcondition *)
 
 (** For closure-based definitions, we relate [sdiv] with the specialization
@@ -276,3 +362,98 @@ Proof using.
   rewrite costeps_iff_cobigsmall_Empty.
   rewrite* cobigsmall_eq_partial.
 Qed.
+
+
+(* ########################################################### *)
+(** ** Properties Captured by Total Correctness, for the Inductive Characterization *)
+
+(** Values are not reducible. *)
+
+Lemma reducible_val_inv : forall s v,
+  ~ reducible s v.
+Proof using. introv (s'&t'&M). inverts M. Qed.
+
+(** [bigsmall] captures safety. *)
+
+Lemma bigsmall_safe : forall s t Q,
+  bigsmall s t Q ->
+  safe s t.
+Proof using.
+  introv M R. gen Q. induction R; intros.
+  { inverts M. { left. hnfs*. } { right*. } }
+  { rename H into S. inverts M. { inverts S. } { applys* IHR. } }
+Qed.
+
+(* [bigsmall] captures correctness. *)
+
+Lemma bigsmall_correct : forall s t Q,
+  bigsmall s t Q ->
+  correct s t Q.
+Proof using.
+  introv M. induction M; introv R.
+  { inverts R as. { auto. } { introv S. inverts S. } }
+  { rename H1 into IH. inverts R. { false* reducible_val_inv. } applys* IH. }
+Qed.
+
+(** [bigsmall] captures termination. *)
+
+Lemma bigsmall_terminates : forall s t Q,
+  bigsmall s t Q ->
+  terminates s t.
+Proof using.
+  introv M. induction M; constructors; introv R.
+  { inverts R. }
+  { eauto. }
+Qed.
+
+
+(* ########################################################### *)
+(** ** Properties Captured by Partial Correctness, for the CoInductive Characterization *)
+
+(** [cobigsmall] captures safety. *)
+
+Lemma cobigsmall_safe : forall s t Q,
+  cobigsmall s t Q ->
+  safe s t.
+Proof using.
+  introv M R. gen Q. induction R; intros.
+  { inverts M. { left. hnfs*. } { right*. } }
+  { rename H into S. inverts M. { inverts S. } { applys* IHR. } }
+Qed.
+
+(* [cobigsmall] captures correctness. *)
+
+Lemma cobigsmall_correct : forall s t Q,
+  cobigsmall s t Q ->
+  correct s t Q.
+Proof using.
+  introv M R. gen_eq t': (trm_val v). gen v Q. induction R; intros; subst.
+  { inverts M as. subst. { auto. } { introv S. false* reducible_val_inv. } }
+  { rename H into R1. inverts M as. { inverts R1. }
+    introv M1 M2. applys* IHR. }
+Qed.
+
+
+(* ########################################################### *)
+(** ** Properties Captured by Partial Correctness, for the Closure-Based Characterization *)
+
+(** [partial] captures safety. *)
+
+Lemma partial_safe : forall s t Q,
+  partial s t Q ->
+  safe s t.
+Proof using.
+  introv M R. forwards [(v2&->&?)|(s3&t3&?)]: M R.
+  { left*. } { right*. }
+Qed.
+
+(* [partial] captures correctness. *)
+
+Lemma partial_correct : forall s t Q,
+  partial s t Q ->
+  correct s t Q.
+Proof using.
+  introv M R. forwards [(v2&E&?)|(s3&t3&?)]: M R.
+  { inverts* E. } { false_invert. }
+Qed.
+

@@ -23,6 +23,11 @@ Contents
 
      The folder `pretty` also contains type soundness proofs, w.r.t. pretty-big-step semantics
 
+   - The folder `omni` formalizes omni-small-steps and omni-big-step semantics,
+     and relate the to standard small-step and big-step semantics.
+     See the Omni-Semantics paper (TOPLAS'23).
+     http://www.chargueraud.org/research/2022/omnisemantics/omnisemantics.pdf
+
    - Folder `tuto` contains a tutorial on the use of classical logic in Coq.
 
 
