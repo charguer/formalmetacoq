@@ -1056,6 +1056,32 @@ Proof using. introv M. intros h K. applys hgc_intro. applys M K. Qed.
 
 
 (* ########################################################### *)
+(** ** Ghost updates for [haffine] *)
+
+Lemma himpl_haffine_hempty : forall H,
+  haffine H ->
+  H |==> \[].
+Proof using.
+  unfold haffine, heap_affine. introv M Hh. esplit. splits*.
+Qed.
+
+Lemma himpl_hgc_hempty :
+  \GC |==> \[].
+Proof using. applys himpl_haffine_hempty. applys haffine_hgc. Qed.
+
+Lemma himpl_hstar_haffine_l : forall H H',
+  haffine H' ->
+  H \* H' |==> H.
+(* TODO -- gstep_frame_l *)
+Admitted.
+
+Lemma qimpl_hstar_hgc_l : forall Q,
+  Q \*+ \GC |===> Q.
+(* TODO -- gstep_frame_l *)
+Admitted.
+
+
+(* ########################################################### *)
 (* ########################################################### *)
 (* ########################################################### *)
 (** * Rules of Separation Logic that Don't Depend on the Ghost State *)
@@ -1076,7 +1102,6 @@ Qed.
 Lemma qupdate_frame : forall Q H,
   qupdate Q \*+ H ===> qupdate (Q \*+ H).
 Proof using. intros. intros v. applys hupdate_frame. Qed.
-
 
 
 (* ########################################################### *)
@@ -1128,6 +1153,21 @@ Lemma triple_conseq : forall t H' Q' H Q,
   triple t H Q.
 Proof using. unfolds triple. introv M MH MQ HF. applys* eval_conseq. Qed.
 
+Lemma triple_conseq_post_ghost : forall t H Q1 Q2,
+  triple t H Q1 ->
+  Q1 |===> Q2 ->
+  triple t H Q2.
+Proof using. unfolds triple. introv M MH Hh. applys* eval_conseq_ghost. Qed.
+
+Lemma triple_conseq_pre_ghost : forall t H1 H2 Q,
+  triple t H2 Q ->
+  H1 |==> H2 ->
+  triple t H1 Q.
+Proof using.
+  unfolds triple. introv M MH Hh.
+  lets (h'&G&H'): MH Hh. applys* eval_ghost_pre.
+Qed.
+
 Lemma triple_frame : forall t H Q H',
   triple t H Q ->
   triple t (H \* H') (Q \*+ H').
@@ -1147,8 +1187,38 @@ Lemma triple_hpure : forall t (P:Prop) H Q,
   triple t (\[P] \* H) Q.
 Proof using.
   introv M. intros h (h1&h2&M1&M2&D&U). destruct M1 as (M1&HP).
-  inverts HP. subst. rewrite union_empty_l. applys~ M.
+  inverts HP. subst. rew_heaps*.
 Qed.
+
+(** Garbage-collection rules *)
+
+Lemma triple_hgc_post : forall t H Q,
+  triple t H (Q \*+ \GC) ->
+  triple t H Q.
+Proof using.
+  introv M. applys triple_conseq_post_ghost M.
+  applys qimpl_hstar_hgc_l.
+Qed.
+
+Lemma triple_haffine_post : forall t H H' Q,
+  triple t H (Q \*+ H') ->
+  haffine H' ->
+  triple t H Q.
+Proof using.
+  introv M K. applys triple_hgc_post.
+  applys* triple_conseq M.
+  intros v. xsimpl. applys* himpl_hgc_r.
+Qed.
+
+Lemma triple_haffine_pre : forall t H H' Q,
+  triple t H Q ->
+  haffine H' ->
+  triple t (H \* H') Q.
+Proof using.
+  introv M K. applys triple_conseq_pre_ghost M.
+  applys* himpl_hstar_haffine_l.
+Qed.
+
 
 (* ########################################################### *)
 (** ** Reasoning Rules for Terms *)
@@ -1250,6 +1320,8 @@ Qed.
 (* ########################################################### *)
 (* ########################################################### *)
 (** * Instantiation to a Concrete Ghost State *)
+
+(* Example of a ghost state that carries times credits *)
 
 (* ########################################################### *)
 (** ** Properties of [hsingle] *)
