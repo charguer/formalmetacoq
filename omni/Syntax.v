@@ -4,10 +4,9 @@
 ****************************************************************)
 
 Set Implicit Arguments.
-From TLC Require Export LibCore LibVar LibLogic.
-Require Export LibSepFmap.
+From TLC Require Export LibCore LibLogic.
+Require Export LibSepVar LibSepFmap.
 Module Fmap := LibSepFmap.
-Definition var_eq := var_compare.
 
 
 (* ########################################################### *)
@@ -147,6 +146,10 @@ Implicit Types s : state.
 Declare Scope heap_scope.
 Open Scope heap_scope.
 
+(** Heap is a synonymous for state *)
+
+Definition heap : Type := state.
+
 (** Heap predicate *)
 
 Definition hprop := state -> Prop.
@@ -180,6 +183,14 @@ Lemma himpl_trans : forall H2 H1 H3,
   (H1 ==> H3).
 Proof using. introv M1 M2. unfolds* himpl. Qed.
 
+Lemma himpl_antisym : forall H1 H2,
+  (H1 ==> H2) ->
+  (H2 ==> H1) ->
+  (H1 = H2).
+Proof. introv M1 M2. applys pred_ext_1. intros h. iff*. Qed.
+
+#[global] Hint Resolve himpl_refl.
+
 
 (* ########################################################### *)
 (** ** Entailment on Postconditions *)
@@ -204,7 +215,7 @@ Lemma qimpl_trans : forall A (Q1 Q2 Q3:A->hprop),
   (Q1 ===> Q3).
 Proof using. introv M1 M2. intros v. eapply himpl_trans; eauto. Qed.
 
-Hint Resolve qimpl_refl.
+#[global] Hint Resolve qimpl_refl.
 
 
 (* ########################################################### *)

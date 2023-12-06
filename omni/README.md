@@ -36,6 +36,9 @@ Languages formalized:
    their properties, and equivalence with big-step semantics.
 - `EquivSmallBig`: equivalence between standard small-step and standard big-step semantics
 - `EquivOmni`: equivalence of omni-semantics and standard semantics
+- `SepLogicCommon`: minimal construction of heap predicates
+- `SepLogicOmniBig`: minimal construction of separation logic rules on top of omni-big-step
+- `SepLogicOmniSmall`: minimal construction of separation logic rules on top of omni-small-step
 
 Other files:
 

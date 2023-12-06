@@ -1,5 +1,6 @@
 
 FILES :=\
+	LibSepVar \
 	LibSepFmap \
 	Syntax \
 	Small \
@@ -7,7 +8,11 @@ FILES :=\
 	OmniSmall \
 	OmniBig \
 	EquivSmallBig \
-	EquivOmni
+	EquivOmni \
+	SepLogicCommon \
+	SepLogicOmniBig
+
+
 
 
 VFILES=$(FILES:=.v)
