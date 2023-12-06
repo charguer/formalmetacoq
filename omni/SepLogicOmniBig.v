@@ -34,18 +34,18 @@ Proof using.
     specializes IH1 HD. applys omnibig_let IH1. introv HK.
     lets (h1'&h2'&K1'&K2'&KD&KU): HK. subst. applys* IH2. }
   { rename H into M. applys omnibig_ref. intros p Hp.
-    rewrite Fmap.indom_union_eq in Hp. rew_logic in Hp.
+    rewrite indom_union_eq in Hp. rew_logic in Hp.
     destruct Hp as [Hp1 Hp2].
-    rewrite* Fmap.update_union_not_r. applys hstar_intro.
-    { applys* M. } { auto. } { applys* Fmap.disjoint_update_not_r. } }
-  { applys omnibig_get. { rewrite* Fmap.indom_union_eq. }
-    { rewrite* Fmap.read_union_l. applys* hstar_intro. } }
-  { applys omnibig_set. { rewrite* Fmap.indom_union_eq. }
-    { rewrite* Fmap.update_union_l. applys hstar_intro.
-      { auto. } { auto. } { applys* Fmap.disjoint_update_l. } } }
-  { applys omnibig_free. { rewrite* Fmap.indom_union_eq. }
-    { rewrite* Fmap.remove_disjoint_union_l. applys hstar_intro.
-      { auto. } { auto. } { applys* Fmap.disjoint_remove_l. } } }
+    rewrite* update_union_not_r. applys hstar_intro.
+    { applys* M. } { auto. } { applys* disjoint_update_not_r. } }
+  { applys omnibig_get. { rewrite* indom_union_eq. }
+    { rewrite* read_union_l. applys* hstar_intro. } }
+  { applys omnibig_set. { rewrite* indom_union_eq. }
+    { rewrite* update_union_l. applys hstar_intro.
+      { auto. } { auto. } { applys* disjoint_update_l. } } }
+  { applys omnibig_free. { rewrite* indom_union_eq. }
+    { rewrite* remove_disjoint_union_l. applys hstar_intro.
+      { auto. } { auto. } { applys* disjoint_remove_l. } } }
 Qed.
 
 
@@ -90,7 +90,7 @@ Lemma triple_hpure : forall t (P:Prop) H Q,
   triple t (\[P] \* H) Q.
 Proof using.
   introv M. intros h (h1&h2&M1&M2&D&U). destruct M1 as (M1&HP).
-  inverts HP. subst. rewrite Fmap.union_empty_l. applys~ M.
+  inverts HP. subst. rewrite union_empty_l. applys~ M.
 Qed.
 
 
@@ -153,7 +153,7 @@ Lemma triple_ref : forall v,
     (fun r => \exists p, \[r = val_loc p] \* p ~~> v).
 Proof using.
   intros. intros s1 K. applys omnibig_ref. intros p D.
-  inverts K. rewrite Fmap.update_empty. exists p.
+  inverts K. rewrite update_empty. exists p.
   rewrite hstar_hpure_l. split*. hnfs*.
 Qed.
 
@@ -163,8 +163,8 @@ Lemma triple_get : forall v p,
     (fun r => \[r = v] \* (p ~~> v)).
 Proof using.
   intros. intros s K. inverts K. applys omnibig_get.
-  { applys* Fmap.indom_single. }
-  { rewrite hstar_hpure_l. split*. rewrite* Fmap.read_single. hnfs*. }
+  { applys* indom_single. }
+  { rewrite hstar_hpure_l. split*. rewrite* read_single. hnfs*. }
 Qed.
 
 Lemma triple_set : forall w p v,
@@ -173,8 +173,8 @@ Lemma triple_set : forall w p v,
     (fun r => (p ~~> v)).
 Proof using.
   intros. intros s1 K. inverts K. applys omnibig_set.
-  { applys* Fmap.indom_single. }
-  { rewrite Fmap.update_single. hnfs*. }
+  { applys* indom_single. }
+  { rewrite update_single. hnfs*. }
 Qed.
 
 Lemma triple_free : forall p v,
@@ -183,8 +183,8 @@ Lemma triple_free : forall p v,
     (fun r => \[]).
 Proof using.
   intros. intros s1 K. inverts K. applys omnibig_free.
-  { applys* Fmap.indom_single. }
-  { rewrite* Fmap.remove_single. hnfs*. }
+  { applys* indom_single. }
+  { rewrite* remove_single. hnfs*. }
 Qed.
 
 (** For example proofs in Separation Logic, see the course:

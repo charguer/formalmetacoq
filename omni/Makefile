@@ -10,10 +10,9 @@ FILES :=\
 	EquivSmallBig \
 	EquivOmni \
 	SepLogicCommon \
+	SepLogicSmall \
 	SepLogicOmniBig \
-	SepLogicSmall
-
-
+	SepLogicOmniSmall
 
 
 VFILES=$(FILES:=.v)

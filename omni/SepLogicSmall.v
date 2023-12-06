@@ -37,13 +37,13 @@ Proof using.
     { unfolds reducible. clear M2 IH2. destruct M1 as (s'&t'&R).
       induction R; tryfalse; try solve [ do 2 esplit; constructors* ].
       { forwards* (s'&t'&R'): IHR. }
-      { lets (p'&F&_): exists_fresh null (Fmap.union s h2). do 2 esplit.
+      { lets (p'&F&_): exists_fresh null (union s h2). do 2 esplit.
         applys step_ref v p'. eauto. }
-      { do 2 esplit. applys step_get. applys* Fmap.indom_union_l. }
-      { do 2 esplit. applys step_set. applys* Fmap.indom_union_l. }
-      { do 2 esplit. applys step_free. applys* Fmap.indom_union_l. } }
+      { do 2 esplit. applys step_get. applys* indom_union_l. }
+      { do 2 esplit. applys step_set. applys* indom_union_l. }
+      { do 2 esplit. applys step_free. applys* indom_union_l. } }
     { introv R. cuts (s1'&E'&D'&R'):
-        (exists s1', s' = s1' \u h2 /\ Fmap.disjoint s1' h2 /\ step s t s1' t').
+        (exists s1', s' = s1' \u h2 /\ disjoint s1' h2 /\ step s t s1' t').
       { subst. applys* IH2. }
       clear M2 IH2.
       gen_eq su: (s \u h2). gen s.
@@ -51,75 +51,24 @@ Proof using.
       { destruct M1 as (s0&t0&R0).
         rename R into R1. forwards* (s1'&E&D&R1'): IHR s.
         { inverts R0. { eauto. } { inverts R1. } } }
-      { rename H into D. rewrite Fmap.indom_union_eq in D. rew_logic in D.
+      { rename H into D. rewrite indom_union_eq in D. rew_logic in D.
         destruct D as (D1&D2). esplit. splits.
-        { rewrite* Fmap.update_union_not_r. }
-        { applys* Fmap.disjoint_update_not_r. }
+        { rewrite* update_union_not_r. }
+        { applys* disjoint_update_not_r. }
         { eauto. } }
       { destruct M1 as (se&te&Re). inverts Re; tryfalse.
-        rewrite* Fmap.read_union_l. }
+        rewrite* read_union_l. }
       { destruct M1 as (se&te&Re). inverts Re; tryfalse. esplit. splits.
-        { rewrite* Fmap.update_union_l. }
-        { applys* Fmap.disjoint_update_l. }
+        { rewrite* update_union_l. }
+        { applys* disjoint_update_l. }
         { eauto. } }
       { destruct M1 as (se&te&Re). inverts Re; tryfalse. esplit. splits.
         { rewrite* remove_disjoint_union_l. }
-        { applys* Fmap.disjoint_remove_l. }
+        { applys* disjoint_remove_l. }
         { eauto. } } } }
 Qed.
 
 
-(* ########################################################### *)
-(* ########################################################### *)
-(* ########################################################### *)
-(** * Deriving Big-Step Evaluation Rules for [stepsinto] *)
-
-Lemma stepsinto_fix : forall s f x t1 Q,
-  Q (val_fix f x t1) s ->
-  stepsinto s (trm_fix f x t1) Q.
-Proof using.
-  introv M. applys stepsinto_step.
-  { do 2 esplit. constructor. }
-  { introv R. inverts R. { applys stepsinto_val. applys M. } }
-Qed.
-
-Lemma stepsinto_app_fix : forall s f x v1 v2 t1 Q,
-  v1 = val_fix f x t1 ->
-  stepsinto s (subst x v2 (subst f v1 t1)) Q ->
-  stepsinto s (trm_app v1 v2) Q.
-Proof using.
-  introv E M. applys stepsinto_step.
-  { do 2 esplit. applys* step_app_fix. }
-  { introv R. invert R; try solve [intros; false].
-    introv -> -> -> -> -> R. inverts E. applys M. }
-Qed.
-
-Lemma stepsinto_let : forall s x t1 t2 Q1 Q,
-  stepsinto s t1 Q1 ->
-  (forall s1 v1, Q1 v1 s1 -> stepsinto s1 (subst x v1 t2) Q) ->
-  stepsinto s (trm_let x t1 t2) Q.
-Proof using.
-  introv M1 M2. gen_eq Q1': Q1.
-  induction M1; intros; subst.
-  { apply stepsinto_step.
-    { do 2 esplit. applys step_let. }
-    { introv R. inverts R as R'. { inverts R'. } applys* M2. } }
-  { rename t into t1, H1 into IH.
-    destruct H as (s'&t'&RE). applys stepsinto_step.
-    { do 2 esplit. constructors. applys RE. }
-    { introv R. inverts R as R'.
-      { applys* IH R' M2. }
-      { false. inverts RE. } } }
-Qed.
-
-Lemma stepsinto_if : forall s b t1 t2 Q,
-  stepsinto s (if b then t1 else t2) Q ->
-  stepsinto s (trm_if b t1 t2) Q.
-Proof using.
-  introv M. applys stepsinto_step.
-  { do 2 esplit. constructors*. }
-  { introv R. inverts R; tryfalse. { applys M. } }
-Qed.
 
 
 (* ########################################################### *)
@@ -162,12 +111,17 @@ Lemma triple_hpure : forall t (P:Prop) H Q,
   triple t (\[P] \* H) Q.
 Proof using.
   introv M. intros h (h1&h2&M1&M2&D&U). destruct M1 as (M1&HP).
-  inverts HP. subst. rewrite Fmap.union_empty_l. applys~ M.
+  inverts HP. subst. rewrite union_empty_l. applys~ M.
 Qed.
 
 
 (* ########################################################### *)
 (** ** Reasoning Rules for Terms *)
+
+(** These proofs look short, but in fact they require nontrival results
+    established by induction near the end of the file [Small.v], in the
+    section "Deriving Big-Step Evaluation Rules for [stepsinto]".
+    There might exist a different route for establishing these rules, thought. *)
 
 Lemma triple_val : forall v H Q,
   H ==> Q v ->
@@ -229,7 +183,7 @@ Proof using.
   intros. intros s1 K. applys* stepsinto_step.
   { forwards~ (p&D&N): (exists_fresh null s1). do 2 esplit. applys* step_ref. }
   { introv R. inverts R; tryfalse. applys stepsinto_val.
-    inverts K. rewrite Fmap.update_empty. exists p.
+    inverts K. rewrite update_empty. exists p.
     rewrite hstar_hpure_l. split*. hnfs*. }
 Qed.
 
@@ -239,9 +193,9 @@ Lemma triple_get : forall v p,
     (fun r => \[r = v] \* (p ~~> v)).
 Proof using.
   intros. intros s K. inverts K. applys* stepsinto_step.
-  { do 2 esplit. applys* step_get. applys* Fmap.indom_single. }
+  { do 2 esplit. applys* step_get. applys* indom_single. }
   { introv R. inverts R; tryfalse. applys stepsinto_val.
-    rewrite hstar_hpure_l. split*. rewrite* Fmap.read_single. hnfs*. }
+    rewrite hstar_hpure_l. split*. rewrite* read_single. hnfs*. }
 Qed.
 
 Lemma triple_set : forall w p v,
@@ -250,9 +204,9 @@ Lemma triple_set : forall w p v,
     (fun r => (p ~~> v)).
 Proof using.
   intros. intros s1 K. inverts K. applys* stepsinto_step.
-  { do 2 esplit. applys* step_set. applys* Fmap.indom_single. }
+  { do 2 esplit. applys* step_set. applys* indom_single. }
   { introv R. inverts R; tryfalse. applys stepsinto_val.
-    rewrite Fmap.update_single. hnfs*. }
+    rewrite update_single. hnfs*. }
 Qed.
 
 Lemma triple_free : forall p v,
@@ -261,7 +215,7 @@ Lemma triple_free : forall p v,
     (fun r => \[]).
 Proof using.
   intros. intros s1 K. inverts K. applys* stepsinto_step.
-  { do 2 esplit. applys* step_free. applys* Fmap.indom_single. }
+  { do 2 esplit. applys* step_free. applys* indom_single. }
   { introv R. inverts R; tryfalse. applys stepsinto_val.
-    rewrite* Fmap.remove_single. hnfs*. }
+    rewrite* remove_single. hnfs*. }
 Qed.

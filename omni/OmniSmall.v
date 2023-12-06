@@ -94,11 +94,53 @@ Inductive eventually : state->trm->(state->trm->Prop)->Prop :=
       (forall s' t', P1 s' t' -> eventually s' t' P) ->
       eventually s t P.
 
+(** [ostepsinto s t Q] asserts that all executions starting from [(s,t)]
+    eventually reach *final* configurations satisfying the predicate [Q].
+    Unlike [stepsinto s t Q], [ostepsinto] does not involve the predicate
+    [reducible]. Indeed, the omni-small-step judgment inherently captures
+    safety. *)
+
+Definition ostepsinto (s:state) (t:trm) (Q:val->hprop) : Prop :=
+    eventually s t (pred_of_post Q).
+
 
 (* ########################################################### *)
 (* ########################################################### *)
 (* ########################################################### *)
 (** * Properties *)
+
+Hint Constructors eventually.
+
+
+(* ########################################################### *)
+(** ** Covariance of the judgment *)
+
+(** [omnismall] is covariant in the postcondition *)
+
+Lemma omnismall_conseq : forall s t P1 P2,
+  omnismall s t P1 ->
+  (forall s' t', P1 s' t' -> P2 s' t') ->
+  omnismall s t P2.
+Proof using. introv M W. induction M; try solve [ constructors* ]. Qed.
+
+(** [eventually] is covariant in the postcondition *)
+
+Lemma eventually_conseq : forall s t P1 P2,
+  eventually s t P1 ->
+  (forall s' t', P1 s' t' -> P2 s' t') ->
+  eventually s t P2.
+Proof using. introv M W. induction* M. Qed.
+
+(** [ostepsinto] is covariant in the postcondition *)
+
+Lemma ostepsinto_conseq : forall s t Q1 Q2,
+  ostepsinto s t Q1 ->
+  Q1 ===> Q2 ->
+  ostepsinto s t Q2.
+Proof using.
+  introv M W. unfolds ostepsinto. applys* eventually_conseq.
+  { unfolds pred_of_post, qimpl, himpl. introv (v&->&?). eauto. }
+Qed.
 
 (* ########################################################### *)
 (** ** Chained Rules and Cut Rules *)
@@ -130,6 +172,31 @@ Lemma eventually_cut_chained : forall s t P,
   eventually s t (fun s' t' => eventually s' t' P) ->
   eventually s t P.
 Proof using. introv M. applys* eventually_cut M. Qed.
+
+(** Chained induction principle for [eventually]. *)
+
+Lemma eventually_ind_chained :
+  forall K : state -> trm -> (state -> trm -> Prop) -> Prop,
+  (forall s t P,
+     P s t ->
+     K s t P) ->
+  (forall s t P,
+    omnismall s t (fun s' t' => eventually s' t' P) ->
+    omnismall s t (fun s' t' => K s' t' P) ->
+    K s t P) ->
+  (forall s t P, eventually s t P -> K s t P).
+Proof using.
+  introv M1 M2 R. induction R.
+  { applys* M1. }
+  { applys M2; applys* omnismall_conseq H. }
+Qed.
+
+(** Chain rule for let-bindings *)
+
+Lemma omnismall_let_ctx_chained : forall s1 x t1 t2 P,
+  omnismall s1 t1 (fun s2 t1' => P s2 (trm_let x t1' t2)) ->
+  omnismall s1 (trm_let x t1 t2) P.
+Proof using. introv M. constructors*. Qed.
 
 
 (* ########################################################### *)
@@ -213,33 +280,66 @@ Qed.
 
 
 (* ########################################################### *)
-(** ** Equivalence of Eventually is Small-Step and Omni-Small-Step *)
+(** ** Equivalence of Steps-Into is Small-Step and Omni-Small-Step *)
 
-(** If all executions of [(t,s)] eventually fall into the set of configuration
-    made the final configurations satisfying [Q], then all executions of [(t,s)]
-    terminate with postcondition [Q]. And reciprocally. *)
-
-Lemma stepsinto_iff_eventually : forall s t Q,
-  stepsinto s t Q <-> eventually s t (pred_of_post Q).
+Lemma ostepsinto_eq_stepsinto :
+  ostepsinto = stepsinto.
 Proof using.
-  rewrite eventually_eq_seventually. applys stepsinto_iff_eventually.
+  extens. intros s t Q. unfold ostepsinto.
+  rewrite eventually_eq_seventually. rewrite* stepsinto_iff_eventually.
 Qed.
 
 (** Another direct proof *)
 
-Lemma stepsinto_iff_eventually' : forall s t Q,
-  stepsinto s t Q <-> eventually s t (pred_of_post Q).
+Lemma ostepsinto_eq_stepsinto' :
+  ostepsinto = stepsinto.
 Proof using.
-  rewrite eventually_eq_seventually.
-  iff M.
-  { induction M.
-    { applys seventually_here. hnf. exists*. }
-    { rename H into R, H0 into M1, H1 into IH1.
-      applys seventually_step R. applys IH1. } }
+  unfold ostepsinto. rewrite eventually_eq_seventually.
+  extens. intros s t Q. iff M.
   { gen_eq C: (pred_of_post Q). induction M; intros; subst.
     { destruct H as (v'&->&Hv'). applys stepsinto_val Hv'. }
     { rename H into R, H0 into M1, H1 into IH1.
       applys stepsinto_step R.
       intros s' t' S. applys* IH1 S. } }
+  { induction M.
+    { applys seventually_here. hnf. exists*. }
+    { rename H into R, H0 into M1, H1 into IH1.
+      applys seventually_step R. applys IH1. } }
 Qed.
 
+
+(* ########################################################### *)
+(* ########################################################### *)
+(* ########################################################### *)
+(** * Deriving Big-Step Evaluation Rules for [eventually] *)
+
+(** Rule for values *)
+
+Lemma eventually_val : forall s v Q,
+  Q v s ->
+  eventually s v (pred_of_post Q).
+Proof using. introv M. applys eventually_here. exists* v. Qed.
+
+Lemma ostepsinto_val : forall s v Q,
+  Q v s ->
+  ostepsinto s v Q.
+Proof using. introv M. applys* eventually_val. Qed.
+
+(** Rule for let-bindings *)
+
+Lemma eventually_let : forall s x t1 t2 Q1 P,
+  eventually s t1 (pred_of_post Q1) ->
+  (forall v1 s, Q1 v1 s -> eventually s (subst x v1 t2) P) ->
+  eventually s (trm_let x t1 t2) P.
+Proof.
+  introv M1. gen_eq P1: (pred_of_post Q1). gen Q1.
+  induction M1 using eventually_ind_chained; introv E M2; subst.
+  { destruct H as (v&->&K). applys eventually_step_chained. constructors*. }
+  { applys eventually_step_chained. applys omnismall_let_ctx_chained.
+    applys omnismall_conseq H0. introv K. applys* K. }
+Qed.
+
+Lemma eventually_let_chained : forall s x t1 t2 P,
+  eventually s t1 (pred_of_post (fun v1 s => eventually s (subst x v1 t2) P) )->
+  eventually s (trm_let x t1 t2) P.
+Proof using. introv M. applys* eventually_let. Qed.

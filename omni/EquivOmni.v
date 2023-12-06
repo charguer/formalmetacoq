@@ -179,11 +179,11 @@ Qed.
 
 (** The final equivalence follows. *)
 
-Lemma omnibig_iff_eventually : forall s t Q,
-  omnibig s t Q <-> eventually s t (pred_of_post Q).
+Lemma omnibig_iff_ostepsinto :
+  omnibig = ostepsinto.
 Proof using.
-  intros. rewrite <- stepsinto_eq_omnibig.
-  rewrite* stepsinto_iff_eventually.
+  extens. rewrite <- stepsinto_eq_omnibig.
+  rewrite* ostepsinto_eq_stepsinto.
 Qed.
 
 

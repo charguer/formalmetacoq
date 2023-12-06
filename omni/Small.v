@@ -547,3 +547,55 @@ Proof using.
   { inverts* E. } { false_invert. }
 Qed.
 
+
+(* ########################################################### *)
+(* ########################################################### *)
+(* ########################################################### *)
+(** * Deriving Big-Step Evaluation Rules for [stepsinto] *)
+
+Lemma stepsinto_fix : forall s f x t1 Q,
+  Q (val_fix f x t1) s ->
+  stepsinto s (trm_fix f x t1) Q.
+Proof using.
+  introv M. applys stepsinto_step.
+  { do 2 esplit. constructor. }
+  { introv R. inverts R. { applys stepsinto_val. applys M. } }
+Qed.
+
+Lemma stepsinto_app_fix : forall s f x v1 v2 t1 Q,
+  v1 = val_fix f x t1 ->
+  stepsinto s (subst x v2 (subst f v1 t1)) Q ->
+  stepsinto s (trm_app v1 v2) Q.
+Proof using.
+  introv E M. applys stepsinto_step.
+  { do 2 esplit. applys* step_app_fix. }
+  { introv R. invert R; try solve [intros; false].
+    introv -> -> -> -> -> R. inverts E. applys M. }
+Qed.
+
+Lemma stepsinto_let : forall s x t1 t2 Q1 Q,
+  stepsinto s t1 Q1 ->
+  (forall s1 v1, Q1 v1 s1 -> stepsinto s1 (subst x v1 t2) Q) ->
+  stepsinto s (trm_let x t1 t2) Q.
+Proof using.
+  introv M1 M2. gen_eq Q1': Q1.
+  induction M1; intros; subst.
+  { apply stepsinto_step.
+    { do 2 esplit. applys step_let. }
+    { introv R. inverts R as R'. { inverts R'. } applys* M2. } }
+  { rename t into t1, H1 into IH.
+    destruct H as (s'&t'&RE). applys stepsinto_step.
+    { do 2 esplit. constructors. applys RE. }
+    { introv R. inverts R as R'.
+      { applys* IH R' M2. }
+      { false. inverts RE. } } }
+Qed.
+
+Lemma stepsinto_if : forall s b t1 t2 Q,
+  stepsinto s (if b then t1 else t2) Q ->
+  stepsinto s (trm_if b t1 t2) Q.
+Proof using.
+  introv M. applys stepsinto_step.
+  { do 2 esplit. constructors*. }
+  { introv R. inverts R; tryfalse. { applys M. } }
+Qed.

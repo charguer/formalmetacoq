@@ -653,25 +653,25 @@ Qed.
 Implicit Types h : state.
 
 Definition hstar (H1 H2 : hprop) : hprop :=
-  fun h => exists h1 h2, H1 h1 /\ H2 h2 /\ Fmap.disjoint h1 h2 /\ h = h1 \u h2.
+  fun h => exists h1 h2, H1 h1 /\ H2 h2 /\ disjoint h1 h2 /\ h = h1 \u h2.
 
 Notation "H1 '\*' H2" := (hstar H1 H2) (at level 41, right associativity).
 
 Lemma hstar_intro : forall H1 H2 h1 h2,
   H1 h1 ->
   H2 h2 ->
-  Fmap.disjoint h1 h2 ->
+  disjoint h1 h2 ->
   (H1 \* H2) (h1 \u h2).
 Proof using. intros. exists* h1 h2. Qed.
 
 Lemma hstar_inv : forall H1 H2 h,
   (H1 \* H2) h ->
-  exists h1 h2, H1 h1 /\ H2 h2 /\ Fmap.disjoint h1 h2 /\ h = h1 \u h2.
+  exists h1 h2, H1 h1 /\ H2 h2 /\ disjoint h1 h2 /\ h = h1 \u h2.
 Proof using. introv M. hnf in M. jauto. Qed.
 
 Lemma omnibig_frame : forall h1 h2 t Q,
   omnibig h1 t Q ->
-  Fmap.disjoint h1 h2 ->
+  disjoint h1 h2 ->
   omnibig (h1 \u h2) t (fun r => Q r \* (= h2)).
 Proof using.
   introv M HD. gen h2. induction M; intros;
@@ -680,17 +680,17 @@ Proof using.
     specializes IH1 HD. applys omnibig_bind NV1 IH1. introv HK.
     lets (h1'&h2'&K1'&K2'&KD&KU): hstar_inv HK. subst. applys* IH2. }
   { rename H into M. applys omnibig_ref. intros p Hp.
-    rewrite Fmap.indom_union_eq in Hp. rew_logic in Hp. destruct Hp as [Hp1 Hp2].
-    rewrite* Fmap.update_union_not_r. applys hstar_intro.
-    { applys* M. } { auto. } { applys* Fmap.disjoint_update_not_r. } }
-  { applys omnibig_get. { rewrite* Fmap.indom_union_eq. }
-    { rewrite* Fmap.read_union_l. applys* hstar_intro. } }
-  { applys omnibig_set. { rewrite* Fmap.indom_union_eq. }
-    { rewrite* Fmap.update_union_l. applys hstar_intro.
-      { auto. } { auto. } { applys* Fmap.disjoint_update_l. } } }
-  { applys omnibig_free. { rewrite* Fmap.indom_union_eq. }
-    { rewrite* Fmap.remove_disjoint_union_l. applys hstar_intro.
-      { auto. } { auto. } { applys* Fmap.disjoint_remove_l. } } }
+    rewrite indom_union_eq in Hp. rew_logic in Hp. destruct Hp as [Hp1 Hp2].
+    rewrite* update_union_not_r. applys hstar_intro.
+    { applys* M. } { auto. } { applys* disjoint_update_not_r. } }
+  { applys omnibig_get. { rewrite* indom_union_eq. }
+    { rewrite* read_union_l. applys* hstar_intro. } }
+  { applys omnibig_set. { rewrite* indom_union_eq. }
+    { rewrite* update_union_l. applys hstar_intro.
+      { auto. } { auto. } { applys* disjoint_update_l. } } }
+  { applys omnibig_free. { rewrite* indom_union_eq. }
+    { rewrite* remove_disjoint_union_l. applys hstar_intro.
+      { auto. } { auto. } { applys* disjoint_remove_l. } } }
 Qed.
 
 End Bind.

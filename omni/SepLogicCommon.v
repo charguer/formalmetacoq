@@ -142,9 +142,9 @@ Lemma hstar_comm : forall H1 H2,
 Proof.
   unfold hprop, hstar. intros H1 H2. applys himpl_antisym.
   { intros h (h1&h2&M1&M2&D&U).
-    rewrite* Fmap.union_comm_of_disjoint in U. exists* h2 h1. }
+    rewrite* union_comm_of_disjoint in U. exists* h2 h1. }
   { intros h (h1&h2&M1&M2&D&U).
-    rewrite* Fmap.union_comm_of_disjoint in U. exists* h2 h1. }
+    rewrite* union_comm_of_disjoint in U. exists* h2 h1. }
 Qed.
 
 Lemma hstar_assoc : forall H1 H2 H3,
@@ -161,7 +161,7 @@ Lemma hstar_hempty_l : forall H,
   \[] \* H = H.
 Proof.
   intros. applys himpl_antisym; intros h.
-  { intros (h1&h2&M1&M2&D&U). hnf in M1. subst. rewrite* Fmap.union_empty_l. }
+  { intros (h1&h2&M1&M2&D&U). hnf in M1. subst. rewrite* union_empty_l. }
   { intros M. exists (@Fmap.empty loc val) h. splits*. { hnfs*. } }
 Qed.
 
@@ -353,5 +353,5 @@ Lemma hstar_hsingle_same_loc : forall p v1 v2,
   (p ~~> v1) \* (p ~~> v2) ==> \[False].
 Proof.
   intros. unfold hsingle. intros h (h1&h2&E1&E2&D&E). false.
-  subst. applys* Fmap.disjoint_single_single_same_inv.
+  subst. applys* disjoint_single_single_same_inv.
 Qed.

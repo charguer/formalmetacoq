@@ -25,7 +25,7 @@ standard, nondeterministic, imperative lambda-calculus.
 Contents
 ========
 
-Languages formalized:
+Semantics formalized:
 
 - `Syntax`: syntax of a nondeterministic, imperative lambda calculus, and of the entailment judgment
 - `Small`: standard small-step semantics
@@ -36,9 +36,13 @@ Languages formalized:
    their properties, and equivalence with big-step semantics.
 - `EquivSmallBig`: equivalence between standard small-step and standard big-step semantics
 - `EquivOmni`: equivalence of omni-semantics and standard semantics
-- `SepLogicCommon`: minimal construction of heap predicates
-- `SepLogicOmniBig`: minimal construction of separation logic rules on top of omni-big-step
-- `SepLogicOmniSmall`: minimal construction of separation logic rules on top of omni-small-step
+
+
+Formalization of a core Separation Logic:
+- `SepLogicCommon`: heap predicates and entailment
+- `SepLogicSmall`: separation logic built on top of standard small-step semantics
+- `SepLogicOmniBig`: separation logic built on top of omni-big-step semantics
+- `SepLogicOmniSmall`: separation logic built on top of omni-small-step semantics
 
 Other files:
 
