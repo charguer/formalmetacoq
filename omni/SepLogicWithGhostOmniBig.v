@@ -4,6 +4,7 @@
 *****************************************************************)
 
 Set Implicit Arguments.
+From TLC Require Import LibRelation.
 Require Export Syntax OmniBig.
 
 Implicit Types f : var.
@@ -35,6 +36,11 @@ Parameter heap_with_state : heap -> state -> heap.
 
 Parameter gstep : heap -> heap -> Prop.
 
+(** Ghost step is a reflexive-transitive relation *)
+
+Parameter gstep_refl : refl gstep.
+Parameter gstep_trans : trans gstep.
+
 (** Ghost step do not modify the physical state *)
 
 Parameter heap_state_gstep : forall h h',
@@ -54,18 +60,9 @@ Parameter heap_state_heap_with_state : forall h s,
 
 Definition hprop := heap -> Prop.
 
+Implicit Types h : heap.
 Implicit Types H : hprop.
 Implicit Types Q : val->hprop.
-
-(** Ghost heap entailment *)
-
-Definition ghimpl (H1 H2 : hprop) : Prop :=
-  forall h, H1 h -> exists h', gstep h h' /\ H2 h'.
-
-(** Ghost post entailment *)
-
-Definition gqimpl (Q1 Q2 : val->hprop) : Prop :=
-  forall v, ghimpl (Q1 v) (Q2 v).
 
 (** Heap entailment *)
 
@@ -125,6 +122,83 @@ Proof using. introv M1 M2. intros v. eapply himpl_trans; eauto. Qed.
 
 
 (* ########################################################### *)
+(** ** Ghoste Update *)
+
+(** Ghost update modality: [hupdate H] asserts that [H] holds
+    after a [gstep] update to the current ghost state. *)
+
+Definition hupdate (H : hprop) : hprop :=
+  fun h => exists h', gstep h h' /\ H h'.
+
+(** Ghost update modality for postconditions *)
+
+Definition qupdate (Q : val->hprop) : val->hprop :=
+  fun v => hupdate (Q v).
+
+(** Ghost update (view shift) *)
+
+Definition ghimpl (H1 H2 : hprop) : Prop :=
+  H1 ==> hupdate H2.
+
+Notation "H1 |==> H2" := (ghimpl H1 H2)
+  (at level 55) : heap_scope.
+
+(** Ghost update on postconditions *)
+
+Definition gqimpl (Q1 Q2 : val->hprop) : Prop :=
+  forall v, ghimpl (Q1 v) (Q2 v).
+
+Notation "Q1 |===> Q2" := (gqimpl Q1 Q2)
+  (at level 55) : heap_scope.
+
+(** Alternative definition of [gqimpl] *)
+
+Lemma gqimpl_eq_qimpl : forall Q1 Q2,
+  gqimpl Q1 Q2 = qimpl Q1 (qupdate Q2).
+Proof using. extens. unfolds gqimpl, ghimpl. iff*. Qed.
+
+
+(* ########################################################### *)
+(** ** Properties of Ghost Updates *)
+
+Lemma hupdate_intro : forall H h h',
+  gstep h h' ->
+  H h' ->
+  hupdate H h.
+Proof using. introv G K. hnfs*. Qed.
+
+(** Introduction of [hupdate] in the particular case where no
+    update is needed. *)
+
+Lemma gupdate_intro_same : forall H h,
+  H h ->
+  hupdate H h.
+Proof using. introv K. applys* hupdate_intro h. applys gstep_refl. Qed.
+
+(** Entailments are included in ghost updates *)
+
+Lemma ghimpl_of_himpl : forall H1 H2,
+  H1 ==> H2 ->
+  H1 |==> H2.
+Proof using. introv M Hh. exists h. split. applys gstep_refl. eauto. Qed.
+
+Lemma ghimpl_of_qimpl : forall Q1 Q2,
+  Q1 ===> Q2 ->
+  Q1 |===> Q2.
+Proof using. introv M. intros v. applys* ghimpl_of_himpl. Qed.
+
+Lemma hupdate_conseq : forall H1 H2,
+  H1 ==> H2 ->
+  hupdate H1 ==> hupdate H2.
+Proof using. introv W. introv (h'&G&K). exists* h'. Qed.
+
+Lemma qupdate_conseq : forall Q1 Q2,
+  Q1 ===> Q2 ->
+  qupdate Q1 ===> qupdate Q2.
+Proof using. introv W. intros v. applys* hupdate_conseq. Qed.
+
+
+(* ########################################################### *)
 (** ** Auxiliary Defintitions for State-Manipulating Primitives *)
 
 Definition heap_state_ref (h:heap) (p:loc) (v:val) (h':heap) : Prop :=
@@ -152,10 +226,6 @@ Definition heap_state_free (h:heap) (p:loc) (h':heap) : Prop :=
     and satisfy the postcondition Q. *)
 
 Inductive eval : heap -> trm -> (val->hprop) -> Prop :=
-  | eval_ghost : forall h' h t Q,
-      gstep h h' ->
-      eval h' t Q ->
-      eval h t Q
   | eval_val : forall h v Q,
       Q v h ->
       eval h (trm_val v) Q
@@ -196,7 +266,14 @@ Inductive eval : heap -> trm -> (val->hprop) -> Prop :=
   | eval_free : forall h' h p Q,
       heap_state_free h p h' ->
       Q val_unit h' ->
-      eval h (val_free (val_loc p)) Q.
+      eval h (val_free (val_loc p)) Q
+  | eval_ghost_pre : forall h' h t Q,
+      gstep h h' ->
+      eval h' t Q ->
+      eval h t Q
+  | eval_ghost_post : forall h t Q,
+      eval h t (qupdate Q) ->
+      eval h t Q.
 
 (** Definition of Separation Logic triples *)
 
@@ -222,7 +299,6 @@ Lemma omnibig_of_eval : forall h t Q,
   omnibig (heap_state h) t (fun v => state_st (Q v)).
 Proof using.
   introv M. induction M; try solve [constructors*].
-  { rewrite* <- (heap_state_gstep H). }
   { constructors*. { introv (h2&K2&->). eauto. } }
   { unfolds heap_state_ref. constructors*.
     { intros p Hp. esplit. split.
@@ -232,12 +308,48 @@ Proof using.
     rewrite* heap_state_heap_with_state. }
   { destruct H as (?&->). constructors*. esplit. split*.
     rewrite* heap_state_heap_with_state. }
+  { rename H into G. rewrite* <- (heap_state_gstep G). }
+  { applys omnibig_conseq IHM. intros v. intros h' (hb&(ha&G&R0)&->).
+    exists ha. splits*. rewrite* <- (heap_state_gstep G). }
 Qed.
 
 Lemma triple_sound : forall t H Q,
   triple t H Q ->
   forall s, state_st H s -> omnibig s t (fun v => state_st (Q v)).
 Proof using. introv M (h&Hh&->). applys* omnibig_of_eval. Qed.
+
+
+(* ########################################################### *)
+(** ** Consequence property for WP *)
+
+Lemma eval_conseq : forall h t Q1 Q2,
+  eval h t Q1 ->
+  Q1 ===> Q2 ->
+  eval h t Q2.
+Proof using.
+  introv M W.
+  gen Q2. induction M; intros; try solve [ constructors; try (intros; applys W); eauto].
+  { applys eval_ghost_post. applys IHM. applys* qupdate_conseq. }
+Qed.
+
+Lemma eval_conseq_ghost : forall h t Q1 Q2,
+  eval h t Q1 ->
+  Q1 |===> Q2 ->
+  eval h t Q2.
+Proof using. introv M W. applys eval_ghost_post. applys* eval_conseq M. Qed.
+
+(** Note: proof sketch without [eval_ghost_post], gets stuck on [rand].
+  introv M W. induction M; try solve [ constructors* ].
+  { lets (h'&G&K): W H. applys eval_ghost G. constructors*. }
+  { lets (h'&G&K): W H. applys eval_ghost G. constructors*. }
+  { lets (h'&G&K): W H0. applys eval_ghost G. constructors*. }
+  { constructors*. introv Hn1. applys W... *)
+
+
+
+
+
+
 
 
 (**

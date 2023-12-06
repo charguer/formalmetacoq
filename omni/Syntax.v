@@ -147,3 +147,5 @@ Ltac false_invert_iter ::=
           | clear H; false_invert_iter
           | fail 2 ] end.
 
+Tactic Notation "constructors" :=
+  econstructor; unfold eq'.
