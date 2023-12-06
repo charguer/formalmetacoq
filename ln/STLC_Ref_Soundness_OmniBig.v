@@ -12,6 +12,7 @@ Require Import STLC_Ref_Soundness_Common.
 Implicit Types Y : phi.
 Implicit Types P : conf->Prop.
 
+
 (* ********************************************************************** *)
 (** * Definition of Co-Omni-Big-Step Semantics *)
 
@@ -235,7 +236,7 @@ Abort. (* Guard condition unhappy *)
 
 
 (* ########################################################### *)
-(** ** Type soundness proof, to satisfy Coq's guard condition *)
+(** ** Type soundness proof, satisfying Coq's guard condition *)
 
 (** For technical reasons associated with the guard condition of the
     coinductive proof, we need to reformulate the soundness statement,
@@ -248,6 +249,8 @@ Lemma coomnibig_soundness_result' : forall t mu Y T P,
   coomnibig (t,mu) P.
 Proof using.
   cofix IH.
+
+  (** Generic reformuations of the induction hypothesis to help automation *)
   asserts IH1: (forall mu t Y T,
     Y |== mu ->
     empty ! Y |= t ~: T ->
@@ -260,6 +263,8 @@ Proof using.
     (post Y T) ==> P ->
     coomnibig (t, mu) P).
   { introv ? ? ? HP. applys* IH. applys himpl_trans HP. applys* post_extends. }
+
+  (** The actual proof begins here (37 lines) *)
   introv HS HT HQ. inverts HT as.
   { introv HK HT1. false* binds_empty_inv. }
   { intros L M. asserts Wf1: (term (trm_abs t1)).
@@ -282,7 +287,7 @@ Proof using.
     { sound_ctx coomnibig_ref_1. } }
   { introv Ht1. tests V1: (value t1).
     { inverts V1; inverts Ht1. forwards (r&Vr&Hr&Tr): (proj33 HS) l0.
-      { eauto.  } applys* coomnibig_get. }
+      { eauto. } applys* coomnibig_get. }
     { sound_ctx coomnibig_get_1. } }
   { introv Ht1 Ht2. tests V1: (value t1).
     { tests V2: (value t2).

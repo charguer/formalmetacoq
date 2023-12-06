@@ -86,9 +86,9 @@ Parameter omnismall_equiv_red : forall c P,
 
 
 (* ********************************************************************** *)
-(** * Statement *)
+(** * Postconditions for Types *)
 
-(** Postcondition associated with a well-typed configuration *)
+(** Configurations associated with a given type and store typing *)
 
 Definition post (Y:phi) (T:typ) : conf->Prop :=
   fun '(t,mu) =>
@@ -96,7 +96,23 @@ Definition post (Y:phi) (T:typ) : conf->Prop :=
              /\ Y' |== mu
              /\ empty ! Y' |= t ~: T.
 
-(** Goal is to prove omnismall-soundness: well typed configurations
+(** Postcondition holds of a well-typed state *)
+
+Lemma post_current : forall Y mu t T,
+  Y |== mu ->
+  empty ! Y |= t ~: T ->
+  post Y T (t,mu).
+Proof using.
+  introv HS HT. exists Y. splits*.
+Qed.
+
+Hint Resolve post_current.
+
+
+(* ********************************************************************** *)
+(** * Statement of Omni-Small-Step Soundness *)
+
+(** The goal is to prove omnismall-soundness: well typed configurations
     are either made of a value or can take a step towards a configuration
     that satisfies the same type, for an extended store typing. *)
 
@@ -109,15 +125,6 @@ Definition omnismall_soundness := forall mu t Y T,
 (* ********************************************************************** *)
 (** * Soundness proof *)
 
-Lemma post_current : forall Y mu t T,
-  Y |== mu ->
-  empty ! Y |= t ~: T ->
-  post Y T (t,mu).
-Proof using.
-  introv HS HT. exists Y. splits*.
-Qed.
-
-Hint Resolve post_current.
 Hint Constructors typing.
 
 Ltac sound_ctx E := (* tactic for context evaluation rules *)
@@ -126,7 +133,7 @@ Ltac sound_ctx E := (* tactic for context evaluation rules *)
 
 Lemma omnismall_soundness_result :
   omnismall_soundness.
-Proof using.
+Proof using. (* 34 lines *)
   introv HS HT. gen_eq E: (@empty typ). gen mu.
   induction HT; intros; subst; try solve [left* ].
   { false* binds_empty_inv. }
@@ -168,7 +175,9 @@ Qed.
 (** * Generic result: type soundness follows from omnismall-soudness *)
 
 (** We next give a generic proof that [omnismall_soundness_induction]
-    entails [type soundness] *)
+    entails type soundness, as defined in file [STLC_Ref_Definitions]:
+    starting from a well-typed configuration, all accessible
+    configurations are either final or reducible. *)
 
 Lemma soundness_of_omnismall_soundness :
   omnismall_soundness ->

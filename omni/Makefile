@@ -10,7 +10,8 @@ FILES :=\
 	EquivSmallBig \
 	EquivOmni \
 	SepLogicCommon \
-	SepLogicOmniBig
+	SepLogicOmniBig \
+	SepLogicSmall
 
 
 

@@ -46,7 +46,7 @@ Ltac pres H t' mu' :=
 (** Preservation (typing is preserved by reduction). *)
 
 Lemma preservation_result : preservation.
-Proof.
+Proof. (* 26 lines *)
   introv Typ. gen t' mu'. gen_eq E: (empty : env).
   induction Typ; intros EQ t' mu' Red TypSto; subst;
    inversions Red. (* todo env_fix.*)
@@ -79,7 +79,7 @@ Qed.
   take a step of reduction). *)
 
 Lemma progress_result : progress.
-Proof.
+Proof. (* 33 lines *)
   introv Typ. gen_eq E: (empty : env). lets Typ': Typ.
   induction Typ; intros; subst.
   false* binds_empty_inv.

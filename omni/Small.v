@@ -146,10 +146,10 @@ Definition partial (s1:state) (t1:trm) (Q:val->state->Prop) : Prop :=
 (* ########################################################### *)
 (** ** Closure-Based Characterization of Divergence *)
 
-(** The judgment [sdiv s t] characterize divergence in small-step:
+(** The judgment [stepsinf s t] characterize divergence in small-step:
     any execution prefix can be extended. *)
 
-Definition sdiv (s:state) (t:trm) : Prop :=
+Definition stepsinf (s:state) (t:trm) : Prop :=
   forall s2 t2, steps s t s2 t2 ->
   exists s3 t3, step s2 t2 s3 t3.
 
@@ -189,7 +189,7 @@ CoInductive costepsinto : state->trm->(val->hprop)->Prop :=
 (* ########################################################### *)
 (** ** CoInductive Characterization of Divergence *)
 
-(** [costeps s t] is equivalent to [sdiv], but defined coinductively. *)
+(** [costeps s t] is equivalent to [stepsinf], but defined coinductively. *)
 
 CoInductive costeps : state -> trm -> Prop :=
   | costeps_step : forall s1 t1,
@@ -306,6 +306,39 @@ Qed.
 
 
 (* ########################################################### *)
+(** ** Covariance of [stepsinto] ands [costepsinto] *)
+
+(** The consequence rule for [stepsinto] is established by induction. *)
+
+Lemma stepsinto_conseq : forall s t Q Q',
+  stepsinto s t Q' ->
+  Q' ===> Q ->
+  stepsinto s t Q.
+Proof using.
+  introv M WQ. induction M.
+  { applys stepsinto_val. applys* WQ. }
+  { rename H1 into IH.
+    applys stepsinto_step.
+    { auto. }
+    { introv HR. applys* IH. } }
+Qed.
+
+(** The consequence rule for [costepsinto] is established by coinduction. *)
+
+Lemma costepsinto_conseq : forall s t Q Q',
+  costepsinto s t Q' ->
+  Q' ===> Q ->
+  costepsinto s t Q.
+Proof using.
+  cofix IH. introv M WQ. inverts M.
+  { applys costepsinto_val. applys* WQ. }
+  { applys costepsinto_step.
+    { auto. }
+    { introv HR. applys* IH. } }
+Qed.
+
+
+(* ########################################################### *)
 (** ** [stepsinto] Included in [seventually] *)
 
 (** If all executions of [(t,s)] eventually fall into the set of configuration
@@ -342,12 +375,12 @@ Qed.
 (* ########################################################### *)
 (** ** Equivalence of Divergence and Partial Correctness with Empty Postcondition *)
 
-(** For closure-based definitions, we relate [sdiv] with the specialization
+(** For closure-based definitions, we relate [stepsinf] with the specialization
     of [partial] to the empty postcondition [Empty].
     [Empty] is defined in the file [Syntax]. *)
 
-Lemma sdiv_iff_omnibigps_Empty : forall s t,
-  sdiv s t <-> partial s t Empty.
+Lemma stepsinf_iff_omnibigps_Empty : forall s t,
+  stepsinf s t <-> partial s t Empty.
 Proof using.
   iff M.
   { introv R. right. applys M R. }
@@ -398,11 +431,11 @@ Proof using.
       { intros s' t' R'. applys IH. applys partial_inv_step M R'. } } }
 Qed.
 
-Lemma costeps_eq_sdiv :
-  costeps = sdiv.
+Lemma costeps_eq_stepsinf :
+  costeps = stepsinf.
 Proof using.
   extens. intros s t.
-  rewrite sdiv_iff_omnibigps_Empty.
+  rewrite stepsinf_iff_omnibigps_Empty.
   rewrite costeps_iff_costepsinto_Empty.
   rewrite* costepsinto_eq_partial.
 Qed.

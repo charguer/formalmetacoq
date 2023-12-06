@@ -395,11 +395,11 @@ Qed.
 (** We establish the equivalence between the small-step characterisation
    and the coinductive Omni-big-step characterization of divergence. *)
 
-Lemma sdiv_eq_coomnidiv :
-  sdiv = coomnidiv.
+Lemma stepsinf_eq_coomnidiv :
+  stepsinf = coomnidiv.
 Proof using.
   extens. intros s t. unfold coomnidiv.
-  rewrite sdiv_iff_omnibigps_Empty.
+  rewrite stepsinf_iff_omnibigps_Empty.
   rewrite <- costepsinto_eq_omnibigp.
   rewrite* costepsinto_eq_partial.
 Qed.
