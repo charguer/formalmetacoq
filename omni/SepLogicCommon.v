@@ -4,7 +4,7 @@
 *****************************************************************)
 
 Set Implicit Arguments.
-Require Export Syntax.
+Require Export Hprop.
 
 Implicit Types f : var.
 Implicit Types b : bool.
@@ -19,7 +19,7 @@ Implicit Types H : hprop.
 Implicit Types Q : val->hprop.
 
 
-(** [Syntax.v] already contains the definition of [heap], [hprop],
+(** [Hprop.v] already contains the definition of [heap], [hprop],
     and of the entailment relations. *)
 
 

@@ -3,6 +3,7 @@ FILES :=\
 	LibSepVar \
 	LibSepFmap \
 	Syntax \
+	Hprop \
 	Small \
 	Big \
 	OmniSmall \

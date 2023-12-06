@@ -4,7 +4,7 @@
 ****************************************************************)
 
 Set Implicit Arguments.
-Require Export Syntax.
+Require Export Hprop.
 
 Implicit Types f : var.
 Implicit Types b : bool.
