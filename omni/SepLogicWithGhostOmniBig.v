@@ -361,7 +361,7 @@ Lemma ghimpl_of_himpl : forall H1 H2,
   H1 |==> H2.
 Proof using. introv M Hh. exists h. split. applys gstep_refl. eauto. Qed.
 
-Lemma ghimpl_of_qimpl : forall Q1 Q2,
+Lemma gqimpl_of_qimpl : forall Q1 Q2,
   Q1 ===> Q2 ->
   Q1 |===> Q2.
 Proof using. introv M. intros v. applys* ghimpl_of_himpl. Qed.
@@ -510,13 +510,6 @@ Lemma eval_conseq_ghost : forall h t Q1 Q2,
   Q1 |===> Q2 ->
   eval h t Q2.
 Proof using. introv M W. applys eval_ghost_post. applys* eval_conseq M. Qed.
-
-(** Note: proof sketch without [eval_ghost_post], gets stuck on [rand].
-  introv M W. induction M; try solve [ constructors* ].
-  { lets (h'&G&K): W H. applys eval_ghost G. constructors*. }
-  { lets (h'&G&K): W H. applys eval_ghost G. constructors*. }
-  { lets (h'&G&K): W H0. applys eval_ghost G. constructors*. }
-  { constructors*. introv Hn1. applys W... *)
 
 
 (* ########################################################### *)
@@ -952,17 +945,13 @@ Proof using.
   intros. unfold qwand. applys himpl_hforall_l v. xsimpl.
 Qed.
 
-(* TODO
-Lemma qwand_equiv : forall H Q1 Q2,
-      H ==> (Q1 \--* Q2)
-  <-> (Q1 \*+ H) ===> Q2.
+Lemma qwand_cancel : forall Q1 Q2,
+  Q1 \*+ (Q1 \--* Q2) ===> Q2.
 Proof using.
-  intros. iff M.
-  { intros x. xchange M. xchange (qwand_specialize x).
-    rewrite hstar_comm. applys (hwand_cancel (Q1 x)). }
-  { applys himpl_hforall_r. intros x. rewrite* hwand_equiv. }
+  intros. intros v. applys himpl_trans.
+  applys himpl_frame_r. applys qwand_specialize v.
+  applys hwand_cancel.
 Qed.
-*)
 
 
 (* ########################################################### *)
@@ -1176,6 +1165,35 @@ Proof using. intros. intros v. applys hupdate_frame. Qed.
 
 Hint Constructors eval.
 
+Parameter heap_state_union : forall h1 h2,
+  heap_state (h1 \u h2) = Fmap.union (heap_state h1) (heap_state h2).
+
+Parameter heap_with_state_union_update : forall h1 h2 p v,
+  heap_compat h1 h2 ->
+  Fmap.indom (heap_state h1) p ->
+    heap_with_state (h1 \u h2) (Fmap.union (update (heap_state h1) p v) (heap_state h2))
+  = (heap_with_state h1 (update (heap_state h1) p v)) \u h2.
+
+Parameter heap_with_state_union_remove : forall h1 h2 p,
+    heap_with_state (h1 \u h2) (Fmap.union (remove (heap_state h1) p) (heap_state h2))
+  = (heap_with_state h1 (remove (heap_state h1) p)) \u h2.
+
+
+Parameter heap_compat_update : forall h1 h2 p v,
+  heap_compat h1 h2 ->
+  Fmap.indom (heap_state h1) p ->
+  heap_compat (heap_with_state h1 (update (heap_state h1) p v)) h2.
+  (* disjoint union l *)
+
+Parameter heap_compat_remove : forall h1 h2 p,
+  heap_compat h1 h2 ->
+  heap_compat (heap_with_state h1 (remove (heap_state h1) p)) h2.
+  (* disjoint_remove_l *)
+
+Parameter disjoint_heap_state_of_heap_compat : forall h1 h2,
+   heap_compat h1 h2 ->
+   Fmap.disjoint (heap_state h1) (heap_state h2).
+
 Lemma eval_frame : forall h1 h2 t Q,
   eval h1 t Q ->
   heap_compat h1 h2 ->
@@ -1191,24 +1209,30 @@ Proof using.
     rewrite heap_state_heap_union in *.
     rewrite indom_union_eq in Hp. rew_logic in Hp.
     destruct Hp as [Hp1 Hp2].
-    rewrite* update_union_not_r. skip. (** applys hstar_intro.
-    { applys* M. } { auto. } { applys* disjoint_update_not_r. } *) }
+    rewrite* update_union_not_r. skip.
     (**
-  { applys eval_get. { rewrite* indom_union_eq. }
-    { rewrite* read_union_l. applys* hstar_intro. } }
-  { applys eval_set. { rewrite* indom_union_eq. }
-    { rewrite* update_union_l. applys hstar_intro.
-      { auto. } { auto. } { applys* disjoint_update_l. } } }
-  { applys eval_free. { rewrite* indom_union_eq. }
-    { rewrite* remove_disjoint_union_l. applys hstar_intro.
-      { auto. } { auto. } { applys* disjoint_remove_l. } } }
-      *)
-      skip.
-      skip.
-      skip.
+
+     applys hstar_intro.
+    { applys* M. } { auto. } { applys* disjoint_update_not_r. } *) }
+  { rename H into M. destruct M as (D&->). applys eval_get.
+     { unfolds. rewrite heap_state_union. split*.
+       { rewrite* indom_union_eq. } }
+     { rewrite* read_union_l. applys* hstar_intro. } }
+  { rename H into M. destruct M as (D&->). applys eval_set.
+     { unfolds. rewrite heap_state_union. split*.
+       { rewrite* indom_union_eq. } }
+    { rewrite* update_union_l. rew_heaps. rewrite* heap_with_state_union_update.
+      applys* hstar_intro. { applys* heap_compat_update. } } }
+  {  rename H into M. destruct M as (D&->). applys eval_free.
+     { unfolds. rewrite heap_state_union. split*.
+       { rewrite* indom_union_eq. } }
+    { rew_heaps. lets D': disjoint_heap_state_of_heap_compat HD.
+      rewrite* remove_disjoint_union_l. rewrite heap_with_state_union_remove.
+      applys* hstar_intro. { applys* heap_compat_remove. } } }
   { forwards* (?&?): gstep_frame_l h2 h h'. }
   {  applys eval_ghost_post. applys* eval_conseq. applys* qupdate_frame. }
 Qed.
+
 
 (* ########################################################### *)
 (** ** Structural Rules *)
@@ -1219,6 +1243,40 @@ Lemma triple_conseq : forall t H' Q' H Q,
   Q' ===> Q ->
   triple t H Q.
 Proof using. unfolds triple. introv M MH MQ HF. applys* eval_conseq. Qed.
+
+Lemma triple_frame : forall t H Q H',
+  triple t H Q ->
+  triple t (H \* H') (Q \*+ H').
+Proof.
+  introv M. intros h HF. lets (h1&h2&M1&M2&MD&MU): (rm HF).
+  subst. specializes M M1. applys eval_conseq.
+  { applys eval_frame M MD. } { xsimpl. intros h' ->. applys M2. }
+Qed.
+
+Lemma triple_ramified_frame : forall H1 Q1 t H Q,
+  triple t H1 Q1 ->
+  H ==> H1 \* (Q1 \--* Q) ->
+  triple t H Q.
+Proof using.
+  introv M W. applys triple_conseq W.
+  applys* triple_frame (Q1 \--* Q) M.
+  applys qwand_cancel.
+Qed.
+
+Lemma triple_hexists : forall t (A:Type) (J:A->hprop) Q,
+  (forall (x:A), triple t (J x) Q) ->
+  triple t (hexists J) Q.
+Proof using. introv M. intros h (x&Hh). applys M Hh. Qed.
+
+Lemma triple_hpure : forall t (P:Prop) H Q,
+  (P -> triple t H Q) ->
+  triple t (\[P] \* H) Q.
+Proof using.
+  introv M. intros h (h1&h2&M1&M2&D&U). destruct M1 as (M1&HP).
+  inverts HP. subst. rew_heaps*.
+Qed.
+
+(** Ghost updates *)
 
 Lemma triple_conseq_post_ghost : forall t H Q1 Q2,
   triple t H Q1 ->
@@ -1235,26 +1293,24 @@ Proof using.
   lets (h'&G&H'): MH Hh. applys* eval_ghost_pre.
 Qed.
 
-Lemma triple_frame : forall t H Q H',
-  triple t H Q ->
-  triple t (H \* H') (Q \*+ H').
-Proof.
-  introv M. intros h HF. lets (h1&h2&M1&M2&MD&MU): (rm HF).
-  subst. specializes M M1. applys eval_conseq.
-  { applys eval_frame M MD. } { xsimpl. intros h' ->. applys M2. }
+Lemma triple_post_ghost : forall t H Q,
+  triple t H (qupdate Q) ->
+  triple t H Q.
+Proof using.
+  unfolds triple. introv M Hh. applys* eval_conseq_ghost.
+  intros v. applys himpl_refl.
 Qed.
 
-Lemma triple_hexists : forall t (A:Type) (J:A->hprop) Q,
-  (forall (x:A), triple t (J x) Q) ->
-  triple t (hexists J) Q.
-Proof using. introv M. intros h (x&Hh). applys M Hh. Qed.
-
-Lemma triple_hpure : forall t (P:Prop) H Q,
-  (P -> triple t H Q) ->
-  triple t (\[P] \* H) Q.
+Lemma triple_ramified_frame_ghost : forall H1 Q1 t H Q,
+  triple t H1 Q1 ->
+  H |==> (H1 \* (Q1 \--* qupdate Q)) ->
+  triple t H Q.
 Proof using.
-  introv M. intros h (h1&h2&M1&M2&D&U). destruct M1 as (M1&HP).
-  inverts HP. subst. rew_heaps*.
+  introv M W. applys triple_post_ghost.
+  applys triple_conseq_pre_ghost W.
+  applys triple_conseq_post_ghost.
+  applys* triple_frame (Q1 \--* qupdate Q) M.
+  applys gqimpl_of_qimpl. applys qwand_cancel.
 Qed.
 
 (** Garbage-collection rules *)
