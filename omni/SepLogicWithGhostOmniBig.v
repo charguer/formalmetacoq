@@ -35,6 +35,8 @@ Parameter heap : Type.
 
 Parameter heap_state : heap -> state.
 
+Coercion heap_state : heap >-> state.
+
 (** Update of the physical state component from a ghost state *)
 
 Parameter heap_with_state : heap -> state -> heap.
@@ -63,8 +65,8 @@ Open Scope heap_union_scope.
 Parameter heap_state_heap_empty :
   heap_state heap_empty = Fmap.empty.
 
-Parameter heap_state_heap_union : forall h1 h2,
-  heap_state (heap_union h1 h2) = Fmap.union (heap_state h1) (heap_state h2).
+Parameter heap_state_union : forall h1 h2,
+  heap_state (h1 \u h2) = Fmap.union (heap_state h1) (heap_state h2).
 
 (** Properties of [heap_with_state] *)
 
@@ -79,6 +81,48 @@ Parameter heap_with_state_heap_with_state : forall h s s',
 
 Parameter heap_with_state_heap_empty_state_empty :
    heap_with_state heap_empty state_empty = heap_empty.
+
+(** Properties of [heap_with_state] on [union] *)
+
+Parameter heap_with_state_union_update : forall h1 h2 p v,
+  heap_compat h1 h2 ->
+  Fmap.indom (heap_state h1) p ->
+    heap_with_state (h1 \u h2) (Fmap.union (update (heap_state h1) p v) (heap_state h2))
+  = (heap_with_state h1 (update (heap_state h1) p v)) \u h2.
+
+Parameter heap_with_state_union_alloc : forall h1 h2 p v,
+  heap_compat h1 h2 ->
+  ~ indom (heap_state h1) p ->
+  ~ indom (heap_state h2) p ->
+    heap_with_state (h1 \u h2) (Fmap.union (update (heap_state h1) p v) (heap_state h2))
+  = (heap_with_state h1 (update (heap_state h1) p v)) \u h2.
+
+Parameter heap_with_state_union_remove : forall h1 h2 p,
+    heap_with_state (h1 \u h2) (Fmap.union (remove (heap_state h1) p) (heap_state h2))
+  = (heap_with_state h1 (remove (heap_state h1) p)) \u h2.
+
+(** Properties of [heap_compat] *)
+
+Parameter heap_compat_update : forall h1 h2 p v,
+  heap_compat h1 h2 ->
+  Fmap.indom (heap_state h1) p ->
+  heap_compat (heap_with_state h1 (update (heap_state h1) p v)) h2.
+  (* disjoint union l *)
+
+Parameter heap_compat_alloc : forall h1 h2 p v,
+  heap_compat h1 h2 ->
+  ~ indom (heap_state h1) p ->
+  ~ indom (heap_state h2) p ->
+  heap_compat (heap_with_state h1 (update (heap_state h1) p v)) h2.
+
+Parameter heap_compat_remove : forall h1 h2 p,
+  heap_compat h1 h2 ->
+  heap_compat (heap_with_state h1 (remove (heap_state h1) p)) h2.
+  (* disjoint_remove_l *)
+
+Parameter disjoint_heap_state_of_heap_compat : forall h1 h2,
+   heap_compat h1 h2 ->
+   Fmap.disjoint (heap_state h1) (heap_state h2).
 
 (** Symmetry of [heap_compat] *)
 
@@ -368,26 +412,6 @@ Proof using. introv M. intros v. applys* ghimpl_of_himpl. Qed.
 
 
 (* ########################################################### *)
-(** ** Auxiliary Defintitions for State-Manipulating Primitives *)
-
-Definition heap_state_ref (h:heap) (p:loc) (v:val) (h':heap) : Prop :=
-  let s := heap_state h in
-  ~ Fmap.indom s p /\ h' = heap_with_state h (Fmap.update s p v).
-
-Definition heap_state_get (h:heap) (p:loc) (v:val) : Prop :=
-  let s := heap_state h in
-  Fmap.indom s p /\ v = Fmap.read s p.
-
-Definition heap_state_set (h:heap) (p:loc) (v:val) (h':heap) : Prop :=
-  let s := heap_state h in
-  Fmap.indom s p /\ h' = heap_with_state h (Fmap.update s p v).
-
-Definition heap_state_free (h:heap) (p:loc) (h':heap) : Prop :=
-  let s := heap_state h in
-  Fmap.indom s p /\ h' = heap_with_state h (Fmap.remove s p).
-
-
-(* ########################################################### *)
 (** ** Inductive WP over Ghost State *)
 
 (** The judgment [eval g t Q] asserts that all executions of [t] in a
@@ -421,20 +445,20 @@ Inductive eval : heap -> trm -> (val->hprop) -> Prop :=
       (forall n1, 0 <= n1 < n -> Q n1 h) ->
       eval h (val_rand (val_int n)) Q
   | eval_ref : forall h v Q,
-      (forall p h', heap_state_ref h p v h' ->
-         Q (val_loc p) h') ->
+      (forall p, ~ Fmap.indom (heap_state h) p ->
+         Q (val_loc p) (heap_with_state h (Fmap.update (heap_state h) p v))) ->
       eval h (val_ref v) Q
-  | eval_get : forall h p v Q,
-      heap_state_get h p v ->
-      Q v h ->
+  | eval_get : forall h p Q,
+      Fmap.indom (heap_state h) p ->
+      Q (Fmap.read (heap_state h) p) h ->
       eval h (val_get (val_loc p)) Q
-  | eval_set : forall h' h p v Q,
-      heap_state_set h p v h' ->
-      Q val_unit h' ->
+  | eval_set : forall h p v Q,
+      Fmap.indom (heap_state h) p ->
+      Q val_unit (heap_with_state h (Fmap.update (heap_state h) p v)) ->
       eval h (val_set (val_loc p) v) Q
-  | eval_free : forall h' h p Q,
-      heap_state_free h p h' ->
-      Q val_unit h' ->
+  | eval_free : forall h p Q,
+      Fmap.indom (heap_state h) p ->
+      Q val_unit ( heap_with_state h (Fmap.remove (heap_state h) p)) ->
       eval h (val_free (val_loc p)) Q
   | eval_ghost_pre : forall h' h t Q,
       gstep h h' ->
@@ -469,14 +493,10 @@ Lemma omnibig_of_eval : forall h t Q,
 Proof using.
   introv M. induction M; try solve [constructors*].
   { constructors*. { introv (h2&K2&->). eauto. } }
-  { unfolds heap_state_ref. constructors*.
-    { intros p Hp. esplit. split.
-    applys* H. rewrite* heap_state_heap_with_state. } }
-  { destruct H as (?&->). constructors*. }
-  { destruct H as (?&->). constructors*. esplit. split*.
+  { constructors*. intros p Hp. esplit. split*.
     rewrite* heap_state_heap_with_state. }
-  { destruct H as (?&->). constructors*. esplit. split*.
-    rewrite* heap_state_heap_with_state. }
+  { constructors*. hnf. esplit. split*. rewrite* heap_state_heap_with_state. }
+  { constructors*. esplit. split*. rewrite* heap_state_heap_with_state. }
   { rename H into G. rewrite* <- (heap_state_gstep G). }
   { applys omnibig_conseq IHM. intros v. intros h' (hb&(ha&G&R0)&->).
     exists ha. splits*. rewrite* <- (heap_state_gstep G). }
@@ -1165,35 +1185,6 @@ Proof using. intros. intros v. applys hupdate_frame. Qed.
 
 Hint Constructors eval.
 
-Parameter heap_state_union : forall h1 h2,
-  heap_state (h1 \u h2) = Fmap.union (heap_state h1) (heap_state h2).
-
-Parameter heap_with_state_union_update : forall h1 h2 p v,
-  heap_compat h1 h2 ->
-  Fmap.indom (heap_state h1) p ->
-    heap_with_state (h1 \u h2) (Fmap.union (update (heap_state h1) p v) (heap_state h2))
-  = (heap_with_state h1 (update (heap_state h1) p v)) \u h2.
-
-Parameter heap_with_state_union_remove : forall h1 h2 p,
-    heap_with_state (h1 \u h2) (Fmap.union (remove (heap_state h1) p) (heap_state h2))
-  = (heap_with_state h1 (remove (heap_state h1) p)) \u h2.
-
-
-Parameter heap_compat_update : forall h1 h2 p v,
-  heap_compat h1 h2 ->
-  Fmap.indom (heap_state h1) p ->
-  heap_compat (heap_with_state h1 (update (heap_state h1) p v)) h2.
-  (* disjoint union l *)
-
-Parameter heap_compat_remove : forall h1 h2 p,
-  heap_compat h1 h2 ->
-  heap_compat (heap_with_state h1 (remove (heap_state h1) p)) h2.
-  (* disjoint_remove_l *)
-
-Parameter disjoint_heap_state_of_heap_compat : forall h1 h2,
-   heap_compat h1 h2 ->
-   Fmap.disjoint (heap_state h1) (heap_state h2).
-
 Lemma eval_frame : forall h1 h2 t Q,
   eval h1 t Q ->
   heap_compat h1 h2 ->
@@ -1205,32 +1196,26 @@ Proof using.
   { rename M into M1, H into M2, IHM into IH1, H0 into IH2.
     specializes IH1 HD. applys eval_let IH1. introv HK.
     lets (h1'&h2'&K1'&K2'&KD&KU): HK. subst. applys* IH2. }
-  { rename H into M. applys eval_ref. intros p h' (Hp&->).
-    rewrite heap_state_heap_union in *.
+  { applys eval_ref. intros p Hp.
+    rewrite heap_state_union in *.
     rewrite indom_union_eq in Hp. rew_logic in Hp.
-    destruct Hp as [Hp1 Hp2].
-    rewrite* update_union_not_r. skip.
-    (**
-
-     applys hstar_intro.
-    { applys* M. } { auto. } { applys* disjoint_update_not_r. } *) }
-  { rename H into M. destruct M as (D&->). applys eval_get.
-     { unfolds. rewrite heap_state_union. split*.
-       { rewrite* indom_union_eq. } }
+    destruct Hp as [Hp1 Hp2]. rewrite* update_union_not_r.
+    rewrite* heap_with_state_union_alloc. applys* hstar_intro.
+    { applys* heap_compat_alloc. } }
+  { applys eval_get; rewrite heap_state_union.
+     { rewrite* indom_union_eq. }
      { rewrite* read_union_l. applys* hstar_intro. } }
-  { rename H into M. destruct M as (D&->). applys eval_set.
-     { unfolds. rewrite heap_state_union. split*.
-       { rewrite* indom_union_eq. } }
-    { rewrite* update_union_l. rew_heaps. rewrite* heap_with_state_union_update.
+  { applys eval_set; rewrite heap_state_union.
+     { rewrite* indom_union_eq. }
+     { rewrite* update_union_l. rewrite* heap_with_state_union_update.
       applys* hstar_intro. { applys* heap_compat_update. } } }
-  {  rename H into M. destruct M as (D&->). applys eval_free.
-     { unfolds. rewrite heap_state_union. split*.
-       { rewrite* indom_union_eq. } }
-    { rew_heaps. lets D': disjoint_heap_state_of_heap_compat HD.
-      rewrite* remove_disjoint_union_l. rewrite heap_with_state_union_remove.
-      applys* hstar_intro. { applys* heap_compat_remove. } } }
+  { applys eval_free; rewrite heap_state_union.
+     { rewrite* indom_union_eq. }
+     { lets D': disjoint_heap_state_of_heap_compat HD.
+       rewrite* remove_disjoint_union_l. rewrite heap_with_state_union_remove.
+       applys* hstar_intro. { applys* heap_compat_remove. } } }
   { forwards* (?&?): gstep_frame_l h2 h h'. }
-  {  applys eval_ghost_post. applys* eval_conseq. applys* qupdate_frame. }
+  { applys eval_ghost_post. applys* eval_conseq. applys* qupdate_frame. }
 Qed.
 
 
@@ -1401,8 +1386,8 @@ Lemma triple_ref : forall v,
     \[]
     (fun r => \exists p, \[r = val_loc p] \* p ~~> v).
 Proof using.
-  intros. intros s1 K. inverts K. applys eval_ref. intros p h' D.
-  destruct D as (Fr&->). exists p. rewrite hstar_hpure_l. split*.
+  intros. intros s1 K. inverts K. applys eval_ref. intros p Hp.
+  exists p. rewrite hstar_hpure_l. split*.
   rewrite heap_state_heap_empty. rewrite update_empty. hnfs*.
 Qed.
 
@@ -1411,9 +1396,9 @@ Lemma triple_get : forall v p,
     (p ~~> v)
     (fun r => \[r = v] \* (p ~~> v)).
 Proof using.
-  intros. intros s K. inverts K. applys eval_get.
-  { unfolds. rewrite heap_state_heap_with_state.
-    splits*. applys* indom_single. }
+  intros. intros s K. inverts K.
+  applys eval_get; rewrite heap_state_heap_with_state.
+  { applys* indom_single. }
   { rewrite hstar_hpure_l. split*.
     { rewrite* read_single. }
     { hnfs*. } }
@@ -1424,9 +1409,9 @@ Lemma triple_set : forall w p v,
     (p ~~> w)
     (fun r => (p ~~> v)).
 Proof using.
-  intros. intros s1 K. inverts K. applys eval_set.
-  { unfolds. rewrite heap_state_heap_with_state.
-    splits*. applys* indom_single. }
+  intros. intros s1 K. inverts K.
+  applys eval_set; rewrite heap_state_heap_with_state.
+  { applys* indom_single. }
   { rewrite update_single. rew_heaps. hnfs. applys* heap_with_state_eq. }
 Qed.
 
@@ -1435,9 +1420,9 @@ Lemma triple_free : forall p v,
     (p ~~> v)
     (fun r => \[]).
 Proof using.
-  intros. intros s1 K. inverts K. applys eval_free.
-  { unfolds. rewrite heap_state_heap_with_state. splits*.
-    { applys* indom_single. } }
+  intros. intros s1 K. inverts K.
+  applys eval_free; rewrite heap_state_heap_with_state.
+  { applys* indom_single. }
   { rewrite* remove_single. rew_heaps.
     rewrite heap_with_state_heap_with_state. hnfs*.
     rewrite* heap_with_state_heap_empty_state_empty. }
