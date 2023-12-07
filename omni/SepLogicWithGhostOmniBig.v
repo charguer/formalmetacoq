@@ -39,11 +39,6 @@ Parameter heap_state : heap -> state.
 
 Parameter heap_with_state : heap -> state -> heap.
 
-(** Reading an updated physical state from a ghost state is a expected *)
-
-Parameter heap_state_heap_with_state : forall h s,
-  heap_state (heap_with_state h s) = s.
-
 (** Empty heap *)
 
 Parameter heap_empty : heap.
@@ -63,13 +58,27 @@ Notation "h1 \u h2" := (heap_union h1 h2)
 
 Open Scope heap_union_scope.
 
-(** Reading in union and empty *)
+(** Properties of [heap_state] *)
 
 Parameter heap_state_heap_empty :
   heap_state heap_empty = Fmap.empty.
 
 Parameter heap_state_heap_union : forall h1 h2,
   heap_state (heap_union h1 h2) = Fmap.union (heap_state h1) (heap_state h2).
+
+(** Properties of [heap_with_state] *)
+
+Parameter heap_state_heap_with_state : forall h s,
+  heap_state (heap_with_state h s) = s.
+
+Parameter heap_with_state_eq : forall h' h s,
+  heap_with_state h s = heap_with_state h' s.
+
+Parameter heap_with_state_heap_with_state : forall h s s',
+  heap_with_state (heap_with_state h s) s' = heap_with_state h s'.
+
+Parameter heap_with_state_heap_empty_state_empty :
+   heap_with_state heap_empty state_empty = heap_empty.
 
 (** Symmetry of [heap_compat] *)
 
@@ -277,7 +286,7 @@ Proof using. extens. unfolds gqimpl, ghimpl. iff*. Qed.
 
 
 (* ########################################################### *)
-(** ** Properties of Ghost Updates *)
+(** ** Properties of the Ghost Update Modality *)
 
 Lemma hupdate_intro : forall H h h',
   gstep h h' ->
@@ -293,17 +302,20 @@ Lemma gupdate_intro_same : forall H h,
   hupdate H h.
 Proof using. introv K. applys* hupdate_intro h. applys gstep_refl. Qed.
 
-(** Entailments are included in ghost updates *)
 
-Lemma ghimpl_of_himpl : forall H1 H2,
-  H1 ==> H2 ->
-  H1 |==> H2.
-Proof using. introv M Hh. exists h. split. applys gstep_refl. eauto. Qed.
+(* ########################################################### *)
+(** ** Properties of Ghost Updates *)
 
-Lemma ghimpl_of_qimpl : forall Q1 Q2,
-  Q1 ===> Q2 ->
-  Q1 |===> Q2.
-Proof using. introv M. intros v. applys* ghimpl_of_himpl. Qed.
+(** The ghost update modality is idempotent *)
+
+Lemma hupdate_hupdate : forall H,
+  hupdate (hupdate H) = hupdate H.
+Proof using.
+  hint gstep_refl, gstep_trans.
+  intros. unfold hupdate. applys himpl_antisym.
+  { intros h (h'&G'&(h''&G''&K)). exists* h''. }
+  { intros h (h'&G'&K). exists* h'. }
+Qed.
 
 (** The ghost update modality is covariant *)
 
@@ -316,6 +328,43 @@ Lemma qupdate_conseq : forall Q1 Q2,
   Q1 ===> Q2 ->
   qupdate Q1 ===> qupdate Q2.
 Proof using. introv W. intros v. applys* hupdate_conseq. Qed.
+
+(** Ghost update is reflexive and transitive *)
+
+Lemma ghimpl_refl : forall H,
+  H |==> H.
+Proof using. introv Hh. applys* gupdate_intro_same. Qed.
+
+Lemma gqimpl_refl : forall Q,
+  Q |===> Q.
+Proof using. intros Q v. applys* ghimpl_refl. Qed.
+
+Lemma ghimpl_trans : forall H2 H1 H3,
+  (H1 |==> H2) ->
+  (H2 |==> H3) ->
+  (H1 |==> H3).
+Proof using.
+  unfolds ghimpl. introv M1 M2. applys himpl_trans M1.
+  rewrite <- (hupdate_hupdate H3). applys* hupdate_conseq.
+Qed.
+
+Lemma gqimpl_trans : forall Q1 Q2 Q3,
+  (Q1 |===> Q2) ->
+  (Q2 |===> Q3) ->
+  (Q1 |===> Q3).
+Proof using. introv M1 M2. intros v. applys* ghimpl_trans. Qed.
+
+(** Entailments are included in ghost updates *)
+
+Lemma ghimpl_of_himpl : forall H1 H2,
+  H1 ==> H2 ->
+  H1 |==> H2.
+Proof using. introv M Hh. exists h. split. applys gstep_refl. eauto. Qed.
+
+Lemma ghimpl_of_qimpl : forall Q1 Q2,
+  Q1 ===> Q2 ->
+  Q1 |===> Q2.
+Proof using. introv M. intros v. applys* ghimpl_of_himpl. Qed.
 
 
 (* ########################################################### *)
@@ -746,6 +795,24 @@ Proof.
   introv M. do 2 rewrite (@hstar_comm H1). applys* himpl_frame_l.
 Qed.
 
+(** The frame property (star on H2) holds for ghost update *)
+
+Lemma ghimpl_frame_l : forall H1 H2 H1',
+  H1 |==> H1' ->
+  H1 \* H2 |==> H1' \* H2.
+Proof using.
+  introv W (h1&h2&K1&K2&D&->).
+  unfolds ghimpl, hupdate.
+  lets (h1'&G1&R1): W K1.
+  forwards* (D'&G'): gstep_frame_l h2 G1.
+  hint hstar_intro. exists* (h1' \u h2).
+Qed.
+
+Lemma qhimpl_frame_l : forall Q1 H2 Q1',
+  Q1 |===> Q1' ->
+  Q1 \*+ H2 |===> Q1' \*+ H2.
+Proof using. introv M. intros v. applys* ghimpl_frame_l. Qed.
+
 (** Properties of [hpure] *)
 
 Lemma hstar_hpure_l : forall P H h,
@@ -1033,16 +1100,6 @@ Proof using.
   unfold haffine in K. applys K. auto.
 Qed.
 
-Lemma hstar_hgc_hgc :
-  (\GC \* \GC) = \GC.
-  (* TODO : xpull
-Proof using.
-  unfold hgc. applys himpl_antisym.
-  { xpull. intros H1 K1 H2 K2. xsimpl (H1 \* H2). applys* haffine_hstar. }
-  { xpull. intros H K. xsimpl H \[]. auto. applys haffine_hempty. }
-Qed.*)
-Admitted.
-
 Lemma haffine_hgc :
   haffine \GC.
 Proof using.
@@ -1058,27 +1115,37 @@ Proof using. introv M. intros h K. applys hgc_intro. applys M K. Qed.
 (* ########################################################### *)
 (** ** Ghost updates for [haffine] *)
 
-Lemma himpl_haffine_hempty : forall H,
+Lemma ghimpl_haffine_hempty : forall H,
   haffine H ->
   H |==> \[].
 Proof using.
   unfold haffine, heap_affine. introv M Hh. esplit. splits*.
 Qed.
 
-Lemma himpl_hgc_hempty :
+Lemma ghimpl_hgc_hempty :
   \GC |==> \[].
-Proof using. applys himpl_haffine_hempty. applys haffine_hgc. Qed.
+Proof using. applys ghimpl_haffine_hempty. applys haffine_hgc. Qed.
 
-Lemma himpl_hstar_haffine_l : forall H H',
+Lemma ghimpl_hstar_haffine_l : forall H H',
   haffine H' ->
-  H \* H' |==> H.
-(* TODO -- gstep_frame_l *)
-Admitted.
+  H' \* H |==> H.
+Proof using.
+  introv N. applys ghimpl_trans. applys ghimpl_frame_l.
+  { applys* ghimpl_haffine_hempty. }
+  { rewrite hstar_hempty_l. applys ghimpl_refl. }
+Qed.
 
-Lemma qimpl_hstar_hgc_l : forall Q,
+Lemma ghimpl_hstar_hgc_l : forall H,
+  H \* \GC |==> H.
+Proof using.
+  intros. rewrite hstar_comm. applys ghimpl_trans. applys ghimpl_frame_l.
+  { applys* ghimpl_hgc_hempty. }
+  { rewrite hstar_hempty_l. applys ghimpl_refl. }
+Qed.
+
+Lemma gqimpl_hstar_hgc_l : forall Q,
   Q \*+ \GC |===> Q.
-(* TODO -- gstep_frame_l *)
-Admitted.
+Proof using. intros Q v. applys* ghimpl_hstar_hgc_l. Qed.
 
 
 (* ########################################################### *)
@@ -1197,7 +1264,7 @@ Lemma triple_hgc_post : forall t H Q,
   triple t H Q.
 Proof using.
   introv M. applys triple_conseq_post_ghost M.
-  applys qimpl_hstar_hgc_l.
+  applys gqimpl_hstar_hgc_l.
 Qed.
 
 Lemma triple_haffine_post : forall t H H' Q,
@@ -1213,10 +1280,10 @@ Qed.
 Lemma triple_haffine_pre : forall t H H' Q,
   triple t H Q ->
   haffine H' ->
-  triple t (H \* H') Q.
+  triple t (H' \* H) Q.
 Proof using.
   introv M K. applys triple_conseq_pre_ghost M.
-  applys* himpl_hstar_haffine_l.
+  applys* ghimpl_hstar_haffine_l.
 Qed.
 
 
@@ -1273,15 +1340,14 @@ Proof using.
   intros n1 Hn1. hnfs. exists*.
 Qed.
 
-(* TODO
 Lemma triple_ref : forall v,
   triple (val_ref v)
     \[]
     (fun r => \exists p, \[r = val_loc p] \* p ~~> v).
 Proof using.
-  intros. intros s1 K. applys eval_ref. intros p D.
-  inverts K. rewrite update_empty. exists p.
-  rewrite hstar_hpure_l. split*. hnfs*.
+  intros. intros s1 K. inverts K. applys eval_ref. intros p h' D.
+  destruct D as (Fr&->). exists p. rewrite hstar_hpure_l. split*.
+  rewrite heap_state_heap_empty. rewrite update_empty. hnfs*.
 Qed.
 
 Lemma triple_get : forall v p,
@@ -1290,8 +1356,11 @@ Lemma triple_get : forall v p,
     (fun r => \[r = v] \* (p ~~> v)).
 Proof using.
   intros. intros s K. inverts K. applys eval_get.
-  { applys* indom_single. }
-  { rewrite hstar_hpure_l. split*. rewrite* read_single. hnfs*. }
+  { unfolds. rewrite heap_state_heap_with_state.
+    splits*. applys* indom_single. }
+  { rewrite hstar_hpure_l. split*.
+    { rewrite* read_single. }
+    { hnfs*. } }
 Qed.
 
 Lemma triple_set : forall w p v,
@@ -1300,8 +1369,9 @@ Lemma triple_set : forall w p v,
     (fun r => (p ~~> v)).
 Proof using.
   intros. intros s1 K. inverts K. applys eval_set.
-  { applys* indom_single. }
-  { rewrite update_single. hnfs*. }
+  { unfolds. rewrite heap_state_heap_with_state.
+    splits*. applys* indom_single. }
+  { rewrite update_single. rew_heaps. hnfs. applys* heap_with_state_eq. }
 Qed.
 
 Lemma triple_free : forall p v,
@@ -1310,10 +1380,12 @@ Lemma triple_free : forall p v,
     (fun r => \[]).
 Proof using.
   intros. intros s1 K. inverts K. applys eval_free.
-  { applys* indom_single. }
-  { rewrite* remove_single. hnfs*. }
+  { unfolds. rewrite heap_state_heap_with_state. splits*.
+    { applys* indom_single. } }
+  { rewrite* remove_single. rew_heaps.
+    rewrite heap_with_state_heap_with_state. hnfs*.
+    rewrite* heap_with_state_heap_empty_state_empty. }
 Qed.
-*)
 
 
 (* ########################################################### *)
