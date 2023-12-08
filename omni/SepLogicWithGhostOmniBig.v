@@ -22,10 +22,13 @@ Implicit Types s : state.
 (* ########################################################### *)
 (* ########################################################### *)
 (* ########################################################### *)
-(** * Construction of Ghost State Based WP *)
+(** * Ghost State Axiomatization *)
+
+Module Type GhostState.
+
 
 (* ########################################################### *)
-(** ** Ghost State Axiomatization *)
+(* ** Axiomatization of ghost state operations *)
 
 (** Heap is a synonymous for ghost state *)
 
@@ -60,6 +63,10 @@ Notation "h1 \u h2" := (heap_union h1 h2)
 
 Open Scope heap_union_scope.
 
+
+(* ########################################################### *)
+(* ** Axiomatization of properties of ghost state operations *)
+
 (** Properties of [heap_state] *)
 
 Parameter heap_state_heap_empty :
@@ -73,14 +80,32 @@ Parameter heap_state_union : forall h1 h2,
 Parameter heap_state_heap_with_state : forall h s,
   heap_state (heap_with_state h s) = s.
 
-Parameter heap_with_state_eq : forall h' h s,
-  heap_with_state h s = heap_with_state h' s.
-
 Parameter heap_with_state_heap_with_state : forall h s s',
   heap_with_state (heap_with_state h s) s' = heap_with_state h s'.
 
 Parameter heap_with_state_heap_empty_state_empty :
    heap_with_state heap_empty state_empty = heap_empty.
+
+(** Properties of [heap_compat] *)
+
+Parameter disjoint_heap_state_of_heap_compat : forall h1 h2,
+   heap_compat h1 h2 ->
+   Fmap.disjoint (heap_state h1) (heap_state h2).
+
+Parameter heap_compat_update : forall h1 h2 p v,
+  heap_compat h1 h2 ->
+  Fmap.indom (heap_state h1) p ->
+  heap_compat (heap_with_state h1 (update (heap_state h1) p v)) h2.
+
+Parameter heap_compat_alloc : forall h1 h2 p v,
+  heap_compat h1 h2 ->
+  ~ indom (heap_state h1) p ->
+  ~ indom (heap_state h2) p ->
+  heap_compat (heap_with_state h1 (update (heap_state h1) p v)) h2.
+
+Parameter heap_compat_remove : forall h1 h2 p,
+  heap_compat h1 h2 ->
+  heap_compat (heap_with_state h1 (remove (heap_state h1) p)) h2.
 
 (** Properties of [heap_with_state] on [union] *)
 
@@ -100,29 +125,6 @@ Parameter heap_with_state_union_alloc : forall h1 h2 p v,
 Parameter heap_with_state_union_remove : forall h1 h2 p,
     heap_with_state (h1 \u h2) (Fmap.union (remove (heap_state h1) p) (heap_state h2))
   = (heap_with_state h1 (remove (heap_state h1) p)) \u h2.
-
-(** Properties of [heap_compat] *)
-
-Parameter heap_compat_update : forall h1 h2 p v,
-  heap_compat h1 h2 ->
-  Fmap.indom (heap_state h1) p ->
-  heap_compat (heap_with_state h1 (update (heap_state h1) p v)) h2.
-  (* disjoint union l *)
-
-Parameter heap_compat_alloc : forall h1 h2 p v,
-  heap_compat h1 h2 ->
-  ~ indom (heap_state h1) p ->
-  ~ indom (heap_state h2) p ->
-  heap_compat (heap_with_state h1 (update (heap_state h1) p v)) h2.
-
-Parameter heap_compat_remove : forall h1 h2 p,
-  heap_compat h1 h2 ->
-  heap_compat (heap_with_state h1 (remove (heap_state h1) p)) h2.
-  (* disjoint_remove_l *)
-
-Parameter disjoint_heap_state_of_heap_compat : forall h1 h2,
-   heap_compat h1 h2 ->
-   Fmap.disjoint (heap_state h1) (heap_state h2).
 
 (** Symmetry of [heap_compat] *)
 
@@ -182,6 +184,16 @@ Parameter gstep_frame_l : forall h2 h1 h1',
  heap_compat h1 h2 ->
  heap_compat h1' h2 /\ gstep (h1 \u h2) (h1' \u h2).
 
+End GhostState.
+
+
+(* ########################################################### *)
+(* ########################################################### *)
+(* ########################################################### *)
+(** * Construction of a Heap Predicates over Ghost State*)
+
+Module SLGhost (G : GhostState).
+Export G.
 
 (* ########################################################### *)
 (* ** Derived properties of operations on heaps *)
@@ -477,6 +489,9 @@ Definition triple (t:trm) (H:hprop) (Q:val->hprop) : Prop :=
 (* ########################################################### *)
 (** ** Soundness of WP *)
 
+(** [state_st H s] asserts that [H] holds of at least one heap
+    whose physical state is [s] *)
+
 Definition state_st (H:hprop) (s:state) : Prop :=
   exists h, H h /\ s = heap_state h.
 
@@ -501,6 +516,8 @@ Proof using.
   { applys omnibig_conseq IHM. intros v. intros h' (hb&(ha&G&R0)&->).
     exists ha. splits*. rewrite* <- (heap_state_gstep G). }
 Qed.
+
+(** Triples are sound w.r.t. the omni-big-step semantics *)
 
 Lemma triple_sound : forall t H Q,
   triple t H Q ->
@@ -725,7 +742,6 @@ Tactic Notation "rew_heaps" "*" "in" "*" :=
 (* ########################################################### *)
 (** ** Properties of [hstar] *)
 
-Section CoreProperties.
 Hint Resolve heap_compat_empty_l heap_compat_empty_r
   heap_union_empty_l heap_union_empty_r hempty_intro
   heap_compat_union_l heap_compat_union_r.
@@ -892,6 +908,19 @@ Lemma himpl_hforall : forall (J1 J2:val->hprop),
   hforall J1 ==> hforall J2.
 Proof.
   introv W. applys himpl_hforall_r. intros x. applys himpl_hforall_l W.
+Qed.
+
+
+(* ########################################################### *)
+(** ** Properties of [hsingle] *)
+
+Lemma hstar_hsingle_same_loc : forall p v1 v2,
+  (p ~~> v1) \* (p ~~> v2) ==> \[False].
+Proof.
+  intros. unfold hsingle. intros h (h1&h2&E1&E2&D&E). false.
+  lets D': disjoint_heap_state_of_heap_compat D. subst.
+  repeat rewrite heap_state_heap_with_state in *.
+  applys* Fmap.disjoint_single_single_same_inv D'.
 Qed.
 
 
@@ -1412,7 +1441,8 @@ Proof using.
   intros. intros s1 K. inverts K.
   applys eval_set; rewrite heap_state_heap_with_state.
   { applys* indom_single. }
-  { rewrite update_single. rew_heaps. hnfs. applys* heap_with_state_eq. }
+  { rewrite update_single. rew_heaps. hnfs.
+    rewrite* heap_with_state_heap_with_state. }
 Qed.
 
 Lemma triple_free : forall p v,
@@ -1428,25 +1458,389 @@ Proof using.
     rewrite* heap_with_state_heap_empty_state_empty. }
 Qed.
 
+End SLGhost.
+
 
 (* ########################################################### *)
 (* ########################################################### *)
 (* ########################################################### *)
-(** * Instantiation to a Concrete Ghost State *)
+(** * Realization of a Ghost State with Time Credits *)
 
-(* Example of a ghost state that carries times credits *)
+Module GhostStateCredits <: GhostState.
 
 (* ########################################################### *)
-(** ** Properties of [hsingle] *)
+(* ** Realization of ghost state with time credits *)
 
-(* TODO
-Lemma hstar_hsingle_same_loc : forall p v1 v2,
-  (p ~~> v1) \* (p ~~> v2) ==> \[False].
-Proof.
-  intros. unfold hsingle. intros h (h1&h2&E1&E2&D&E). false.
-  subst. applys* Fmap.disjoint_single_single_same_inv.
+(** Heap is a synonymous for ghost state. *)
+
+Definition heap : Type :=
+   (state * Z)%type.
+
+Definition heap_make (s:state) (n:Z) : heap :=
+  (s,n).
+
+Coercion heap_state (h:heap) : state :=
+  fst h.
+
+Definition heap_credits (h:heap) :=
+  snd h.
+
+(** Update of the physical state component from a ghost state *)
+
+Definition heap_with_state (h:heap) (s:state) : heap :=
+  heap_make s (heap_credits h).
+
+(** Empty heap *)
+
+Definition heap_empty : heap :=
+  heap_make Fmap.empty 0.
+
+(** Compatibility of two heaps *)
+
+Definition heap_compat (h1 h2:heap) : Prop :=
+  let (s1,n1) := h1 in
+  let (s2,n2) := h2 in
+  Fmap.disjoint s1 s2.
+
+(** Union of two compatible heaps *)
+
+Definition heap_union (h1 h2:heap) : heap :=
+  let (s1,n1) := h1 in
+  let (s2,n2) := h2 in
+  heap_make (Fmap.union s1 s2) (n1 + n2).
+
+Declare Scope heap_union_scope.
+
+Notation "h1 \u h2" := (heap_union h1 h2)
+   (at level 37, right associativity) : heap_union_scope.
+
+Open Scope heap_union_scope.
+
+
+(* ########################################################### *)
+(* ** Properties of ghost state operations *)
+
+(** Properties of [heap_state] *)
+
+Lemma heap_state_heap_empty :
+  heap_state heap_empty = Fmap.empty.
+Proof using. auto. Qed.
+
+Lemma heap_state_union : forall h1 h2,
+  heap_state (h1 \u h2) = Fmap.union (heap_state h1) (heap_state h2).
+Proof using. intros [s1 n1] [s2 n2]. auto. Qed.
+
+(** Properties of [heap_with_state] *)
+
+Lemma heap_state_heap_with_state : forall h s,
+  heap_state (heap_with_state h s) = s.
+Proof using. intros [s1 n1] s. auto. Qed.
+
+Lemma heap_with_state_heap_with_state : forall h s s',
+  heap_with_state (heap_with_state h s) s' = heap_with_state h s'.
+Proof using. intros [s1 n1] s s'. auto. Qed.
+
+Lemma heap_with_state_heap_empty_state_empty :
+   heap_with_state heap_empty state_empty = heap_empty.
+Proof using. auto. Qed.
+
+(** Properties of [heap_compat] *)
+
+Lemma disjoint_heap_state_of_heap_compat : forall h1 h2,
+   heap_compat h1 h2 ->
+   Fmap.disjoint (heap_state h1) (heap_state h2).
+Proof using. intros [s1 n1] [s2 n2]. introv K; simpls*. Qed.
+
+Lemma heap_compat_update : forall h1 h2 p v,
+  heap_compat h1 h2 ->
+  Fmap.indom (heap_state h1) p ->
+  heap_compat (heap_with_state h1 (update (heap_state h1) p v)) h2.
+Proof using.
+  intros [s1 n1] [s2 n2]. introv K N; simpls.
+  applys* disjoint_update_l.
 Qed.
-*)
+
+Lemma heap_compat_alloc : forall h1 h2 p v,
+  heap_compat h1 h2 ->
+  ~ indom (heap_state h1) p ->
+  ~ indom (heap_state h2) p ->
+  heap_compat (heap_with_state h1 (update (heap_state h1) p v)) h2.
+Proof using.
+  intros [s1 n1] [s2 n2]. introv K N1 N2; simpls.
+  applys* disjoint_update_not_r.
+Qed.
+
+Lemma heap_compat_remove : forall h1 h2 p,
+  heap_compat h1 h2 ->
+  heap_compat (heap_with_state h1 (remove (heap_state h1) p)) h2.
+Proof using.
+  intros [s1 n1] [s2 n2]. introv K; simpls. applys* disjoint_remove_l.
+Qed.
+
+(** Properties of [heap_with_state] on [union] *)
+
+Lemma heap_with_state_union_update : forall h1 h2 p v,
+  heap_compat h1 h2 ->
+  Fmap.indom (heap_state h1) p ->
+    heap_with_state (h1 \u h2) (Fmap.union (update (heap_state h1) p v) (heap_state h2))
+  = (heap_with_state h1 (update (heap_state h1) p v)) \u h2.
+Proof using. intros [s1 n1] [s2 n2]. auto. Qed.
+
+Lemma heap_with_state_union_alloc : forall h1 h2 p v,
+  heap_compat h1 h2 ->
+  ~ indom (heap_state h1) p ->
+  ~ indom (heap_state h2) p ->
+    heap_with_state (h1 \u h2) (Fmap.union (update (heap_state h1) p v) (heap_state h2))
+  = (heap_with_state h1 (update (heap_state h1) p v)) \u h2.
+Proof using. intros [s1 n1] [s2 n2]. auto. Qed.
+
+Lemma heap_with_state_union_remove : forall h1 h2 p,
+    heap_with_state (h1 \u h2) (Fmap.union (remove (heap_state h1) p) (heap_state h2))
+  = (heap_with_state h1 (remove (heap_state h1) p)) \u h2.
+Proof using. intros [s1 n1] [s2 n2]. auto. Qed.
+
+(** Symmetry of [heap_compat] *)
+
+Lemma heap_compat_sym : forall h1 h2,
+  heap_compat h1 h2 ->
+  heap_compat h2 h1.
+Proof using. intros [s1 n1] [s2 n2]; simpl. autos* Fmap.disjoint_sym. Qed.
+
+(** [heap_compat] on [heap_empty] *)
+
+Lemma heap_compat_empty_l : forall h,
+  heap_compat heap_empty h.
+Proof using. intros [s1 n1]; simpl. autos* Fmap.disjoint_empty_l. Qed.
+
+(** [heap_compat] on [heap_union] *)
+
+Lemma heap_compat_union_l_eq: forall h1 h2 h3,
+  heap_compat h1 h2 ->
+  heap_compat (h1 \u h2) h3 = (heap_compat h1 h3 /\ heap_compat h2 h3).
+Proof using.
+  intros [s1 n1] [s2 n2] [s3 n3]; simpl. introv N. rewrite* disjoint_union_eq_l.
+  extens. iff; autos* Fmap.disjoint_sym.
+Qed.
+
+(** [heap_union] neutral, commutativity, and asociativity *)
+
+Lemma heap_union_empty_l : forall h,
+  heap_empty \u h = h.
+Proof using. intros [s n]. simpl. fequals. applys Fmap.union_empty_l. Qed.
+
+Lemma heap_union_comm : forall h1 h2,
+  heap_compat h1 h2 ->
+  h1 \u h2 = h2 \u h1.
+Proof using.
+  intros [s1 n1] [s2 n2] N. simpls. fequals.
+  { applys* Fmap.union_comm_of_disjoint. } { math. }
+Qed.
+
+Lemma heap_union_assoc : forall h1 h2 h3,
+  heap_compat h1 h2 ->
+  heap_compat h2 h3 ->
+  heap_compat h1 h3 ->
+  (h1 \u h2) \u h3 = h1 \u (h2 \u h3).
+Proof using.
+  intros [s1 n1] [s2 n2] [s3 n3] N1 N2 N3. simpls. fequals.
+  { applys* Fmap.union_assoc. } { math. }
+Qed.
 
 
+(* ########################################################### *)
+(* ** Realization of ghost updates *)
+
+(** Ghost step: it is allowed to decrease the number of credits *)
+
+Definition gstep (h1 h2:heap) : Prop :=
+  let (s1,n1) := h1 in
+  let (s2,n2) := h2 in
+  s1 = s2 /\ n2 <= n1.
+
+(** Ghost step is a reflexive-transitive relation *)
+
+Lemma gstep_refl : refl gstep.
+Proof using. intros [s n]; simpl. split. { auto. } { math. } Qed.
+
+Lemma gstep_trans : trans gstep.
+Proof using.
+  intros [s1 n1] [s2 n2] [s3 n3] (E1&N1) (E2&N2); simpls. split.
+  { subst*. } { math. }
+Qed.
+
+(** Ghost step do not modify the physical state *)
+
+Lemma heap_state_gstep : forall h h',
+  gstep h h' ->
+  heap_state h' = heap_state h.
+Proof using. intros [s1 n1] [s2 n2] (E&N); simpls. auto. Qed.
+
+(** Ghost step is frame-compatible *)
+
+Lemma gstep_frame_l : forall h2 h1 h1',
+ gstep h1 h1' ->
+ heap_compat h1 h2 ->
+ heap_compat h1' h2 /\ gstep (h1 \u h2) (h1' \u h2).
+Proof using.
+  intros [s2 n2] [s1 n1] [s1' n1'] (E&N) K; simpls; subst.
+  splits*. { math. }
+Qed.
+
+End GhostStateCredits.
+
+
+(* ########################################################### *)
+(* ########################################################### *)
+(* ########################################################### *)
+(** * Construction of a Separation Logic with Time Credits *)
+
+(** Separation Logic with Credits *)
+
+Module Import SLCredits := SLGhost(GhostStateCredits).
+Import GhostStateCredits.
+
+
+(* ########################################################### *)
+(* ** Heap with credits *)
+
+(** [heap_creds n] describes a heap with an empty physical state
+    and with [n] time credits *)
+
+Definition heap_creds (n:Z) : heap :=
+  (Fmap.empty, n).
+
+Lemma heap_compat_creds : forall n m,
+  heap_compat (heap_creds n) (heap_creds m).
+Proof using. intros. simpl. applys Fmap.disjoint_empty_l. Qed.
+
+Lemma heap_creds_zero :
+  heap_creds 0 = heap_empty.
+Proof using. auto. Qed.
+
+Lemma heap_creds_add : forall n m,
+  heap_creds (n + m) = heap_union (heap_creds n) (heap_creds m).
+Proof using.
+  intros. unfolds heap_creds, heap_union. fequals. rewrite* Fmap.union_empty_l.
+Qed.
+
+Lemma heap_creds_affine : forall n,
+  n >= 0 ->
+  heap_affine (heap_creds n).
+Proof using. introv M. simpls. split. { auto. } { math. } Qed.
+
+
+(* ########################################################### *)
+(* ** Time credits assertion *)
+
+(** Definition of the time credits assertion [$n] *)
+
+Definition hcredits (n:Z) : hprop :=
+  fun h => h = heap_creds n.
+
+Notation "'\$' n" := (hcredits n)
+  (at level 40,
+   n at level 0,
+   format "\$ n") : heap_scope.
+
+(** Properites of the time credits assertion *)
+
+Lemma hcredits_zero :
+  \$ 0 = \[].
+Proof using.
+  applys fun_ext_1. intros h. unfold hcredits. rewrite* heap_creds_zero.
+Qed.
+
+Lemma hcredits_add : forall n m,
+  \$ (n+m) = \$ n \* \$ m.
+Proof using.
+  intros. applys fun_ext_1. intros h. unfold hcredits.
+  unfold hstar. extens. iff M.
+  { exists __ __. splits; try reflexivity.
+    { applys heap_compat_creds. }
+    { subst. rewrite* heap_creds_add. } }
+  { destruct M as (h1&h2&->&->&C&->).
+    rewrite* heap_creds_add. }
+Qed.
+
+Lemma haffine_hcredits : forall n,
+  n >= 0 ->
+  haffine (\$ n).
+Proof using. introv H. unfold haffine. introv ->. apply* heap_creds_affine. Qed.
+
+Lemma hcredits_sub : forall (n m : int),
+  \$(n-m) = \$ n \* \$ (-m).
+Proof using. intros. math_rewrite (n-m = n+(-m)). rewrite* hcredits_add. Qed.
+
+Lemma hcredits_cancel : forall (n: int),
+  \$ n \* \$ (-n) = \[].
+Proof using. intros. rewrite <- hcredits_add. applys_eq hcredits_zero. fequals. math. Qed.
+
+Lemma hcredits_extract : forall m n,
+  \$ n = \$ m \* \$ (n-m).
+Proof using. intros. rewrite <- hcredits_add. fequals. math. Qed.
+
+Lemma hwand_hcredits_l : forall H n,
+  (\$n \-* H) = (\$(-n) \* H).
+Proof using.
+  intros H1 n. unfold hwand. applys himpl_antisym.
+  { applys himpl_hexists_l. intros H2. rewrite hstar_comm.
+    apply himpl_hstar_hpure_l. intros M. rewrite <- (hstar_hempty_l H2).
+    rewrite <- (hcredits_cancel n). rewrite hstar_assoc.
+    rewrites (>> hstar_comm H2). rewrite <- hstar_assoc.
+    rewrites (>> hstar_comm H1). applys himpl_frame_l M. }
+  { sets H2: (\$(- n) \* H1). applys himpl_hexists_r H2.
+    rewrites (hstar_comm H2). applys* himpl_hstar_hpure_r.
+    subst H2. rewrite <- hstar_assoc. rewrite hcredits_cancel.
+    rewrite* hstar_hempty_l. }
+Qed.
+
+Lemma ghimpl_haffine_hempty : forall H,
+  haffine H ->
+  H |==> \[].
+Proof using.
+  unfold haffine, heap_affine. introv M Hh. esplit. splits*.
+Qed.
+
+
+(* ########################################################### *)
+(* ** Ghost updates for time credits *)
+
+(** A ghost update may be used to throw a way a nonnegative number of credits. *)
+
+Lemma hcredits_discard : forall n,
+  n >= 0 ->
+  (\$n) |==> \[].
+Proof using. introv N. applys ghimpl_haffine_hempty. applys* haffine_hcredits. Qed.
+
+
+(* ########################################################### *)
+(* ** Tick function *)
+
+(** The [tick] function forces the consumption of time credit.
+    In the operational semantics, a call to [tick] is a no-op.
+    But by making the definition of [tick] abstract, we force
+    the user to reason about [tick] through its specification,
+    which consumes one time credit. *)
+
+Module Type Tick.
+
+Parameter tick : val.
+
+Parameter triple_tick : triple (trm_app tick val_unit) (\$ 1) (fun _ => \[]).
+
+End Tick.
+
+Module Import TickImpl : Tick.
+
+Definition tick : val :=
+  val_fix "f" "x" val_unit.
+
+Lemma triple_tick :
+  triple (trm_app tick val_unit) (\$ 1) (fun _ => \[]).
+Proof using.
+  applys* triple_app_fix. simpl. applys triple_conseq_pre_ghost \[].
+  { applys* triple_val. } { applys hcredits_discard. math. }
+Qed.
+
+End TickImpl.
 
