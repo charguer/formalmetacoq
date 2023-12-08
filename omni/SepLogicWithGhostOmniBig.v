@@ -40,7 +40,12 @@ Parameter heap_state : heap -> state.
 
 Coercion heap_state : heap >-> state.
 
-(** Update of the physical state component from a ghost state *)
+(** Update of the physical state component from a ghost state.
+    The current interface is somewhat restrictive, because it
+    forces that the ghost state remains valid independently
+    of updates to the physical state. It suffices to formalize,
+    e.g., time credits. But the definition is yet to be
+    generalize to handle more advanced forms of ghost state. *)
 
 Parameter heap_with_state : heap -> state -> heap.
 
@@ -253,7 +258,7 @@ Definition himpl (H1 H2:hprop) : Prop :=
   forall h, H1 h -> H2 h.
 
 Notation "H1 ==> H2" := (himpl H1 H2)
-  (at level 55) : heap_scope.
+  (at level 55).
 
 (** Entailment on postconditions *)
 
@@ -261,7 +266,7 @@ Definition qimpl (Q1 Q2:val->hprop) :=
   forall v, himpl (Q1 v) (Q2 v).
 
 Notation "Q1 ===> Q2" := (qimpl Q1 Q2)
-  (at level 55) : heap_scope.
+  (at level 55).
 
 
 (* ########################################################### *)
@@ -324,7 +329,7 @@ Definition ghimpl (H1 H2 : hprop) : Prop :=
   H1 ==> hupdate H2.
 
 Notation "H1 |==> H2" := (ghimpl H1 H2)
-  (at level 55) : heap_scope.
+  (at level 55).
 
 (** Ghost update on postconditions *)
 
@@ -332,7 +337,7 @@ Definition gqimpl (Q1 Q2 : val->hprop) : Prop :=
   forall v, ghimpl (Q1 v) (Q2 v).
 
 Notation "Q1 |===> Q2" := (gqimpl Q1 Q2)
-  (at level 55) : heap_scope.
+  (at level 55).
 
 (** Alternative definition of [gqimpl] *)
 
@@ -1468,10 +1473,11 @@ End SLGhost.
 
 Module GhostStateCredits <: GhostState.
 
-(* ########################################################### *)
-(* ** Realization of ghost state with time credits *)
 
-(** Heap is a synonymous for ghost state. *)
+(* ########################################################### *)
+(* ** Axiomatization of fractions *)
+
+(** Heap is a pair of a physical state and a number of credits. *)
 
 Definition heap : Type :=
    (state * Z)%type.
@@ -1740,7 +1746,7 @@ Definition hcredits (n:Z) : hprop :=
 Notation "'\$' n" := (hcredits n)
   (at level 40,
    n at level 0,
-   format "\$ n") : heap_scope.
+   format "\$ n").
 
 (** Properites of the time credits assertion *)
 
@@ -1843,4 +1849,5 @@ Proof using.
 Qed.
 
 End TickImpl.
+
 

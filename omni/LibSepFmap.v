@@ -341,9 +341,14 @@ Lemma fmap_extens : forall h1 h2,
 Proof using. intros [f1 F1] [f2 F2] M. simpls. applys~ make_eq. Qed.
 
 
-
 (* ########################################################### *)
 (** ** Domain *)
+
+Lemma indom_empty_eq : forall x,
+  indom (empty:fmap A B) x = False.
+Proof using.
+  intros. unfold empty, indom, map_indom. simpl. extens. auto_false.
+Qed.
 
 Lemma indom_single_eq : forall x y v,
   indom (single x v) y = (x = y).

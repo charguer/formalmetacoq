@@ -37,12 +37,12 @@ Semantics formalized:
 - `EquivSmallBig`: equivalence between standard small-step and standard big-step semantics
 - `EquivOmni`: equivalence of omni-semantics and standard semantics
 
-
 Formalization of a core Separation Logic:
 - `SepLogicCommon`: heap predicates and entailment
 - `SepLogicSmall`: separation logic built on top of standard small-step semantics
 - `SepLogicOmniBig`: separation logic built on top of omni-big-step semantics
 - `SepLogicOmniSmall`: separation logic built on top of omni-small-step semantics
+- `SepLogicWithGhostOmniBig`: (work in progress) on the formalization of ghost state
 
 Other files:
 
