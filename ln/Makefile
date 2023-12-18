@@ -19,7 +19,8 @@ BIG :=\
 FSUB :=\
 	Fsub_Definitions \
 	Fsub_Infrastructure \
-	Fsub_Soundness
+	Fsub_Soundness \
+	Fsub_Soundness_OmniSmall
 COC :=\
 	CoC_Definitions \
 	CoC_Infrastructure \

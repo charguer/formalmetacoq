@@ -94,10 +94,11 @@ Definition subst_tb (Z : var) (P : typ) (b : bind) : bind :=
 (** Constructors as hints. *)
 
 Hint Constructors type term wft ok okt value red.
-
-Hint Resolve
-  sub_top sub_refl_tvar sub_arrow
+Hint Resolve sub_top sub_refl_tvar sub_arrow
   typing_var typing_app typing_tapp typing_sub.
+Hint Extern 1 (typing ?E ?e ?T) =>
+  match goal with H: typing E e ?S |-  _ =>
+    is_not_evar S; eapply (@typing_sub S) end.
 
 (** Gathering free names already used in the proofs *)
 
@@ -823,14 +824,14 @@ Hint Extern 1 (wft ?E ?T) =>
 
 Hint Extern 1 (type ?T) =>
   let go E := apply (@wft_type E); auto in
-  match goal with
+  simpls; match goal with
   | H: typing ?E _ T |- _ => go E
   | H: sub ?E T _ |- _ => go E
   | H: sub ?E _ T |- _ => go E
   end.
 
 Hint Extern 1 (term ?e) =>
-  match goal with
+  simpls; match goal with
   | H: typing _ ?e _ |- _ => apply (proj32 (typing_regular H))
   | H: red ?e _ |- _ => apply (proj1 (red_regular H))
   | H: red _ ?e |- _ => apply (proj2 (red_regular H))

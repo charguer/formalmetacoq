@@ -17,7 +17,7 @@ The folder contains a number of type soundness proofs:
 - `ML`: ML types with references and exceptions and pattern matching
 
 All the proofs are based the standart "preservation and progress" small-step approach,
-except the files `STLC_Ref_Soundness_OmniBig.v` and `STLC_Ref_Soundness_OmniSmall.v`
+except the files `STLC_Ref_Soundness_OmniBig.v` and `STLC_Ref_Soundness_OmniSmall.v` and `Fsub_Soundness_OmniSmall.v`,
 which are based on novel techniques described in the Omni-Semantics paper (TOPLAS'23).
 http://www.chargueraud.org/research/2022/omnisemantics/omnisemantics.pdf
 

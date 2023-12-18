@@ -1,6 +1,6 @@
 (***************************************************************************
-* Preservation and Progress for System-F with Subtyping - Definitions      *
-* Brian Aydemir & Arthur Chargueraud, March 2007                           *
+* Type Soundness for System-F with Subtyping - Omni-Small-Step Proof       *
+* Arthur Chargueraud, Dec 2023                                             *
 ***************************************************************************)
 
 Set Implicit Arguments.

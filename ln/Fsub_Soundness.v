@@ -212,11 +212,11 @@ Proof.
     binds_cases H0; apply* typing_var.
   apply_fresh* typing_abs as y.
     rewrite* subst_ee_open_ee_var.
-    apply_ih_bind* H0.
+    apply_ih_bind* (>> H0 TypU).
   apply* typing_app.
   apply_fresh* typing_tabs as Y.
     rewrite* subst_ee_open_te_var.
-    apply_ih_bind* H0.
+    apply_ih_bind* (>> H0 TypU).
   apply* typing_tapp. apply* sub_strengthening.
   apply* typing_sub. apply* sub_strengthening.
 Qed.
@@ -287,33 +287,31 @@ Qed.
 (** Preservation Result (20) *)
 
 Lemma preservation_result : preservation.
-Proof.
+Proof. (* 19 lines *)
   introv Typ. gen e'. induction Typ; introv Red;
    try solve [ inversion Red ].
   (* case: app *)
   inversions Red; try solve [ apply* typing_app ].
-  destruct~ (typing_inv_abs Typ1 (U1:=T1) (U2:=T2)) as [P1 [S2 [L P2]]].
+  lets~ (P1&S2&L&P2): typing_inv_abs Typ1 T1 T2.
     apply* sub_reflexivity.
-    pick_fresh X. forwards~ K: (P2 X). destruct K.
+    pick_fresh X. forwards~ (K1&K2): (P2 X).
      rewrite* (@subst_ee_intro X).
      apply_empty (@typing_through_subst_ee V).
        apply* (@typing_sub S2). apply_empty* sub_weakening.
        autos*.
   (* case: tapp *)
   inversions Red; try solve [ apply* typing_tapp ].
-  destruct~ (typing_inv_tabs Typ (U1:=T1) (U2:=T2)) as [P1 [S2 [L P2]]].
+  lets~ (P1&S2&L&P2): typing_inv_tabs Typ T1 T2.
     apply* sub_reflexivity.
-    pick_fresh X. forwards~ K: (P2 X). destruct K.
+    pick_fresh X. forwards~ (K1&K2): (P2 X).
      rewrite* (@subst_te_intro X).
      rewrite* (@subst_tt_intro X).
-     (* todo: apply empty here *)
-     asserts_rewrite (E = E & map (subst_tb X T) empty).
-       rewrite map_empty. rewrite~ concat_empty_r.
-     apply* (@typing_through_subst_te T1).
-       rewrite* concat_empty_r.
+     applys_eq (>> typing_through_subst_te T1 E (empty:env));
+      try rewrite map_empty; try rewrite concat_empty_r; eauto.
   (* case sub *)
   apply* typing_sub.
 Qed.
+
 
 (* ********************************************************************** *)
 (** * Progress *)
@@ -351,7 +349,7 @@ Qed.
 (** Progress Result (16) *)
 
 Lemma progress_result : progress.
-Proof.
+Proof. (* 14 lines *)
   introv Typ. gen_eq E: (@empty bind). lets Typ': Typ.
   induction Typ; intros EQ; subst.
   (* case: var *)
@@ -361,15 +359,14 @@ Proof.
   (* case: app *)
   right. destruct* IHTyp1 as [Val1 | [e1' Rede1']].
     destruct* IHTyp2 as [Val2 | [e2' Rede2']].
-      destruct (canonical_form_abs Val1 Typ1) as [S [e3 EQ]].
-        subst. exists* (open_ee e3 e2).
+      destruct (canonical_form_abs Val1 Typ1) as (S&e3&->).
+        exists* (open_ee e3 e2).
   (* case: tabs *)
   left*.
   (* case: tapp *)
-  right. destruct~ IHTyp as [Val1 | [e1' Rede1']].
-    destruct (canonical_form_tabs Val1 Typ) as [S [e3 EQ]].
-      subst. exists* (open_te e3 T).
-      exists* (trm_tapp e1' T).
+  right. destruct* IHTyp as [Val1 | [e1' Rede1']].
+    destruct (canonical_form_tabs Val1 Typ) as (S&e3&->).
+      exists* (open_te e3 T).
   (* case: sub *)
   autos*.
 Qed.
