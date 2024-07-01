@@ -295,7 +295,7 @@ Lemma xchange_lemma : forall H1 H1',
   H1' \* H2 ==> H' ->
   H ==> H'.
 Proof.
-  introv M1 M2 M3. applys himpl_trans M2. applys himpl_trans M3.
+  introv M1 M2 M3. applys himpl_trans M2. applys himpl_trans; [|applys M3].
   applys himpl_frame_l. applys M1.
 Qed.
 

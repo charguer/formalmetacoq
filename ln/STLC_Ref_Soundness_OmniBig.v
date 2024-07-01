@@ -262,7 +262,7 @@ Proof using.
     empty ! Y' |= t ~: T ->
     (post Y T) ==> P ->
     coomnibig (t, mu) P).
-  { introv ? ? ? HP. applys* IH. applys himpl_trans HP. applys* post_extends. }
+  { introv ? ? ? HP. applys* IH. applys* himpl_trans (post Y T). applys* post_extends. }
 
   (** The actual proof begins here (37 lines) *)
   introv HS HT HQ. inverts HT as.
