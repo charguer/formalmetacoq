@@ -22,7 +22,7 @@ Proof.
   exists* i1.
   destruct (IHless1 _ C1) as [i2 [Le2 C2]].
    destruct (IHless2 _ C2) as [i3 [Le3 C3]].
-   exists i3. autos* (Le.le_trans i1 i2 i3).
+   exists i3. autos* (PeanoNat.Nat.le_trans i1 i2 i3).
 Qed.
 
 Lemma less_type_type_inv : forall i j,

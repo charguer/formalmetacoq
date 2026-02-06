@@ -4,7 +4,7 @@
 **************************************************************************)
 
 Set Implicit Arguments.
-Require Import Coq.micromega.Lia Coq.Arith.Plus Coq.Arith.Wf_nat.
+Require Import Coq.micromega.Lia Coq.Arith.PeanoNat Coq.Arith.Wf_nat.
 Require Coq.Classes.Equivalence.
 
 (** By default, Coq features a constructive logic and provides a

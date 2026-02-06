@@ -34,7 +34,7 @@ Contents
 Compilation
 ===========
 
-The files compile with Coq v8.18.
+The files compile with Coq v8.20.
 
 A tutorial on how to best configure Coq in VScode is available from:
 https://chargueraud.org/teach/verif/install/install.html

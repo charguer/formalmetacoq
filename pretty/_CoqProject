@@ -1,3 +1,5 @@
 -R . Top -arg -w -arg -deprecated
+-arg -w
+-arg -notation-incompatible-prefix
 
 #-implicit-core-hint-db,-deprecated-ident-entry,-omega-is-deprecated,-deprecated-hint-without-locality,-deprecated-instance-without-locality,-deprecated-hint-rewrite-without-locality,deprecated-hint-rewrite-without-locality,deprecated-hint-without-locality,deprecated-instance-without-locality
